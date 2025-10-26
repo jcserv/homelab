@@ -1,0 +1,15 @@
+apiVersion: v2
+name: beszel
+description: Lightweight server monitoring hub with historical data, docker stats, and alerts
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - monitoring
+  - metrics
+  - dashboard
+home: https://github.com/henrygd/beszel
+sources:
+  - https://github.com/henrygd/beszel
+maintainers:
+  - name: homelab

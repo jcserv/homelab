@@ -1,0 +1,72 @@
+hub:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: henrygd/beszel
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "100Mi"
+      cpu: "200m"
+
+  storage:
+    data:
+      storageClass: local-path
+      size: 1Gi
+
+  service:
+    type: LoadBalancer
+    port: 8090
+    loadBalancerIP: 10.0.0.104
+    annotations:
+      metallb.universe.tf/allow-shared-ip: beszel
+
+agent:
+  enabled: true
+  # Deploy agent as DaemonSet on all nodes
+  deploymentType: DaemonSet
+
+  image:
+    repository: henrygd/beszel-agent
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      memory: "32Mi"
+      cpu: "25m"
+    limits:
+      memory: "64Mi"
+      cpu: "100m"
+
+  # Agent configuration
+  port: 45876
+  hubUrl: "http://beszel:8090"
+
+  # WebSocket authentication (generated from hub UI)
+  auth:
+    # Hub's SSH public key (provided when adding systems in UI)
+    # After deploying, access the hub UI and add each system manually:
+    # 1. Go to Settings > Add System
+    # 2. Copy the SSH public key shown
+    # 3. Add each node with: Host=<node-ip>, Port=45876, Key=<hub-public-key>
+    # 4. Update this value with the hub's public key and redeploy
+    key: "ssh-ed25519 AAAA... (copy from hub UI after deployment)"
+    # Universal token from hub UI (Settings > Token)
+    token: "your-hub-token-here"
+
+  # Host network mode for accurate system metrics
+  hostNetwork: true
+
+  # Mount docker socket and extra filesystems
+  volumes:
+    dockerSocket: false
+    extraFilesystems: []
+    # Note: HDD storage should be accessed via NFS, not direct mounts
+    # DaemonSets run on all nodes and can't have per-node volumes
