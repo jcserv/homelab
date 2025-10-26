@@ -1,0 +1,18 @@
+nfs:
+  server: 10.0.0.28  # pi5-01
+  path: /mnt/hd1
+
+storageClass:
+  name: nfs-client
+  defaultClass: false
+  reclaimPolicy: Retain
+  archiveOnDelete: true  # Moves deleted PVCs to "archived-" folder instead of deleting
+
+# Resource limits for the provisioner pod
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

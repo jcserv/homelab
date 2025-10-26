@@ -1,0 +1,43 @@
+# cert-manager Configuration
+# This chart wraps the official cert-manager Helm chart
+
+# Pass-through values to the official cert-manager chart
+cert-manager:
+  # Install CRDs as part of the Helm release
+  crds:
+    enabled: true
+
+  # Global configuration
+  global:
+    leaderElection:
+      namespace: cert-manager
+
+  # Controller configuration
+  controller:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  # Webhook configuration
+  webhook:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  # CA injector configuration
+  cainjector:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
