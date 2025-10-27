@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pihole.fullname" . }}-admin
+  labels:
+    app: {{ include "pihole.name" . }}
+  {{- with .Values.service.admin.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.admin.type }}
+  {{- if .Values.service.admin.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.admin.loadBalancerIP }}
+  {{- end }}
+  ports:
+  - port: {{ .Values.service.admin.ports.http }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ include "pihole.name" . }}
+    statefulset.kubernetes.io/pod-name: {{ include "pihole.fullname" . }}-0
