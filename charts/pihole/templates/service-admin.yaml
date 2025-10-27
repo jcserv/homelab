@@ -10,9 +10,6 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.service.admin.type }}
-  {{- if eq .Values.service.admin.type "LoadBalancer" }}
-  loadBalancerClass: metallb
-  {{- end }}
   {{- if .Values.service.admin.loadBalancerIP }}
   loadBalancerIP: {{ .Values.service.admin.loadBalancerIP }}
   {{- end }}

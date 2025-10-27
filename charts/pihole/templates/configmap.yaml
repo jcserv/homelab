@@ -9,6 +9,9 @@ data:
 {{- range .Values.customDnsEntries }}
     {{ . }}
 {{- end }}
+  02-custom-dns.conf: |
+    # Load custom DNS entries from custom.list
+    addn-hosts=/etc/pihole/custom.list
 ---
 apiVersion: v1
 kind: ConfigMap

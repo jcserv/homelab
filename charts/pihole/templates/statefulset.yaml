@@ -30,6 +30,12 @@ spec:
                 - /bin/bash
                 - -c
                 - |
+                  # Create dnsmasq config for custom DNS entries
+                  echo "# Load custom DNS entries from custom.list" > /etc/dnsmasq.d/02-custom-dns.conf
+                  echo "addn-hosts=/etc/pihole/custom.list" >> /etc/dnsmasq.d/02-custom-dns.conf
+                  echo "# Prevent forwarding .home domains to upstream DNS (prevents Kubernetes DNS conflicts)" >> /etc/dnsmasq.d/02-custom-dns.conf
+                  echo "local=/home/" >> /etc/dnsmasq.d/02-custom-dns.conf
+
                   # Wait for gravity.db to be created by Pi-hole
                   for i in {1..60}; do
                     if [ -f /etc/pihole/gravity.db ]; then
@@ -51,6 +57,9 @@ spec:
                     echo "Adlists initialized, running gravity update..."
                     pihole -g
                   fi
+
+                  # Reload DNS to apply custom DNS entries
+                  pihole reloaddns
         ports:
         - containerPort: 53
           name: dns-tcp

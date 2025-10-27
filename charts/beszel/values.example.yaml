@@ -21,11 +21,22 @@ hub:
       size: 1Gi
 
   service:
-    type: LoadBalancer
+    type: ClusterIP # Changed to ClusterIP when using ingress
     port: 8090
-    loadBalancerIP: 10.0.0.104
+    # Uncomment for direct LoadBalancer access (without ingress)
+    # type: LoadBalancer
+    # loadBalancerIP: 10.0.0.104
+    # annotations:
+    #   metallb.universe.tf/allow-shared-ip: beszel
+
+  # Ingress configuration for HTTPS access via beszel.home
+  ingress:
+    enabled: true
+    className: nginx
+    host: beszel.home
+    tlsSecretName: wildcard-home-tls
     annotations:
-      metallb.universe.tf/allow-shared-ip: beszel
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
 agent:
   enabled: true

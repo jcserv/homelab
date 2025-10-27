@@ -1,0 +1,23 @@
+---
+# Wildcard certificate for *.home domain in default namespace
+# This allows all ingresses in default namespace to share the same wildcard cert
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-home-cert-default
+  namespace: default
+spec:
+  secretName: wildcard-home-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  commonName: "*.home"
+  dnsNames:
+    - "*.home"
+    - "home"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  issuerRef:
+    name: homelab-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

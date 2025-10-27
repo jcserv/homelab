@@ -42,13 +42,15 @@ service:
     ports:
       tcp: 53
       udp: 53
-      http: 80
+      http: 80 # Web UI accessible on all instances
   # Admin service - pihole-0 only, for making configuration changes
   admin:
-    type: LoadBalancer
-    loadBalancerIP: 10.0.0.203
-    annotations:
-      metallb.universe.tf/allow-shared-ip: pihole-admin
+    type: ClusterIP
+    # Uncomment for direct LoadBalancer access (without ingress)
+    # type: LoadBalancer
+    # loadBalancerIP: 10.0.0.203
+    # annotations:
+    #   metallb.universe.tf/allow-shared-ip: pihole-admin
     ports:
       http: 80
 
@@ -60,14 +62,24 @@ env:
   DNS2: "1.0.0.1" # Cloudflare upstream
   DNSMASQ_LISTENING: "all"
 
+# Ingress configuration for HTTPS access via pi.home
+ingress:
+  enabled: true
+  className: nginx
+  host: pi.home
+  tlsSecretName: wildcard-home-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
 # Custom DNS entries
 customDnsEntries:
-  - "10.0.0.100 nginx.home"
-  - "10.0.0.101 img.home"
-  - "10.0.0.102 homeassistant.home"
-  - "10.0.0.103 files.home"
-  - "10.0.0.201 beszel.home"
-  - "10.0.0.202 pi.home"
+  - "10.0.0.200 nginx.home"
+  - "10.0.0.200 img.home"
+  - "10.0.0.200 homeassistant.home"
+  - "10.0.0.200 files.home"
+  - "10.0.0.200 beszel.home"
+  - "10.0.0.200 pi.home"
+  - "10.0.0.200 dozzle.home"
 
 # Custom blocklist entries
 customBlocklist: |
@@ -79,6 +91,7 @@ customBlocklist: |
   appmetrica.yandex.ru
   business-api.tiktok.com
 
+# Adlists to bootstrap on initialization
 adlists:
   - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   - https://blocklistproject.github.io/Lists/ads.txt
