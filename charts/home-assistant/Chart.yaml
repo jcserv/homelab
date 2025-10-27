@@ -1,0 +1,15 @@
+apiVersion: v2
+name: home-assistant
+description: Open source home automation platform
+type: application
+version: 1.0.0
+appVersion: "2024.10"
+keywords:
+  - home-automation
+  - iot
+  - smart-home
+home: https://www.home-assistant.io
+sources:
+  - https://github.com/home-assistant/core
+maintainers:
+  - name: homelab
