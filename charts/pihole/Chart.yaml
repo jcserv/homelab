@@ -1,0 +1,15 @@
+apiVersion: v2
+name: pihole
+description: Network-wide ad blocking via your own Linux hardware
+type: application
+version: 1.0.0
+appVersion: "2024.07.0"
+keywords:
+  - dns
+  - adblock
+  - privacy
+home: https://pi-hole.net
+sources:
+  - https://github.com/pi-hole/pi-hole
+maintainers:
+  - name: homelab

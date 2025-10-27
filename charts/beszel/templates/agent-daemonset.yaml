@@ -1,4 +1,124 @@
 {{- if .Values.agent.enabled }}
+{{- if eq .Values.agent.deploymentType "PerNode" }}
+{{- range .Values.agent.nodes }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "beszel.fullname" $ }}-agent-{{ .name }}-secrets
+  labels:
+    app: {{ include "beszel.name" $ }}
+    component: agent
+    node: {{ .name }}
+type: Opaque
+stringData:
+  KEY: {{ .key | quote }}
+  TOKEN: {{ .token | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "beszel.fullname" $ }}-agent-{{ .name }}
+  labels:
+    app: {{ include "beszel.name" $ }}
+    component: agent
+    node: {{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "beszel.name" $ }}
+      component: agent
+      node: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "beszel.name" $ }}
+        component: agent
+        node: {{ .name }}
+    spec:
+      {{- if $.Values.agent.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      # Pin this agent to its specific node
+      nodeSelector:
+        kubernetes.io/hostname: {{ .hostname }}
+      containers:
+      - name: beszel-agent
+        image: "{{ $.Values.agent.image.repository }}:{{ $.Values.agent.image.tag }}"
+        imagePullPolicy: {{ $.Values.agent.image.pullPolicy }}
+        ports:
+        - containerPort: {{ $.Values.agent.port }}
+          {{- if $.Values.agent.hostNetwork }}
+          hostPort: {{ $.Values.agent.port }}
+          {{- end }}
+          name: agent
+        env:
+        - name: PORT
+          value: {{ $.Values.agent.port | quote }}
+        {{- if $.Values.agent.hubUrl }}
+        - name: HUB_URL
+          value: {{ $.Values.agent.hubUrl | quote }}
+        {{- end }}
+        - name: KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "beszel.fullname" $ }}-agent-{{ .name }}-secrets
+              key: KEY
+        - name: TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "beszel.fullname" $ }}-agent-{{ .name }}-secrets
+              key: TOKEN
+        volumeMounts:
+        {{- if $.Values.agent.volumes.dockerSocket }}
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+          readOnly: true
+        {{- end }}
+        {{- range $.Values.agent.volumes.extraFilesystems }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+          readOnly: true
+        {{- end }}
+        resources:
+          {{- toYaml $.Values.agent.resources | nindent 10 }}
+      volumes:
+      {{- if $.Values.agent.volumes.dockerSocket }}
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      {{- end }}
+      {{- range $.Values.agent.volumes.extraFilesystems }}
+      - name: {{ .name }}
+        hostPath:
+          path: {{ .hostPath }}
+          type: DirectoryOrCreate
+      {{- end }}
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
+        operator: Exists
+{{- end }}
+{{- else }}
+# Original DaemonSet configuration (if deploymentType is not PerNode)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "beszel.fullname" . }}-agent-secrets
+  labels:
+    app: {{ include "beszel.name" . }}
+    component: agent
+type: Opaque
+stringData:
+  KEY: {{ .Values.agent.auth.key | quote }}
+  TOKEN: {{ .Values.agent.auth.token | quote }}
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -81,4 +201,5 @@ spec:
       - effect: NoSchedule
         key: node-role.kubernetes.io/control-plane
         operator: Exists
+{{- end }}
 {{- end }}

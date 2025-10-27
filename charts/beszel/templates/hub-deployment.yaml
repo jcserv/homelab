@@ -18,6 +18,10 @@ spec:
         app: {{ include "beszel.name" . }}
         component: hub
     spec:
+      {{- with .Values.hub.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: beszel-hub
         image: "{{ .Values.hub.image.repository }}:{{ .Values.hub.image.tag }}"

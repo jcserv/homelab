@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pihole.fullname" . }}
+  labels:
+    app: {{ include "pihole.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "pihole.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "pihole.name" . }}
+    spec:
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: pihole
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 53
+          name: dns-udp
+          protocol: UDP
+        - containerPort: 80
+          name: http
+        env:
+        - name: TZ
+          value: {{ .Values.env.TZ }}
+        - name: WEBPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "pihole.fullname" . }}-secrets
+              key: WEBPASSWORD
+        - name: FTLCONF_LOCAL_IPV4
+          value: {{ .Values.env.FTLCONF_LOCAL_IPV4 }}
+        - name: DNS1
+          value: {{ .Values.env.DNS1 }}
+        - name: DNS2
+          value: {{ .Values.env.DNS2 }}
+        - name: DNSMASQ_LISTENING
+          value: {{ .Values.env.DNSMASQ_LISTENING }}
+        volumeMounts:
+        - name: config
+          mountPath: /etc/pihole
+        - name: dnsmasq
+          mountPath: /etc/dnsmasq.d
+        - name: custom-dns
+          mountPath: /etc/pihole/custom.list
+          subPath: custom.list
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: {{ include "pihole.fullname" . }}-config-pvc
+      - name: dnsmasq
+        persistentVolumeClaim:
+          claimName: {{ include "pihole.fullname" . }}-dnsmasq-pvc
+      - name: custom-dns
+        configMap:
+          name: {{ include "pihole.fullname" . }}-custom-dns

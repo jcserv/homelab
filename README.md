@@ -127,6 +127,9 @@ helm repo update
 helm install nfs-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
     -f charts/nfs-provisioner/values.yaml \
     -n kube-system
+
+# install nfs clients on the other pis
+sudo apt-get update && sudo apt-get install -y nfs-common
 ```
 
 #### 4. Deploy Services
@@ -325,8 +328,11 @@ helm upgrade nginx-proxy-manager ./charts/nginx-proxy-manager \
 ### Draining a Node
 
 ```bash
-kubectl drain <node-name> --ignore-daemonsets
-# Perform maintenance
+kubectl cordon pi5-01
+kubectl drain pi5-01 --ignore-daemonsets --delete-emptydir-data
+
+# do your stuff
+
 kubectl uncordon <node-name>
 ```
 

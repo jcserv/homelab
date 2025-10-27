@@ -1,0 +1,36 @@
+{{- if eq .Values.storage.type "nfs" }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "pihole.fullname" . }}-config-pv
+  labels:
+    app: {{ include "pihole.name" . }}
+    type: config
+spec:
+  capacity:
+    storage: {{ .Values.storage.config.size }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: {{ .Values.storage.nfs.server }}
+    path: {{ .Values.storage.nfs.path }}/pihole/config
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "pihole.fullname" . }}-dnsmasq-pv
+  labels:
+    app: {{ include "pihole.name" . }}
+    type: dnsmasq
+spec:
+  capacity:
+    storage: {{ .Values.storage.dnsmasq.size }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: {{ .Values.storage.nfs.server }}
+    path: {{ .Values.storage.nfs.path }}/pihole/dnsmasq
+{{- end }}
