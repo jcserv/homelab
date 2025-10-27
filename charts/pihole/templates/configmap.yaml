@@ -12,6 +12,8 @@ data:
   02-custom-dns.conf: |
     # Load custom DNS entries from custom.list
     addn-hosts=/etc/pihole/custom.list
+    # Return NODATA for IPv6 (AAAA) queries on .home domains to prevent ERR_ADDRESS_UNREACHABLE in Chromium
+    filter-AAAA=home
 ---
 apiVersion: v1
 kind: ConfigMap

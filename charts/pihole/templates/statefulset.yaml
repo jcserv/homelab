@@ -35,6 +35,8 @@ spec:
                   echo "addn-hosts=/etc/pihole/custom.list" >> /etc/dnsmasq.d/02-custom-dns.conf
                   echo "# Prevent forwarding .home domains to upstream DNS (prevents Kubernetes DNS conflicts)" >> /etc/dnsmasq.d/02-custom-dns.conf
                   echo "local=/home/" >> /etc/dnsmasq.d/02-custom-dns.conf
+                  echo "# Return NODATA for IPv6 (AAAA) queries on .home domains to prevent ERR_ADDRESS_UNREACHABLE in Chromium" >> /etc/dnsmasq.d/02-custom-dns.conf
+                  echo "filter-AAAA=home" >> /etc/dnsmasq.d/02-custom-dns.conf
 
                   # Wait for gravity.db to be created by Pi-hole
                   for i in {1..60}; do
