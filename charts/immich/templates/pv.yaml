@@ -1,0 +1,27 @@
+---
+# Library PV (HDD storage for photos/videos)
+# This is the ONLY static PV - postgres and ML cache use local-path dynamic provisioning
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "immich.fullname" . }}-library-pv
+  labels:
+    app: {{ include "immich.name" . }}
+    type: local-hdd
+spec:
+  capacity:
+    storage: {{ .Values.storage.library.size }}
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.library.storageClass | quote }}
+  hostPath:
+    path: {{ .Values.storage.library.hostPath }}
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage-type
+          operator: In
+          values:
+          - "hdd"

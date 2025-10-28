@@ -1,0 +1,15 @@
+apiVersion: v2
+name: immich
+description: Self-hosted photo and video backup solution
+type: application
+version: 1.0.0
+appVersion: "v1.117.0"
+keywords:
+  - photos
+  - backup
+  - self-hosted
+home: https://immich.app
+sources:
+  - https://github.com/immich-app/immich
+maintainers:
+  - name: homelab
