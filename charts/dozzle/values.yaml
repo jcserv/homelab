@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: amir20/dozzle
-  tag: "v8.11.0"
+  tag: "v8.14.6"
   pullPolicy: IfNotPresent
 
 # Resource limits
@@ -16,7 +16,7 @@ resources:
 
 # Service configuration
 service:
-  type: ClusterIP # Changed to ClusterIP when using ingress
+  type: ClusterIP
   port: 8080
   # Uncomment for direct LoadBalancer access (without ingress)
   # type: LoadBalancer
@@ -49,9 +49,7 @@ config:
   # Authentication
   auth:
     enabled: false
-    # Username for authentication (only simple auth supported in k8s mode)
     username: "admin"
-    # Password - should be overridden with sealed-secret in production
     password: "changeme"
 
   # Timezone
@@ -69,5 +67,14 @@ nodeSelector: {}
 # Tolerations for pod scheduling
 tolerations: []
 
-# Affinity rules
-affinity: {}
+# Affinity rules - prefer pi4-01 for load balancing
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - pi4-01

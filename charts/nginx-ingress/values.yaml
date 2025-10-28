@@ -21,9 +21,6 @@ ingress-nginx:
     # Enable SSL passthrough for services that handle their own TLS
     extraArgs:
       enable-ssl-passthrough: true
-
-    # Configure to use our wildcard certificate
-    extraArgs:
       default-ssl-certificate: "cert-manager/wildcard-home-tls"
 
     # Resource limits

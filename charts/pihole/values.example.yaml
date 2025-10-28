@@ -2,7 +2,7 @@ replicaCount: 3 # Three instances for high availability (synced via nebula-sync)
 
 image:
   repository: pihole/pihole
-  tag: "2025.06.2" # Pi-hole v6 required for nebula-sync
+  tag: "2025.10.2" # Pi-hole v6 required for nebula-sync
   pullPolicy: IfNotPresent
 
 # Spread pods across different hosts for high availability
@@ -42,25 +42,12 @@ service:
     ports:
       tcp: 53
       udp: 53
-      http: 80 # Web UI accessible on all instances
+      http: 80
   # Admin service - pihole-0 only, for making configuration changes
   admin:
     type: ClusterIP
-    # Uncomment for direct LoadBalancer access (without ingress)
-    # type: LoadBalancer
-    # loadBalancerIP: 10.0.0.203
-    # annotations:
-    #   metallb.universe.tf/allow-shared-ip: pihole-admin
     ports:
       http: 80
-
-env:
-  TZ: "America/New_York"
-  WEBPASSWORD: "changeme" # Override with sealed-secret
-  FTLCONF_LOCAL_IPV4: "10.0.0.202"
-  DNS1: "1.1.1.1" # Cloudflare upstream
-  DNS2: "1.0.0.1" # Cloudflare upstream
-  DNSMASQ_LISTENING: "all"
 
 # Ingress configuration for HTTPS access via pi.home
 ingress:
@@ -71,11 +58,23 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
+# Environment variables
+env:
+  TZ: "America/New_York"
+
+  # WEBPASSWORD - Admin password for Pi-hole web interface
+  # WEBPASSWORD: "changeme"
+
+  FTLCONF_LOCAL_IPV4: "10.0.0.202"
+  DNS1: "1.1.1.1" # Cloudflare upstream
+  DNS2: "1.0.0.1" # Cloudflare upstream
+  DNSMASQ_LISTENING: "all"
+
 # Custom DNS entries
 customDnsEntries:
   - "10.0.0.200 nginx.home"
   - "10.0.0.200 img.home"
-  - "10.0.0.200 homeassistant.home"
+  - "10.0.0.200 assistant.home"
   - "10.0.0.200 files.home"
   - "10.0.0.200 beszel.home"
   - "10.0.0.200 pi.home"
@@ -113,5 +112,8 @@ nebulaSync:
   schedule: "*/5 * * * *" # Every 5 minutes (reduced frequency to avoid timing issues)
   fullSync: true
   runGravity: false # Disabled to prevent connection issues during sync
-  primaryPassword: "changeme" # Should match env.WEBPASSWORD
-  replicaPassword: "changeme" # Should match env.WEBPASSWORD
+
+
+  # IMPORTANT: These passwords MUST match env.WEBPASSWORD for authentication
+  # primaryPassword: "changeme" # Should match env.WEBPASSWORD
+  # replicaPassword: "changeme" # Should match env.WEBPASSWORD

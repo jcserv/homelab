@@ -21,11 +21,11 @@ hub:
       size: 1Gi
 
   service:
-    type: ClusterIP # Changed to ClusterIP when using ingress
+    type: ClusterIP
     port: 8090
     # Uncomment for direct LoadBalancer access (without ingress)
     # type: LoadBalancer
-    # loadBalancerIP: 10.0.0.104
+    # loadBalancerIP: 10.0.0.201
     # annotations:
     #   metallb.universe.tf/allow-shared-ip: beszel
 
@@ -38,10 +38,22 @@ hub:
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
+  # Prefer pi4-01, but allow scheduling on other nodes if unavailable
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - pi4-01
+
 agent:
   enabled: true
-  # Deploy agent as DaemonSet on all nodes
-  deploymentType: DaemonSet
+  # Deploy individual agents per node for unique credentials
+  deploymentType: PerNode
 
   image:
     repository: henrygd/beszel-agent
@@ -60,24 +72,23 @@ agent:
   port: 45876
   hubUrl: "http://beszel:8090"
 
-  # WebSocket authentication (generated from hub UI)
-  auth:
-    # Hub's SSH public key (provided when adding systems in UI)
-    # After deploying, access the hub UI and add each system manually:
-    # 1. Go to Settings > Add System
-    # 2. Copy the SSH public key shown
-    # 3. Add each node with: Host=<node-ip>, Port=45876, Key=<hub-public-key>
-    # 4. Update this value with the hub's public key and redeploy
-    key: "ssh-ed25519 AAAA... (copy from hub UI after deployment)"
-    # Universal token from hub UI (Settings > Token)
-    token: "your-hub-token-here"
+  # Per-node agent configurations
+  nodes:
+    - name: pi4-01
+      hostname: pi4-01
+      # key: "ssh-ed25519 XYZ"
+      # token: "XYZ"
+    - name: pi4-02
+      hostname: pi4-02
+      # key: "ssh-ed25519 XYZ"
+      # token: "XYZ"
+    - name: pi5-01
+      hostname: pi5-01
+      # key: "ssh-ed25519 XYZ"
+      # token: "XYZ"
 
-  # Host network mode for accurate system metrics
   hostNetwork: true
 
-  # Mount docker socket and extra filesystems
   volumes:
     dockerSocket: false
     extraFilesystems: []
-    # Note: HDD storage should be accessed via NFS, not direct mounts
-    # DaemonSets run on all nodes and can't have per-node volumes

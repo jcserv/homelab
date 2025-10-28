@@ -2,19 +2,6 @@
 {{- if eq .Values.agent.deploymentType "PerNode" }}
 {{- range .Values.agent.nodes }}
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ include "beszel.fullname" $ }}-agent-{{ .name }}-secrets
-  labels:
-    app: {{ include "beszel.name" $ }}
-    component: agent
-    node: {{ .name }}
-type: Opaque
-stringData:
-  KEY: {{ .key | quote }}
-  TOKEN: {{ .token | quote }}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -107,18 +94,6 @@ spec:
 {{- end }}
 {{- else }}
 # Original DaemonSet configuration (if deploymentType is not PerNode)
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ include "beszel.fullname" . }}-agent-secrets
-  labels:
-    app: {{ include "beszel.name" . }}
-    component: agent
-type: Opaque
-stringData:
-  KEY: {{ .Values.agent.auth.key | quote }}
-  TOKEN: {{ .Values.agent.auth.token | quote }}
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/home-assistant/home-assistant
-  tag: "2025.10"
+  tag: "2025.10.3"
   pullPolicy: IfNotPresent
 
 # Node affinity - force to run on pi4-02 with Zigbee adapter
@@ -28,10 +28,10 @@ affinity:
 resources:
   requests:
     memory: "512Mi"
-    cpu: "250m"
+    cpu: "500m"
   limits:
     memory: "1Gi"
-    cpu: "1000m"
+    cpu: "2000m"
 
 # Storage configuration
 storage:
@@ -100,6 +100,8 @@ config:
     # Trust nginx proxy
     use_x_forwarded_for: true
     trusted_proxies:
-      - 10.42.0.0/16  # Pod network
-      - 10.43.0.0/16  # Service network
-      - 10.0.0.200    # Nginx ingress IP
+      - 10.42.0.0/16     # Pod network (nginx ingress pods run here)
+      - 10.43.0.0/16     # Service network
+      - 10.0.0.0/24      # Local network (for direct access)
+      - 127.0.0.1        # Localhost
+      - ::1              # IPv6 localhost
