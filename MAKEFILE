@@ -21,6 +21,7 @@ help:
 	@echo "Maintenance Commands:"
 	@echo "  make drain NODE=<name>  Drain a node for maintenance"
 	@echo "  make uncordon NODE=<name> Uncordon a node after maintenance"
+	@echo "  make kill-svclb         Remove svclb DaemonSets and pods"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make logs SERVICE=immich"
@@ -137,7 +138,7 @@ endif
 	@echo "Draining node $(NODE)..."
 	kubectl cordon $(NODE)
 	kubectl drain $(NODE) --ignore-daemonsets --delete-emptydir-data
-	@echo "✓ Node $(NODE) drained"
+	@echo "✓ Node $(NodeDE) drained"
 	@echo "  Uncordon with: make uncordon NODE=$(NODE)"
 
 uncordon:
@@ -150,3 +151,9 @@ endif
 	@echo "Uncordoning node $(NODE)..."
 	kubectl uncordon $(NODE)
 	@echo "✓ Node $(NODE) is now schedulable"
+
+kill-svclb:
+	@echo "Removing svclb DaemonSets and pods..."
+	@kubectl get daemonset -n kube-system -o name | grep svclb | xargs -r kubectl delete -n kube-system || echo "No svclb DaemonSets found"
+	@kubectl get pods -n kube-system -o name | grep svclb | xargs -r kubectl delete -n kube-system || echo "No svclb pods found"
+	@echo "✓ svclb resources removed"
