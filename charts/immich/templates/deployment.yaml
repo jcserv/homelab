@@ -92,8 +92,22 @@ spec:
         app: {{ include "immich.name" . }}
         component: machine-learning
     spec:
-      # SOFT PREFERENCE: Prefers Pi 4 nodes, but can run anywhere
-      {{- if not .Values.componentAffinity.machinelearning.required }}
+      # Node scheduling for ML workload
+      {{- if .Values.componentAffinity.machinelearning.required }}
+      nodeSelector:
+        {{- toYaml .Values.componentAffinity.machinelearning.nodeSelector | nindent 8 }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              {{- range $key, $value := .Values.componentAffinity.machinelearning.nodeSelector }}
+              - key: {{ $key }}
+                operator: In
+                values:
+                - {{ $value | quote }}
+              {{- end }}
+      {{- else }}
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

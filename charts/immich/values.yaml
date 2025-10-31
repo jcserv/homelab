@@ -19,13 +19,9 @@ componentAffinity:
       storage-type: "hdd"
 
   machinelearning:
-    required: false
-    preferredNodes:
-      - key: zigbee
-        weight: 100
-      - key: role
-        value: control-plane
-        weight: 80
+    required: true  # Require storage node for ML workload
+    nodeSelector:
+      storage: "true"  # MUST run on pi5-01
 
   postgres:
     required: false
