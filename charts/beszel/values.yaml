@@ -72,7 +72,20 @@ agent:
   port: 45876
   hubUrl: "http://beszel:8090"
 
-  # Per-node agent configurations
+  # Authentication method: "universal" or "individual"
+  # - universal: All agents use the same token and key (auto-registration)
+  # - individual: Each agent has unique credentials (manual setup required)
+  authMode: "universal"
+
+  # Universal token authentication (when authMode: "universal")
+  # Get token from beszel hub: /settings/tokens
+  # Get key from beszel hub: /api/beszel/getkey (requires authentication)
+  universal:
+    # Note: These should be stored in sealed secrets
+    # key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOFjX/xhD+Y/8JqYu/x6J2m/LRf0g2KodgRghSB5bALP"
+    # token: "be3719b6-9255-492d-a542-d64cac27a6b4"
+
+  # Per-node agent configurations (when authMode: "individual")
   nodes:
     - name: pi4-01
       hostname: pi4-01

@@ -48,6 +48,8 @@ spec:
         - name: HUB_URL
           value: {{ $.Values.agent.hubUrl | quote }}
         {{- end }}
+        - name: SYSTEM_NAME
+          value: {{ .name | quote }}
         - name: KEY
           valueFrom:
             secretKeyRef:
