@@ -12,6 +12,11 @@ cert-manager:
     leaderElection:
       namespace: cert-manager
 
+    # Pod disruption budgets for high availability
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+
   # Controller configuration
   controller:
     resources:
@@ -21,6 +26,16 @@ cert-manager:
       limits:
         cpu: 100m
         memory: 128Mi
+
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cert-manager
+            app.kubernetes.io/component: controller
 
   # Webhook configuration
   webhook:
@@ -32,6 +47,16 @@ cert-manager:
         cpu: 100m
         memory: 128Mi
 
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cert-manager
+            app.kubernetes.io/component: webhook
+
   # CA injector configuration
   cainjector:
     resources:
@@ -41,3 +66,13 @@ cert-manager:
       limits:
         cpu: 100m
         memory: 128Mi
+
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cert-manager
+            app.kubernetes.io/component: cainjector

@@ -13,6 +13,15 @@ sealed-secrets:
         cpu: 100m
         memory: 128Mi
 
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: sealed-secrets
+
   # Install in kube-system namespace by default
   # This can be overridden during installation with --namespace flag
   namespace: kube-system

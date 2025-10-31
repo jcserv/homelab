@@ -17,6 +17,16 @@ metallb:
         cpu: 50m
         memory: 64Mi
 
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: metallb
+            app.kubernetes.io/component: controller
+
   # Speaker configuration (L2 mode)
   speaker:
     enabled: true

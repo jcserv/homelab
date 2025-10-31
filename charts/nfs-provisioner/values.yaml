@@ -16,3 +16,12 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+# Pod topology spread for balanced distribution across nodes
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app: nfs-subdir-external-provisioner
