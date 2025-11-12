@@ -1,0 +1,15 @@
+apiVersion: v2
+name: filebrowser
+description: Web file browser with file management capabilities
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - files
+  - storage
+  - browser
+home: https://filebrowser.org
+sources:
+  - https://github.com/filebrowser/filebrowser
+maintainers:
+  - name: homelab

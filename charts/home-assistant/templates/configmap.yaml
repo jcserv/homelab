@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "home-assistant.fullname" . }}-config
+  labels:
+    app: {{ include "home-assistant.name" . }}
+data:
+  configuration.yaml: |
+    # Loads default set of integrations. Do not remove.
+    default_config:
+
+    # Load frontend themes from the themes folder
+    frontend:
+      themes: !include_dir_merge_named themes
+
+    automation: !include automations.yaml
+    script: !include scripts.yaml
+    scene: !include scenes.yaml
+
+    {{- with .Values.config }}
+    {{- if .http }}
+    http:
+      {{- if .http.use_x_forwarded_for }}
+      use_x_forwarded_for: {{ .http.use_x_forwarded_for }}
+      {{- end }}
+      {{- if .http.trusted_proxies }}
+      trusted_proxies:
+        {{- range .http.trusted_proxies }}
+        - {{ . }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- end }}

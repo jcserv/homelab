@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "filebrowser.fullname" . }}-files-pvc
+  labels:
+    app: {{ include "filebrowser.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.files.storageClass | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.files.size }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "filebrowser.fullname" . }}-database-pvc
+  labels:
+    app: {{ include "filebrowser.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.database.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.database.size }}

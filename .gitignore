@@ -1,0 +1,44 @@
+# Secrets
+*.env
+homelab-ca.crt
+secrets/
+values/*-secrets.yaml
+values/production-secrets.yaml
+
+# Sealed secrets (private keys only, sealed manifests are safe to commit)
+sealed-secrets-key.yaml
+
+# Local development
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Helm
+.helm/
+*.tgz
+charts/*/charts/
+charts/*/*.lock
+
+# Chart values with secrets (use values.example.yaml as template)
+# Only ignore values.yaml for charts that contain sensitive data
+charts/pihole/values.yaml
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Backup files
+*.bak
+*.backup
+
+# Terraform (if used later)
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# IDE
+.vscode/
+.idea/
+*.iml

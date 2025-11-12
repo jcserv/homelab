@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        release: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccountName }}
+      containers:
+        - name: dozzle
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # Required: Enable Kubernetes mode
+            - name: DOZZLE_MODE
+              value: {{ .Values.config.mode | quote }}
+            {{- if .Values.config.namespace }}
+            # Optional: Filter by namespace(s)
+            - name: DOZZLE_NAMESPACE
+              value: {{ .Values.config.namespace | quote }}
+            {{- end }}
+            {{- if .Values.config.filter }}
+            # Optional: Filter by pod labels
+            - name: DOZZLE_FILTER
+              value: {{ .Values.config.filter | quote }}
+            {{- end }}
+            {{- if .Values.config.auth.enabled }}
+            # Authentication
+            - name: DOZZLE_USERNAME
+              value: {{ .Values.config.auth.username | quote }}
+            - name: DOZZLE_PASSWORD
+              value: {{ .Values.config.auth.password | quote }}
+            {{- end }}
+            # Timezone
+            - name: TZ
+              value: {{ .Values.config.timezone | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

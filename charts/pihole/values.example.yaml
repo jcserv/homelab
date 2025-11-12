@@ -1,0 +1,119 @@
+replicaCount: 3 # Three instances for high availability (synced via nebula-sync)
+
+image:
+  repository: pihole/pihole
+  tag: "2025.10.2" # Pi-hole v6 required for nebula-sync
+  pullPolicy: IfNotPresent
+
+# Spread pods across different hosts for high availability
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - pihole
+        topologyKey: kubernetes.io/hostname
+
+resources:
+  requests:
+    memory: "200Mi"
+    cpu: "100m"
+  limits:
+    memory: "300Mi"
+    cpu: "500m"
+
+storage:
+  type: nfs-client # Using NFS for ReadWriteMany support (HA)
+  storageClass: nfs-client
+  config:
+    size: 1Gi
+  dnsmasq:
+    size: 500Mi
+
+service:
+  dns:
+    type: LoadBalancer
+    loadBalancerIP: 10.0.0.202
+    annotations:
+      metallb.universe.tf/allow-shared-ip: pihole-dns
+    ports:
+      tcp: 53
+      udp: 53
+      http: 80
+  # Admin service - pihole-0 only, for making configuration changes
+  admin:
+    type: ClusterIP
+    ports:
+      http: 80
+
+# Ingress configuration for HTTPS access via pi.home
+ingress:
+  enabled: true
+  className: nginx
+  host: pi.home
+  tlsSecretName: wildcard-home-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+# Environment variables
+env:
+  TZ: "America/New_York"
+
+  # WEBPASSWORD - Admin password for Pi-hole web interface
+  # WEBPASSWORD: "changeme"
+
+  FTLCONF_LOCAL_IPV4: "10.0.0.202"
+  DNS1: "1.1.1.1" # Cloudflare upstream
+  DNS2: "1.0.0.1" # Cloudflare upstream
+  DNSMASQ_LISTENING: "all"
+
+# Custom DNS entries
+customDnsEntries:
+  - "10.0.0.200 nginx.home"
+  - "10.0.0.200 img.home"
+  - "10.0.0.200 assistant.home"
+  - "10.0.0.200 files.home"
+  - "10.0.0.200 beszel.home"
+  - "10.0.0.200 pi.home"
+  - "10.0.0.200 dozzle.home"
+
+# Custom blocklist entries
+customBlocklist: |
+  # ------------------------------------[FILTERS]-------------------------------------
+  udcm.yahoo.com
+  api-adservices.apple.com
+  books-analytics-events.apple.com
+  grs.hicloud.com
+  appmetrica.yandex.ru
+  business-api.tiktok.com
+
+# Adlists to bootstrap on initialization
+adlists:
+  - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+  - https://blocklistproject.github.io/Lists/ads.txt
+  - https://blocklistproject.github.io/Lists/malware.txt
+  - https://blocklistproject.github.io/Lists/ransomware.txt
+  - https://blocklistproject.github.io/Lists/redirect.txt
+  - https://blocklistproject.github.io/Lists/phishing.txt
+  - https://blocklistproject.github.io/Lists/abuse.txt
+  - https://blocklistproject.github.io/Lists/fraud.txt
+  - https://blocklistproject.github.io/Lists/gambling.txt
+  - https://blocklistproject.github.io/Lists/scam.txt
+  - https://blocklistproject.github.io/Lists/tracking.txt
+  - file:///var/www/html/pihole-blocklist.txt
+
+# nebula-sync configuration for syncing between instances
+nebulaSync:
+  enabled: true
+  image: ghcr.io/lovelaze/nebula-sync:latest
+  schedule: "*/5 * * * *" # Every 5 minutes (reduced frequency to avoid timing issues)
+  fullSync: true
+  runGravity: false # Disabled to prevent connection issues during sync
+
+
+  # IMPORTANT: These passwords MUST match env.WEBPASSWORD for authentication
+  # primaryPassword: "changeme" # Should match env.WEBPASSWORD
+  # replicaPassword: "changeme" # Should match env.WEBPASSWORD

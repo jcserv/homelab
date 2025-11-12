@@ -1,0 +1,155 @@
+.PHONY: help setup-repos build-deps install-infra deploy-all install-all status logs backup drain uncordon seal-secret upgrade-service
+
+# Default target
+help:
+	@echo "Homelab K8s Makefile"
+	@echo ""
+	@echo "Setup Commands:"
+	@echo "  make setup-repos        Add all required Helm repositories"
+	@echo "  make build-deps         Build chart dependencies"
+	@echo "  make install-infra      Install infrastructure (MetalLB, cert-manager, etc.)"
+	@echo "  make deploy-all   		 Deploy all application services"
+	@echo "  make install-all        Install everything (infra + services)"
+	@echo ""
+	@echo "Management Commands:"
+	@echo "  make status             Show cluster status (nodes, pods, services)"
+	@echo "  make logs SERVICE=<name> View logs for a service"
+	@echo "  make upgrade SERVICE=<name> Upgrade a service"
+	@echo "  make backup             Trigger manual backup job"
+	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
+	@echo ""
+	@echo "Maintenance Commands:"
+	@echo "  make drain NODE=<name>  Drain a node for maintenance"
+	@echo "  make uncordon NODE=<name> Uncordon a node after maintenance"
+	@echo "  make kill-svclb         Remove svclb DaemonSets and pods"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make logs SERVICE=immich"
+	@echo "  make upgrade SERVICE=pihole"
+	@echo "  make drain NODE=pi5-01"
+	@echo "  kubectl create secret generic test --from-literal=key=val --dry-run=client -o yaml | make seal-secret CHART=immich SECRET=test"
+
+# Setup Commands
+setup-repos:
+	@echo "Adding Helm repositories..."
+	helm repo add metallb https://metallb.github.io/metallb
+	helm repo add jetstack https://charts.jetstack.io
+	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+	helm repo update
+	@echo "✓ Repositories added and updated"
+
+build-deps:
+	@echo "Building chart dependencies..."
+	helm dependency build ./charts/metallb
+	helm dependency build ./charts/cert-manager
+	helm dependency build ./charts/sealed-secrets
+	@echo "✓ Dependencies built"
+
+install-infra:
+	@echo "Installing infrastructure components..."
+	helm install metallb ./charts/metallb -n metallb-system --create-namespace
+	helm install cert-manager ./charts/cert-manager -n cert-manager --create-namespace
+	helm install sealed-secrets ./charts/sealed-secrets -n kube-system
+	helm install nginx-ingress ./charts/nginx-ingress -n default
+	@echo "✓ Infrastructure installed"
+
+deploy-all:
+	@echo "Installing application services..."
+	helm install pihole ./charts/pihole
+	helm install immich ./charts/immich
+	helm install home-assistant ./charts/home-assistant
+	helm install filebrowser ./charts/filebrowser
+	helm install beszel ./charts/beszel
+	helm install dozzle ./charts/dozzle
+	helm install restic-backup ./charts/restic-backup
+	@echo "✓ Services installed"
+
+install-all: setup-repos build-deps install-infra deploy-all
+	@echo ""
+	@echo "✓ Complete installation finished!"
+	@echo "  Configure your router DNS to 10.0.0.53 for .home domain resolution"
+
+# Management Commands
+status:
+	@echo "=== Cluster Nodes ==="
+	@kubectl get nodes
+	@echo ""
+	@echo "=== All Pods ==="
+	@kubectl get pods --all-namespaces
+	@echo ""
+	@echo "=== Services with LoadBalancers ==="
+	@kubectl get svc --all-namespaces | grep LoadBalancer || echo "No LoadBalancer services found"
+	@echo ""
+	@echo "=== Persistent Volume Claims ==="
+	@kubectl get pvc --all-namespaces
+
+logs:
+ifndef SERVICE
+	@echo "Error: SERVICE parameter required"
+	@echo "Usage: make logs SERVICE=<service-name>"
+	@echo "Example: make logs SERVICE=immich"
+	@exit 1
+endif
+	@echo "Showing logs for $(SERVICE)..."
+	kubectl logs -l app=$(SERVICE) --tail=100 -f
+
+upgrade:
+ifndef SERVICE
+	@echo "Error: SERVICE parameter required"
+	@echo "Usage: make upgrade SERVICE=<service-name>"
+	@echo "Example: make upgrade SERVICE=immich"
+	@exit 1
+endif
+	@echo "Upgrading $(SERVICE)..."
+	helm upgrade $(SERVICE) ./charts/$(SERVICE)
+	@echo "✓ $(SERVICE) upgraded"
+
+backup:
+	@echo "Creating manual backup job..."
+	kubectl create job --from=cronjob/restic-backup manual-backup-$(shell date +%Y%m%d-%H%M%S)
+	@echo "✓ Backup job created"
+	@echo "  Monitor with: kubectl logs -l app=restic-backup -f"
+
+seal-secret:
+ifndef CHART
+	@echo "Error: CHART parameter required"
+	@echo "Usage: kubectl create secret ... --dry-run=client -o yaml | make seal-secret CHART=<chart> SECRET=<name>"
+	@exit 1
+endif
+ifndef SECRET
+	@echo "Error: SECRET parameter required"
+	@echo "Usage: kubectl create secret ... --dry-run=client -o yaml | make seal-secret CHART=<chart> SECRET=<name>"
+	@exit 1
+endif
+	@./scripts/seal-secret.sh $(CHART) $(SECRET)
+
+# Maintenance Commands
+drain:
+ifndef NODE
+	@echo "Error: NODE parameter required"
+	@echo "Usage: make drain NODE=<node-name>"
+	@echo "Example: make drain NODE=pi5-01"
+	@exit 1
+endif
+	@echo "Draining node $(NODE)..."
+	kubectl cordon $(NODE)
+	kubectl drain $(NODE) --ignore-daemonsets --delete-emptydir-data
+	@echo "✓ Node $(NodeDE) drained"
+	@echo "  Uncordon with: make uncordon NODE=$(NODE)"
+
+uncordon:
+ifndef NODE
+	@echo "Error: NODE parameter required"
+	@echo "Usage: make uncordon NODE=<node-name>"
+	@echo "Example: make uncordon NODE=pi5-01"
+	@exit 1
+endif
+	@echo "Uncordoning node $(NODE)..."
+	kubectl uncordon $(NODE)
+	@echo "✓ Node $(NODE) is now schedulable"
+
+kill-svclb:
+	@echo "Removing svclb DaemonSets and pods..."
+	@kubectl get daemonset -n kube-system -o name | grep svclb | xargs -r kubectl delete -n kube-system || echo "No svclb DaemonSets found"
+	@kubectl get pods -n kube-system -o name | grep svclb | xargs -r kubectl delete -n kube-system || echo "No svclb pods found"
+	@echo "✓ svclb resources removed"

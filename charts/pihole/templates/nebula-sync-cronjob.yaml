@@ -1,0 +1,48 @@
+{{- if .Values.nebulaSync.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "pihole.fullname" . }}-nebula-sync
+  labels:
+    app: {{ include "pihole.name" . }}
+spec:
+  schedule: {{ .Values.nebulaSync.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ include "pihole.name" . }}-nebula-sync
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: nebula-sync
+            image: {{ .Values.nebulaSync.image }}
+            env:
+            - name: PRIMARY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pihole.fullname" . }}-nebula-sync
+                  key: PRIMARY
+            - name: REPLICAS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pihole.fullname" . }}-nebula-sync
+                  key: REPLICAS
+            - name: FULL_SYNC
+              value: {{ .Values.nebulaSync.fullSync | quote }}
+            - name: RUN_GRAVITY
+              value: {{ .Values.nebulaSync.runGravity | quote }}
+            - name: TZ
+              value: {{ .Values.env.TZ }}
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "50m"
+              limits:
+                memory: "128Mi"
+                cpu: "200m"
+{{- end }}

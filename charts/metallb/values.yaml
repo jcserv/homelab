@@ -1,0 +1,66 @@
+# MetalLB Configuration
+# This chart wraps the official MetalLB Helm chart and adds custom IP pool configuration
+
+# Pass-through values to the official MetalLB chart
+metallb:
+  # Controller configuration
+  controller:
+    enabled: true
+    image:
+      repository: quay.io/metallb/controller
+      tag: v0.15.2
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: metallb
+            app.kubernetes.io/component: controller
+
+  # Speaker configuration (L2 mode)
+  speaker:
+    enabled: true
+    image:
+      repository: quay.io/metallb/speaker
+      tag: v0.15.2
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    # Tolerations to run on all nodes including control plane
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+
+# Custom IP Address Pool Configuration
+ipAddressPool:
+  name: homelab-pool
+  addresses:
+    # IP range for LoadBalancer services
+    # Adjust this range based on your network DHCP configuration
+    - 10.0.0.200-10.0.0.210
+  autoAssign: true
+
+# L2 Advertisement Configuration
+l2Advertisement:
+  name: homelab-l2
+  # Advertise all IP pools via L2
+  ipAddressPools:
+    - homelab-pool

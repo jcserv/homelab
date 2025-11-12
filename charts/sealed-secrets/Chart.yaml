@@ -1,0 +1,11 @@
+apiVersion: v2
+name: sealed-secrets
+description: Sealed Secrets for GitOps-friendly secret management in homelab Kubernetes cluster
+type: application
+version: 1.0.0
+appVersion: "v0.27.1"
+
+dependencies:
+  - name: sealed-secrets
+    version: 2.16.2
+    repository: https://bitnami-labs.github.io/sealed-secrets

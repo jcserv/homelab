@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pihole.fullname" . }}-dns
+  labels:
+    app: {{ include "pihole.name" . }}
+  {{- with .Values.service.dns.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.dns.type }}
+  {{- if .Values.service.dns.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.dns.loadBalancerIP }}
+  {{- end }}
+  ports:
+  - port: {{ .Values.service.dns.ports.tcp }}
+    targetPort: dns-tcp
+    protocol: TCP
+    name: dns-tcp
+  - port: {{ .Values.service.dns.ports.udp }}
+    targetPort: dns-udp
+    protocol: UDP
+    name: dns-udp
+  - port: {{ .Values.service.dns.ports.http }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ include "pihole.name" . }}
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pihole.fullname" . }}-headless
+  labels:
+    app: {{ include "pihole.name" . }}
+spec:
+  clusterIP: None
+  ports:
+  - port: 53
+    name: dns-tcp
+    protocol: TCP
+  - port: 53
+    name: dns-udp
+    protocol: UDP
+  - port: 80
+    name: http
+    protocol: TCP
+  selector:
+    app: {{ include "pihole.name" . }}

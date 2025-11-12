@@ -1,0 +1,65 @@
+# Restic backup CronJob configuration
+schedule: "0 2 1 * *" # Monthly at 2 AM on the 1st
+
+image:
+  repository: restic/restic
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Node affinity - run on storage node with HDD to access backup data
+nodeSelector:
+  storage-type: "hdd"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: storage-type
+              operator: In
+              values:
+                - "hdd"
+
+# Resource limits
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "500m"
+  limits:
+    memory: "512Mi"
+    cpu: "2000m"
+
+# Backup source path
+backup:
+  sourcePath: /mnt/hd1
+  tag: raspberry-pi
+  excludePatterns:
+    - /mnt/hd1/lost+found
+
+# Retention policy
+retention:
+  keepLast: 3
+  keepDaily: 7
+  keepWeekly: 4
+  keepMonthly: 6
+
+# Backblaze B2 configuration
+b2:
+  existingSecret: restic-b2-secrets
+
+  #accessKeyId: "xyz"
+  #secretAccessKey: "xyz"
+  #repository: "xyz"
+  #resticPassword: "xyz"
+
+# Slack/webhook notifications (optional)
+notifications:
+  enabled: false
+  webhookUrl: ""
+
+# Job settings
+jobSettings:
+  backoffLimit: 3
+  restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3

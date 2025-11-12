@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "filebrowser.fullname" . }}
+  labels:
+    app: {{ include "filebrowser.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ include "filebrowser.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "filebrowser.name" . }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: filebrowser
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - name: files
+          mountPath: /srv
+        - name: database
+          mountPath: /database
+        - name: config
+          mountPath: /.filebrowser.json
+          subPath: .filebrowser.json
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: files
+        persistentVolumeClaim:
+          claimName: {{ include "filebrowser.fullname" . }}-files-pvc
+      - name: database
+        persistentVolumeClaim:
+          claimName: {{ include "filebrowser.fullname" . }}-database-pvc
+      - name: config
+        configMap:
+          name: {{ include "filebrowser.fullname" . }}-config

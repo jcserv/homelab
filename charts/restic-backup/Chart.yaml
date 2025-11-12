@@ -1,0 +1,15 @@
+apiVersion: v2
+name: restic-backup
+description: Automated backups to Backblaze B2 using Restic
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - backup
+  - restic
+  - backblaze
+home: https://restic.net
+sources:
+  - https://github.com/restic/restic
+maintainers:
+  - name: homelab

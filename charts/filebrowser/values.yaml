@@ -1,0 +1,72 @@
+replicaCount: 1
+
+image:
+  repository: filebrowser/filebrowser
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Node affinity - force to run on storage node (Pi 5) with HDD
+nodeSelector:
+  storage-type: "hdd"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: storage-type
+          operator: In
+          values:
+          - "hdd"
+
+# Resource limits
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "100Mi"
+    cpu: "200m"
+
+# Storage configuration
+storage:
+  files:
+    storageClass: ""  # Use empty string for hostPath PVs
+    size: 100Gi
+    hostPath: /mnt/hd1/Files
+  database:
+    storageClass: local-path  # K3s default dynamic provisioner
+    size: 100Mi
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 80
+  loadBalancerIP: 10.0.0.201
+  annotations:
+    metallb.universe.tf/allow-shared-ip: filebrowser
+
+# FileBrowser configuration
+config:
+  port: 80
+  baseURL: ""
+  address: "0.0.0.0"
+  log: "stdout"
+  database: "/database/filebrowser.db"
+  root: "/srv"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: files.home
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - files.home
+      secretName: wildcard-home-tls
