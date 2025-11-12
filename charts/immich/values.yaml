@@ -1,0 +1,149 @@
+replicaCount: 1
+
+image:
+  server:
+    repository: ghcr.io/immich-app/immich-server
+    tag: "v2.1.0"
+    pullPolicy: IfNotPresent
+  machinelearning:
+    repository: ghcr.io/immich-app/immich-machine-learning
+    tag: "v2.1.0"
+    pullPolicy: IfNotPresent
+
+# Component-specific node affinity
+componentAffinity:
+  # Server MUST run on storage node
+  server:
+    required: true
+    nodeSelector:
+      storage-type: "hdd"
+
+  machinelearning:
+    required: true  # Require storage node for ML workload
+    nodeSelector:
+      storage: "true"  # MUST run on pi5-01
+
+  postgres:
+    required: false
+    preferredNodes:
+      - key: storage
+        weight: 100
+
+  redis:
+    required: false
+    preferredNodes:
+      - key: kubernetes.io/hostname
+        value: pi4-01
+        weight: 100
+
+resources:
+  server:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  machinelearning:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+storage:
+  # Media library (photos/videos) - HDD hostPath
+  library:
+    storageClass: "" # Use empty string for hostPath PVs
+    size: 500Gi
+    hostPath: /mnt/hd1/Library
+
+  # Database - local-path provisioner (dynamic)
+  database:
+    storageClass: local-path
+    size: 20Gi
+
+  # ML model cache - local-path provisioner (dynamic)
+  modelCache:
+    storageClass: local-path
+    size: 10Gi
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  image:
+    repository: tensorchord/pgvecto-rs
+    tag: pg14-v0.2.0
+  auth:
+    database: immich
+    username: postgres
+    existingSecret: immich-secrets
+    secretKeys:
+      adminPasswordKey: DB_PASSWORD
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  persistence:
+    existingClaim: immich-postgres-pvc
+
+# Redis configuration
+redis:
+  enabled: true
+  image:
+    repository: valkey/valkey
+    tag: "9.0.0-alpine"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "200Mi"
+      cpu: "200m"
+  persistence:
+    enabled: false
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 2283
+  loadBalancerIP: 10.0.0.204
+  annotations:
+    metallb.universe.tf/allow-shared-ip: immich
+
+# Environment variables
+env:
+  DB_HOSTNAME: immich-postgres
+  DB_PORT: "5432"
+  DB_DATABASE_NAME: immich
+  DB_USERNAME: postgres
+  REDIS_HOSTNAME: immich-redis
+  REDIS_PORT: "6379"
+  IMMICH_WEB_URL: https://img.home
+  IMMICH_SERVER_URL: http://immich:2283
+
+# Secrets Configuration
+secrets:
+  DB_PASSWORD: "changeme" # PostgreSQL password for immich database
+  JWT_SECRET: "changeme" # JWT signing secret for authentication tokens
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  hosts:
+    - host: img.home
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - img.home
+      secretName: wildcard-home-tls

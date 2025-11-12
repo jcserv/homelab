@@ -1,0 +1,83 @@
+---
+# Immich Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "immich.fullname" . }}
+  labels:
+    app: {{ include "immich.name" . }}
+    component: server
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ include "immich.name" . }}
+    component: server
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "immich.fullname" . }}-postgres
+  labels:
+    app: {{ include "immich.name" . }}
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    protocol: TCP
+    name: postgres
+  selector:
+    app: {{ include "immich.name" . }}
+    component: database
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "immich.fullname" . }}-redis
+  labels:
+    app: {{ include "immich.name" . }}
+    component: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: redis
+    protocol: TCP
+    name: redis
+  selector:
+    app: {{ include "immich.name" . }}
+    component: redis
+---
+# Machine Learning Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "immich.fullname" . }}-ml
+  labels:
+    app: {{ include "immich.name" . }}
+    component: machine-learning
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3003
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ include "immich.name" . }}
+    component: machine-learning

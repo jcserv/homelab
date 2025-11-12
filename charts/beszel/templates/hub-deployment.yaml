@@ -1,0 +1,41 @@
+{{- if .Values.hub.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "beszel.fullname" . }}-hub
+  labels:
+    app: {{ include "beszel.name" . }}
+    component: hub
+spec:
+  replicas: {{ .Values.hub.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "beszel.name" . }}
+      component: hub
+  template:
+    metadata:
+      labels:
+        app: {{ include "beszel.name" . }}
+        component: hub
+    spec:
+      {{- with .Values.hub.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: beszel-hub
+        image: "{{ .Values.hub.image.repository }}:{{ .Values.hub.image.tag }}"
+        imagePullPolicy: {{ .Values.hub.image.pullPolicy }}
+        ports:
+        - containerPort: 8090
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /beszel_data
+        resources:
+          {{- toYaml .Values.hub.resources | nindent 10 }}
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "beszel.fullname" . }}-hub-data-pvc
+{{- end }}

@@ -1,0 +1,108 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "restic-backup.fullname" . }}
+  labels:
+    app: {{ include "restic-backup.name" . }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.jobSettings.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.jobSettings.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.jobSettings.backoffLimit }}
+      template:
+        metadata:
+          labels:
+            app: {{ include "restic-backup.name" . }}
+        spec:
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          restartPolicy: {{ .Values.jobSettings.restartPolicy }}
+          containers:
+          - name: restic
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting Restic backup at $(date)"
+
+              # Initialize repository if it doesn't exist
+              echo "Checking if repository is initialized..."
+              if ! restic snapshots > /dev/null 2>&1; then
+                echo "Repository not initialized. Initializing..."
+                restic init
+                echo "Repository initialized successfully"
+              else
+                echo "Repository already initialized"
+              fi
+
+              # Run backup with excludes
+              echo "Running backup..."
+              restic backup {{ .Values.backup.sourcePath }} \
+                --tag {{ .Values.backup.tag }} \
+                --tag "$(hostname)" \
+                {{- range .Values.backup.excludePatterns }}
+                --exclude {{ . | quote }} \
+                {{- end }}
+                --verbose
+
+              # Cleanup old snapshots and prune
+              echo "Cleaning up old snapshots..."
+              restic forget \
+                --keep-last {{ .Values.retention.keepLast }} \
+                --keep-daily {{ .Values.retention.keepDaily }} \
+                --keep-weekly {{ .Values.retention.keepWeekly }} \
+                --keep-monthly {{ .Values.retention.keepMonthly }} \
+                --prune \
+                --verbose
+
+              echo "Backup completed successfully at $(date)"
+
+              {{- if .Values.notifications.enabled }}
+              # Send success notification
+              curl -X POST {{ .Values.notifications.webhookUrl }} \
+                -H 'Content-Type: application/json' \
+                -d '{"text":"Restic backup completed successfully"}'
+              {{- end }}
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2.existingSecret }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2.existingSecret }}
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: RESTIC_REPOSITORY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2.existingSecret }}
+                  key: RESTIC_REPOSITORY
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2.existingSecret }}
+                  key: RESTIC_PASSWORD
+            volumeMounts:
+            - name: backup-source
+              mountPath: {{ .Values.backup.sourcePath }}
+              readOnly: true
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+          volumes:
+          - name: backup-source
+            hostPath:
+              path: {{ .Values.backup.sourcePath }}
+              type: Directory

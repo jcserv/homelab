@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "home-assistant.fullname" . }}
+  labels:
+    app: {{ include "home-assistant.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate  # Required for hostPath volumes
+  selector:
+    matchLabels:
+      app: {{ include "home-assistant.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "home-assistant.name" . }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- end }}
+      initContainers:
+      - name: config-init
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          # Copy base configuration if it doesn't exist
+          if [ ! -f /config/configuration.yaml ]; then
+            echo "Copying initial configuration.yaml..."
+            cp /config-template/configuration.yaml /config/configuration.yaml
+          else
+            echo "configuration.yaml already exists, skipping initial copy"
+            # Update only the http section while preserving other settings
+            # This is a basic approach - for production you might want a more sophisticated merge
+            echo "Note: To update http settings, delete configuration.yaml and restart the pod"
+          fi
+          # Ensure other required files exist
+          touch /config/automations.yaml /config/scripts.yaml /config/scenes.yaml
+          mkdir -p /config/themes
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: config-template
+          mountPath: /config-template
+      containers:
+      - name: home-assistant
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.privileged }}
+        securityContext:
+          privileged: true
+          {{- with .Values.securityContext.capabilities }}
+          capabilities:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- else if .Values.securityContext.capabilities }}
+        securityContext:
+          capabilities:
+            {{- toYaml .Values.securityContext.capabilities | nindent 12 }}
+        {{- end }}
+        ports:
+        - containerPort: 8123
+          name: http
+          {{- if not .Values.hostNetwork }}
+          protocol: TCP
+          {{- end }}
+        env:
+        - name: TZ
+          value: {{ .Values.env.TZ }}
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: dbus
+          mountPath: /run/dbus
+          readOnly: true
+        {{- if .Values.usb.enabled }}
+        - name: usb-device
+          mountPath: {{ .Values.usb.devicePath }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: {{ include "home-assistant.fullname" . }}-config-pvc
+      - name: config-template
+        configMap:
+          name: {{ include "home-assistant.fullname" . }}-config
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: dbus
+        hostPath:
+          path: /run/dbus
+          type: Directory
+      {{- if .Values.usb.enabled }}
+      - name: usb-device
+        hostPath:
+          path: {{ .Values.usb.devicePath }}
+          type: CharDevice
+      {{- end }}

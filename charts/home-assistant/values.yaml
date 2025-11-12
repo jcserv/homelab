@@ -1,0 +1,107 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/home-assistant/home-assistant
+  tag: "2025.10.3"
+  pullPolicy: IfNotPresent
+
+# Node affinity - force to run on pi4-02 with Zigbee adapter
+nodeSelector:
+  kubernetes.io/hostname: pi4-02
+  zigbee: "true"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - pi4-02
+        - key: zigbee
+          operator: In
+          values:
+          - "true"
+
+# Resource limits
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "2000m"
+
+# Storage configuration
+storage:
+  config:
+    storageClass: local-path
+    size: 5Gi
+
+# USB device passthrough for Zigbee adapter
+# IMPORTANT: Update devicePath with your actual Zigbee device path
+# Find it with: ssh to pi4-02 and run: ls -la /dev/serial/by-id/
+# Common paths:
+# - /dev/ttyUSB0 or /dev/ttyUSB1
+# - /dev/ttyACM0 or /dev/ttyACM1
+# - /dev/serial/by-id/usb-<your-device-id>
+usb:
+  enabled: true
+  devicePath: /dev/ttyUSB0  # UPDATE THIS with your actual device path
+
+# Host network mode (required for Bluetooth and mDNS discovery)
+# IMPORTANT: When hostNetwork is enabled, the pod uses the host's network namespace
+# This means it can access Bluetooth adapters directly
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+# Privileged mode (required for USB devices)
+privileged: true
+
+# Additional capabilities for USB devices, networking, and Bluetooth
+securityContext:
+  capabilities:
+    add:
+    - NET_ADMIN
+    - NET_RAW
+    - SYS_ADMIN  # Required for Bluetooth adapter access
+    - SYS_RAWIO  # Required for raw I/O operations
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 8123
+  loadBalancerIP: 10.0.0.203
+
+# Ingress configuration for HTTPS access
+ingress:
+  enabled: true
+  className: nginx
+  host: assistant.home
+  tlsSecretName: wildcard-home-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # WebSocket support for Home Assistant
+    nginx.ingress.kubernetes.io/websocket-services: "home-assistant"
+    # Increase timeout for long-running connections
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+
+# Environment variables
+env:
+  TZ: America/New_York
+
+# Home Assistant configuration
+# This will be mounted as /config/configuration.yaml
+config:
+  http:
+    # Trust nginx proxy
+    use_x_forwarded_for: true
+    trusted_proxies:
+      - 10.42.0.0/16     # Pod network (nginx ingress pods run here)
+      - 10.43.0.0/16     # Service network
+      - 10.0.0.0/24      # Local network (for direct access)
+      - 127.0.0.1        # Localhost
+      - ::1              # IPv6 localhost

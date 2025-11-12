@@ -1,0 +1,45 @@
+---
+# Library PVC (HDD storage for photos/videos via hostPath)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "immich.fullname" . }}-library-pvc
+  labels:
+    app: {{ include "immich.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.library.storageClass | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.library.size }}
+---
+# PostgreSQL PVC (local-path dynamic provisioning)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "immich.fullname" . }}-postgres-pvc
+  labels:
+    app: {{ include "immich.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.database.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.database.size }}
+---
+# ML Cache PVC (local-path dynamic provisioning)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "immich.fullname" . }}-ml-cache-pvc
+  labels:
+    app: {{ include "immich.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.modelCache.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.modelCache.size }}

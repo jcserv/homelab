@@ -1,0 +1,259 @@
+---
+# Immich Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "immich.fullname" . }}-server
+  labels:
+    app: {{ include "immich.name" . }}
+    component: server
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "immich.name" . }}
+      component: server
+  template:
+    metadata:
+      labels:
+        app: {{ include "immich.name" . }}
+        component: server
+    spec:
+      # HARD REQUIREMENT: Must run on storage node (needs HDD access)
+      {{- if .Values.componentAffinity.server.required }}
+      nodeSelector:
+        storage-type: "hdd"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: storage-type
+                operator: In
+                values:
+                - "hdd"
+      {{- end }}
+      containers:
+      - name: immich-server
+        image: "{{ .Values.image.server.repository }}:{{ .Values.image.server.tag }}"
+        imagePullPolicy: {{ .Values.image.server.pullPolicy }}
+        ports:
+        - containerPort: 2283
+          name: http
+        env:
+        - name: DB_HOSTNAME
+          value: {{ .Values.env.DB_HOSTNAME }}
+        - name: DB_PORT
+          value: {{ .Values.env.DB_PORT | quote }}
+        - name: DB_DATABASE_NAME
+          value: {{ .Values.env.DB_DATABASE_NAME }}
+        - name: DB_USERNAME
+          value: {{ .Values.env.DB_USERNAME }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "immich.fullname" . }}-secrets
+              key: DB_PASSWORD
+        - name: REDIS_HOSTNAME
+          value: {{ .Values.env.REDIS_HOSTNAME }}
+        - name: REDIS_PORT
+          value: {{ .Values.env.REDIS_PORT | quote }}
+        - name: IMMICH_PORT
+          value: "2283"
+        - name: IMMICH_MACHINE_LEARNING_URL
+          value: "http://{{ include "immich.fullname" . }}-ml:3003"
+        volumeMounts:
+        - name: library
+          mountPath: /usr/src/app/upload
+        resources:
+          {{- toYaml .Values.resources.server | nindent 10 }}
+      volumes:
+      - name: library
+        persistentVolumeClaim:
+          claimName: {{ include "immich.fullname" . }}-library-pvc
+---
+# Immich Machine Learning Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "immich.fullname" . }}-ml
+  labels:
+    app: {{ include "immich.name" . }}
+    component: machine-learning
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "immich.name" . }}
+      component: machine-learning
+  template:
+    metadata:
+      labels:
+        app: {{ include "immich.name" . }}
+        component: machine-learning
+    spec:
+      # Node scheduling for ML workload
+      {{- if .Values.componentAffinity.machinelearning.required }}
+      nodeSelector:
+        {{- toYaml .Values.componentAffinity.machinelearning.nodeSelector | nindent 8 }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              {{- range $key, $value := .Values.componentAffinity.machinelearning.nodeSelector }}
+              - key: {{ $key }}
+                operator: In
+                values:
+                - {{ $value | quote }}
+              {{- end }}
+      {{- else }}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          {{- range .Values.componentAffinity.machinelearning.preferredNodes }}
+          - weight: {{ .weight }}
+            preference:
+              matchExpressions:
+              - key: {{ .key }}
+                operator: In
+                values:
+                {{- if .value }}
+                - {{ .value | quote }}
+                {{- else }}
+                - "true"
+                {{- end }}
+          {{- end }}
+      {{- end }}
+      containers:
+      - name: immich-ml
+        image: "{{ .Values.image.machinelearning.repository }}:{{ .Values.image.machinelearning.tag }}"
+        imagePullPolicy: {{ .Values.image.machinelearning.pullPolicy }}
+        ports:
+        - containerPort: 3003
+          name: http
+        env:
+        - name: IMMICH_HOST
+          value: "0.0.0.0"
+        - name: IMMICH_PORT
+          value: "3003"
+        - name: MACHINE_LEARNING_CACHE_FOLDER
+          value: "/cache"
+        volumeMounts:
+        - name: model-cache
+          mountPath: /cache
+        resources:
+          {{- toYaml .Values.resources.machinelearning | nindent 10 }}
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: {{ include "immich.fullname" . }}-ml-cache-pvc
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "immich.fullname" . }}-postgres
+  labels:
+    app: {{ include "immich.name" . }}
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "immich.name" . }}
+      component: database
+  template:
+    metadata:
+      labels:
+        app: {{ include "immich.name" . }}
+        component: database
+    spec:
+      # SOFT PREFERENCE: Prefers storage node for NVMe, but can use local-path elsewhere
+      {{- if not .Values.componentAffinity.postgres.required }}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          {{- range .Values.componentAffinity.postgres.preferredNodes }}
+          - weight: {{ .weight }}
+            preference:
+              matchExpressions:
+              - key: {{ .key }}
+                operator: In
+                values:
+                - "true"
+          {{- end }}
+      {{- end }}
+      containers:
+      - name: postgres
+        image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.postgresql.auth.database }}
+        - name: POSTGRES_USER
+          value: {{ .Values.postgresql.auth.username }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "immich.fullname" . }}-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          {{- toYaml .Values.postgresql.resources | nindent 10 }}
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: {{ include "immich.fullname" . }}-postgres-pvc
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "immich.fullname" . }}-redis
+  labels:
+    app: {{ include "immich.name" . }}
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "immich.name" . }}
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: {{ include "immich.name" . }}
+        component: redis
+    spec:
+      # SOFT PREFERENCE: Prefers control plane, but can run anywhere
+      {{- if not .Values.componentAffinity.redis.required }}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          {{- range .Values.componentAffinity.redis.preferredNodes }}
+          - weight: {{ .weight }}
+            preference:
+              matchExpressions:
+              - key: {{ .key }}
+                operator: In
+                values:
+                {{- if .value }}
+                - {{ .value | quote }}
+                {{- else }}
+                - "true"
+                {{- end }}
+          {{- end }}
+      {{- end }}
+      containers:
+      - name: redis
+        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          {{- toYaml .Values.redis.resources | nindent 10 }}

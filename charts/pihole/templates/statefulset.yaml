@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "pihole.fullname" . }}
+  labels:
+    app: {{ include "pihole.name" . }}
+spec:
+  serviceName: {{ include "pihole.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "pihole.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "pihole.name" . }}
+    spec:
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: pihole
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  # Configure Pi-hole to listen on all interfaces (not just local)
+                  pihole-FTL --config dns.listeningMode all
+
+                  # Set password from secret (in case it changed or db was reset)
+                  if [ -n "$WEBPASSWORD" ]; then
+                    pihole setpassword "$WEBPASSWORD"
+                  fi
+
+                  # Add custom DNS entries using Pi-hole v6 dns.hosts configuration
+                  # This writes entries to /etc/pihole/hosts/custom.list and persists across restarts
+                  pihole-FTL --config dns.hosts "[\"10.0.0.200 nginx.home\",\"10.0.0.200 img.home\",\"10.0.0.200 assistant.home\",\"10.0.0.200 files.home\",\"10.0.0.200 beszel.home\",\"10.0.0.200 pi.home\",\"10.0.0.200 dozzle.home\"]"
+
+                  # Wait for gravity.db to be created by Pi-hole
+                  for i in {1..60}; do
+                    if [ -f /etc/pihole/gravity.db ]; then
+                      break
+                    fi
+                    sleep 2
+                  done
+
+                  # Check if adlists are already populated
+                  COUNT=$(sqlite3 /etc/pihole/gravity.db "SELECT COUNT(*) FROM adlist;" 2>/dev/null || echo "0")
+
+                  if [ "$COUNT" -eq "0" ]; then
+                    echo "Initializing adlists..."
+                    sqlite3 /etc/pihole/gravity.db <<'EOF'
+                  {{- range .Values.adlists }}
+                    INSERT INTO adlist (address, enabled, comment) VALUES ('{{ . }}', 1, 'Auto-added');
+                  {{- end }}
+                  EOF
+                    echo "Adlists initialized, running gravity update..."
+                    pihole -g
+                  fi
+
+                  # Reload DNS to apply all custom configurations
+                  echo "Reloading DNS to apply custom configurations..."
+                  pihole reloaddns
+                  echo "DNS reload complete"
+        ports:
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 53
+          name: dns-udp
+          protocol: UDP
+        - containerPort: 80
+          name: http
+        env:
+        - name: TZ
+          value: {{ .Values.env.TZ }}
+        - name: WEBPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "pihole.fullname" . }}-secrets
+              key: WEBPASSWORD
+        - name: FTLCONF_LOCAL_IPV4
+          value: {{ .Values.env.FTLCONF_LOCAL_IPV4 }}
+        - name: DNS1
+          value: {{ .Values.env.DNS1 }}
+        - name: DNS2
+          value: {{ .Values.env.DNS2 }}
+        - name: DNSMASQ_LISTENING
+          value: {{ .Values.env.DNSMASQ_LISTENING }}
+        - name: FTLCONF_LISTENING_MODE
+          value: all
+        volumeMounts:
+        - name: config
+          mountPath: /etc/pihole
+        - name: dnsmasq
+          mountPath: /etc/dnsmasq.d
+        - name: custom-dns
+          mountPath: /etc/pihole/custom.list
+          subPath: custom.list
+        - name: custom-blocklist
+          mountPath: /var/www/html/pihole-blocklist.txt
+          subPath: pihole-blocklist.txt
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: custom-dns
+        configMap:
+          name: {{ include "pihole.fullname" . }}-custom-dns
+      - name: custom-blocklist
+        configMap:
+          name: {{ include "pihole.fullname" . }}-custom-blocklist
+  volumeClaimTemplates:
+  - metadata:
+      name: config
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.storage.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.storage.config.size }}
+  - metadata:
+      name: dnsmasq
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.storage.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.storage.dnsmasq.size }}

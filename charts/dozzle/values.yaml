@@ -1,0 +1,80 @@
+replicaCount: 1
+
+image:
+  repository: amir20/dozzle
+  tag: "v8.14.6"
+  pullPolicy: IfNotPresent
+
+# Resource limits
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+  # Uncomment for direct LoadBalancer access (without ingress)
+  # type: LoadBalancer
+  # loadBalancerIP: 10.0.0.204
+
+# Ingress configuration for HTTPS access via dozzle.home
+ingress:
+  enabled: true
+  className: nginx
+  host: dozzle.home
+  tlsSecretName: wildcard-home-tls
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+# Dozzle configuration
+config:
+  # Kubernetes mode (required)
+  mode: k8s
+
+  # Optional: Filter by namespace(s)
+  # Leave empty to monitor all namespaces
+  # Single namespace: "default"
+  # Multiple namespaces: "default,kube-system,monitoring"
+  namespace: ""
+
+  # Optional: Filter by pod labels
+  # Example: "app=nginx" or "env=prod"
+  filter: ""
+
+  # Authentication
+  auth:
+    enabled: false
+    username: "admin"
+    password: "changeme"
+
+  # Timezone
+  timezone: "America/New_York"
+
+# RBAC configuration
+rbac:
+  create: true
+  # ServiceAccount name
+  serviceAccountName: dozzle
+
+# Node selector for scheduling
+nodeSelector: {}
+
+# Tolerations for pod scheduling
+tolerations: []
+
+# Affinity rules - prefer pi4-01 for load balancing
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - pi4-01

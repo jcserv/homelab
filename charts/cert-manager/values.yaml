@@ -1,0 +1,78 @@
+# cert-manager Configuration
+# This chart wraps the official cert-manager Helm chart
+
+# Pass-through values to the official cert-manager chart
+cert-manager:
+  # Install CRDs as part of the Helm release
+  crds:
+    enabled: true
+
+  # Global configuration
+  global:
+    leaderElection:
+      namespace: cert-manager
+
+    # Pod disruption budgets for high availability
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+
+  # Controller configuration
+  controller:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cert-manager
+            app.kubernetes.io/component: controller
+
+  # Webhook configuration
+  webhook:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cert-manager
+            app.kubernetes.io/component: webhook
+
+  # CA injector configuration
+  cainjector:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+    # Pod topology spread for balanced distribution across nodes
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cert-manager
+            app.kubernetes.io/component: cainjector

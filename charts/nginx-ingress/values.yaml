@@ -1,0 +1,47 @@
+# NGINX Ingress Controller Configuration
+# This chart wraps the official ingress-nginx Helm chart
+
+# Pass-through values to the official ingress-nginx chart
+ingress-nginx:
+  controller:
+    # Use DaemonSet for better HA across nodes
+    kind: DaemonSet
+
+    # Expose via LoadBalancer on a dedicated IP
+    service:
+      type: LoadBalancer
+      loadBalancerIP: 10.0.0.200
+      annotations:
+        metallb.universe.tf/allow-shared-ip: nginx-ingress
+      # Enable HTTPS
+      ports:
+        http: 80
+        https: 443
+
+    # Enable SSL passthrough for services that handle their own TLS
+    extraArgs:
+      enable-ssl-passthrough: true
+      default-ssl-certificate: "cert-manager/wildcard-home-tls"
+
+    # Resource limits
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+    # Metrics for monitoring
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: false
+
+    # Allow snippets for advanced configuration
+    allowSnippetAnnotations: true
+
+  # Default backend (optional - returns 404 for unmapped routes)
+  # Disabled due to ARM architecture incompatibility
+  defaultBackend:
+    enabled: false
