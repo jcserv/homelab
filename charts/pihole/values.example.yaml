@@ -1,4 +1,4 @@
-replicaCount: 3 # Three instances for high availability (synced via nebula-sync)
+replicaCount: 2 # Two instances for high availability (synced via nebula-sync)
 
 image:
   repository: pihole/pihole
