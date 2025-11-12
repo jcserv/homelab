@@ -27,15 +27,12 @@ Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.e
 - **Home Assistant** - Home automation with Zigbee (10.0.0.102 / https://assistant.home)
 - **Pi-hole** - DNS + ad blocking (10.0.0.53 / https://pi.home)
 - **FileBrowser** - Web file manager (10.0.0.103 / https://files.home)
-- **Beszel** - System monitoring (10.0.0.104 / https://beszel.home)
-- **Dozzle** - Container log viewer (https://dozzle.home)
 
 **Infrastructure:**
 - **NGINX Ingress** - Reverse proxy with TLS (10.0.0.200)
 - **MetalLB** - LoadBalancer implementation
 - **cert-manager** - Automatic TLS certificates
 - **sealed-secrets** - Encrypted secrets in Git
-- **NFS provisioner** - Shared storage from Pi 5 HDD
 - **Restic** - Monthly backups to Backblaze B2
 
 ## getting started ✅

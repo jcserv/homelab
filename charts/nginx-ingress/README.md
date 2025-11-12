@@ -43,8 +43,8 @@ The setup consists of:
 
 5. **Deploy services with ingress enabled**:
    ```bash
-   # Example: Deploy beszel with ingress
-   helm upgrade --install beszel ./charts/beszel --namespace default -f charts/beszel/values.yaml
+   # Example: Deploy immich with ingress
+   helm upgrade --install immich ./charts/immich --namespace default -f charts/immich/values.yaml
    ```
 
 ## Configuration
@@ -156,12 +156,12 @@ kubectl describe ingress <ingress-name> -n <namespace>
 
 ### Test DNS resolution
 ```bash
-nslookup beszel.home <pihole-ip>
+nslookup immich.home <pihole-ip>
 ```
 
 ### Test HTTPS access
 ```bash
-curl -k https://beszel.home
+curl -k https://immich.home
 ```
 
 ## Architecture Diagram
@@ -170,10 +170,10 @@ curl -k https://beszel.home
 ┌─────────────┐
 │   Client    │
 └──────┬──────┘
-       │ https://beszel.home
+       │ https://immich.home
        ↓
 ┌─────────────┐
-│   Pi-hole   │ DNS: beszel.home → 10.0.0.200
+│   Pi-hole   │ DNS: immich.home → 10.0.0.200
 └──────┬──────┘
        │
        ↓
@@ -182,7 +182,6 @@ curl -k https://beszel.home
 │ (LoadBalancer)      │ TLS: wildcard-home-tls
 └──────┬──────────────┘
        │
-       ├──→ beszel.home ──→ beszel-service:8090
-       ├──→ pi.home ──────→ pihole-admin:80
-       └──→ dozzle.home ──→ dozzle-service:8080
+       ├──→ immich.home ──→ immich-service:8090
+       └──→ pi.home ──────→ pihole-admin:80
 ```

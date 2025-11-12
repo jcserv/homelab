@@ -76,9 +76,7 @@ customDnsEntries:
   - "10.0.0.200 img.home"
   - "10.0.0.200 assistant.home"
   - "10.0.0.200 files.home"
-  - "10.0.0.200 beszel.home"
   - "10.0.0.200 pi.home"
-  - "10.0.0.200 dozzle.home"
 
 # Custom blocklist entries
 customBlocklist: |
