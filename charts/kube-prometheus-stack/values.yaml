@@ -1,0 +1,202 @@
+kube-prometheus-stack:
+  # Default rules for monitoring
+  defaultRules:
+    create: true
+    rules:
+      alertmanager: false
+      etcd: false
+      configReloaders: true
+      general: true
+      k8s: true
+      kubeApiserverAvailability: true
+      kubeApiserverBurnrate: true
+      kubeApiserverHistogram: true
+      kubeApiserverSlos: true
+      kubeControllerManager: false
+      kubelet: true
+      kubeProxy: false
+      kubePrometheusGeneral: true
+      kubePrometheusNodeRecording: true
+      kubernetesApps: true
+      kubernetesResources: true
+      kubernetesStorage: true
+      kubernetesSystem: true
+      kubeSchedulerAlerting: false
+      kubeSchedulerRecording: false
+      kubeStateMetrics: true
+      network: true
+      node: true
+      nodeExporterAlerting: true
+      nodeExporterRecording: true
+      prometheus: true
+      prometheusOperator: true
+
+  # Alertmanager - disabled for now
+  alertmanager:
+    enabled: false
+
+  # Kubelet metrics
+  kubelet:
+    enabled: true
+    namespace: kube-system
+
+  # Grafana configuration
+  grafana:
+    enabled: true
+    adminPassword: admin
+
+    # Sidecar for dashboards
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "1"
+        folder: /tmp/dashboards
+        searchNamespace: ALL
+
+    # Ingress configuration
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: homelab-ca-issuer
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      hosts:
+        - grafana.home
+      tls:
+        - hosts:
+            - grafana.home
+          secretName: wildcard-home-tls
+
+    # Persistence
+    persistence:
+      enabled: true
+      storageClassName: local-path
+      size: 10Gi
+
+    # Resources
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    # Data sources - Prometheus is auto-configured
+    additionalDataSources:
+      - name: Loki
+        type: loki
+        url: http://loki-gateway.monitoring.svc.cluster.local
+        access: proxy
+        isDefault: false
+        jsonData:
+          maxLines: 1000
+
+    # Topology spread for HA
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: grafana
+
+  # Prometheus Operator
+  prometheusOperator:
+    enabled: true
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+    # Topology spread for HA
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus-operator
+
+  # Prometheus instance
+  prometheus:
+    enabled: true
+
+    prometheusSpec:
+      # Retention
+      retention: 15d
+      retentionSize: "45GB"
+
+      # Resources
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+      # Storage
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: local-path
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi
+
+      # Service monitors selector - match all
+      serviceMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelector: {}
+
+      podMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelector: {}
+
+      # Topology spread for HA
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+
+      # Additional scrape configs for services without serviceMonitor
+      additionalScrapeConfigs: []
+
+  # Kube State Metrics
+  kube-state-metrics:
+    enabled: true
+
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  # Node Exporter - collects hardware and OS metrics
+  prometheus-node-exporter:
+    enabled: true
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+
+    # Run on all nodes including control plane
+    hostNetwork: true
+    hostPID: true
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists

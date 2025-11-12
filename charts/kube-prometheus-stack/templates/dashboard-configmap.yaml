@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kube-prometheus-stack.fullname" . }}-homelab-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kube-prometheus-stack.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  homelab.json: |
+{{ .Files.Get "dashboards/homelab.json" | indent 4 }}

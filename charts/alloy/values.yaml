@@ -1,0 +1,193 @@
+alloy:
+  # Alloy configuration
+  alloy:
+    # Clustering - disabled for simplicity
+    clustering:
+      enabled: false
+
+    # Configuration file
+    configMap:
+      create: true
+      content: |-
+        // Logging configuration
+        logging {
+          level  = "info"
+          format = "logfmt"
+        }
+
+        // Discover Kubernetes pods
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        // Discover Kubernetes nodes
+        discovery.kubernetes "nodes" {
+          role = "node"
+        }
+
+        // Relabel pod logs
+        discovery.relabel "pod_logs" {
+          targets = discovery.kubernetes.pods.targets
+
+          // Only scrape running pods
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            action        = "keep"
+            regex         = "Running"
+          }
+
+          // Set namespace label
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+
+          // Set pod name label
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+
+          // Set container name label
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+
+          // Set job label to namespace/pod
+          rule {
+            source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+            separator     = "/"
+            target_label  = "job"
+          }
+
+          // Set node name label
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node_name"
+          }
+
+          // Set log path
+          rule {
+            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+            separator     = "/"
+            target_label  = "__path__"
+            replacement   = "/var/log/pods/*$1/*.log"
+          }
+        }
+
+        // Scrape pod logs
+        loki.source.kubernetes "pod_logs" {
+          targets    = discovery.relabel.pod_logs.output
+          forward_to = [loki.process.pod_logs.receiver]
+        }
+
+        // Process pod logs
+        loki.process "pod_logs" {
+          // Extract log level if present
+          stage.regex {
+            expression = "(?i)(?P<level>(debug|info|warn|error|fatal|panic))"
+          }
+
+          stage.labels {
+            values = {
+              level = "",
+            }
+          }
+
+          forward_to = [loki.write.default.receiver]
+        }
+
+        // Write logs to Loki
+        loki.write "default" {
+          endpoint {
+            url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+
+            // Batching configuration for better performance
+            batch_wait = "1s"
+            batch_size = "1MiB"
+          }
+
+          external_labels = {
+            cluster = "homelab",
+          }
+        }
+
+        // Prometheus remote write for collected metrics
+        prometheus.remote_write "default" {
+          endpoint {
+            url = "http://prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+
+            queue_config {
+              capacity             = 10000
+              max_shards           = 10
+              min_shards           = 1
+              max_samples_per_send = 5000
+              batch_send_deadline  = "5s"
+              min_backoff          = "30ms"
+              max_backoff          = "5s"
+            }
+          }
+        }
+
+        // Discover Prometheus service monitors
+        prometheus.operator.servicemonitors "default" {
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+
+  # Controller settings
+  controller:
+    type: daemonset  # Run on every node to collect logs
+
+    # Host paths for reading pod logs
+    volumes:
+      extra:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+
+    volumeMounts:
+      extra:
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+
+    # Tolerations to run on all nodes including control plane
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
+  # Resources
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  # RBAC
+  rbac:
+    create: true
+
+  # Service account
+  serviceAccount:
+    create: true
+
+  # Service
+  service:
+    enabled: true
+    type: ClusterIP
+
+  # Monitoring - expose metrics for Prometheus
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+    interval: 60s

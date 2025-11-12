@@ -1,4 +1,4 @@
-.PHONY: help setup-repos build-deps install-infra deploy-all install-all status logs backup drain uncordon seal-secret upgrade-service
+.PHONY: help setup-repos build-deps install-infra install-monitoring deploy-all install-all status logs backup drain uncordon seal-secret upgrade-service
 
 # Default target
 help:
@@ -8,8 +8,9 @@ help:
 	@echo "  make setup-repos        Add all required Helm repositories"
 	@echo "  make build-deps         Build chart dependencies"
 	@echo "  make install-infra      Install infrastructure (MetalLB, cert-manager, etc.)"
+	@echo "  make install-monitoring Install monitoring stack (Prometheus, Grafana, Loki, Alloy)"
 	@echo "  make deploy-all   		 Deploy all application services"
-	@echo "  make install-all        Install everything (infra + services)"
+	@echo "  make install-all        Install everything (infra + monitoring + services)"
 	@echo ""
 	@echo "Management Commands:"
 	@echo "  make status             Show cluster status (nodes, pods, services)"
@@ -35,6 +36,8 @@ setup-repos:
 	helm repo add metallb https://metallb.github.io/metallb
 	helm repo add jetstack https://charts.jetstack.io
 	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo update
 	@echo "✓ Repositories added and updated"
 
@@ -43,6 +46,9 @@ build-deps:
 	helm dependency build ./charts/metallb
 	helm dependency build ./charts/cert-manager
 	helm dependency build ./charts/sealed-secrets
+	helm dependency build ./charts/kube-prometheus-stack
+	helm dependency build ./charts/loki
+	helm dependency build ./charts/alloy
 	@echo "✓ Dependencies built"
 
 install-infra:
@@ -53,6 +59,21 @@ install-infra:
 	helm install nginx-ingress ./charts/nginx-ingress -n default
 	@echo "✓ Infrastructure installed"
 
+install-monitoring:
+	@echo "Installing monitoring stack..."
+	helm install kube-prometheus-stack ./charts/kube-prometheus-stack -n monitoring --create-namespace
+	@echo "Waiting for Prometheus Operator to be ready..."
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus-operator -n monitoring --timeout=120s
+	helm install loki ./charts/loki -n monitoring
+	@echo "Waiting for Loki to be ready..."
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=loki -n monitoring --timeout=120s
+	helm install alloy ./charts/alloy -n monitoring
+	@echo "✓ Monitoring stack installed"
+	@echo ""
+	@echo "Access Grafana at: https://grafana.home"
+	@echo "  Default credentials: admin / admin"
+	@echo ""
+
 deploy-all:
 	@echo "Installing application services..."
 	helm install pihole ./charts/pihole
@@ -62,10 +83,11 @@ deploy-all:
 	helm install restic-backup ./charts/restic-backup
 	@echo "✓ Services installed"
 
-install-all: setup-repos build-deps install-infra deploy-all
+install-all: setup-repos build-deps install-infra install-monitoring deploy-all
 	@echo ""
 	@echo "✓ Complete installation finished!"
 	@echo "  Configure your router DNS to 10.0.0.53 for .home domain resolution"
+	@echo "  Access Grafana at: https://grafana.home (admin/admin)"
 
 # Management Commands
 status:
