@@ -35,6 +35,12 @@ Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.e
 - **sealed-secrets** - Encrypted secrets in Git
 - **Restic** - Monthly backups to Backblaze B2
 
+**Monitoring:**
+- **Prometheus** - Metrics collection and time-series database
+- **Grafana** - Dashboards and visualization (https://grafana.home)
+- **Loki** - Log aggregation and querying
+- **Alloy** - Log and metrics collection agent
+
 ## getting started ✅
 
 ### 1. k3s cluster setup
@@ -67,9 +73,16 @@ curl -sfL https://get.k3s.io | sh -s - server \
 ### 2. tool setup 🛠️
 
 ```bash
-make setup-repos      # Add Helm repos
-make build-deps       # Build chart dependencies
-make install-infra    # Install MetalLB, cert-manager, nginx-ingress, etc.
+make setup-repos         # Add Helm repos
+make build-deps          # Build chart dependencies
+make install-infra       # Install MetalLB, cert-manager, nginx-ingress, etc.
+make install-monitoring  # Install Prometheus, Grafana, Loki, Alloy
+make deploy-all          # Deploy all application services
+```
+
+**Or install everything at once:**
+```bash
+make install-all  # Runs all setup commands sequentially
 ```
 
 ### 3. configure dns 🌳
@@ -77,13 +90,59 @@ make install-infra    # Install MetalLB, cert-manager, nginx-ingress, etc.
 - point your router's DNS to `10.0.0.202` (Pi-hole) for `.home` domain resolution and ad blocking
 - or, set your devices to use `10.0.0.202` as a custom dns server
 
-### 4. restore from backup 🔄
+### 4. accessing services 🔐
+
+**Grafana:**
+- URL: https://grafana.home
+- Default credentials: `admin` / `admin` (change on first login)
+- Pre-configured data sources: Prometheus (metrics) and Loki (logs)
+
+**Other Services:**
+- Immich: https://img.home
+- Home Assistant: https://assistant.home
+- Pi-hole: https://pi.home
+- FileBrowser: https://files.home
+
+### 5. restore from backup 🔄
 
 **Restore:** See [charts/restic-backup/](charts/restic-backup/) for restore instructions.
+
+## monitoring and observability 📊
+
+The monitoring stack provides comprehensive observability across your cluster:
+
+**Metrics (Prometheus):**
+- Infrastructure metrics: Node resources, kubelet, API server
+- Service metrics: NGINX Ingress, MetalLB, cert-manager
+- Application metrics: Automatically scraped via ServiceMonitors
+- Retention: 15 days (50Gi storage)
+
+**Logs (Loki):**
+- Centralized log aggregation from all pods
+- Accessible via Grafana's Explore interface
+- Retention: 7 days (20Gi storage)
+
+**Dashboards (Grafana):**
+- Pre-installed dashboards for Kubernetes cluster monitoring
+- Custom dashboards can be created and persisted
+
+**View logs and metrics:**
+```bash
+# Access Grafana
+open https://grafana.home
+
+# View Prometheus metrics directly
+kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
+
+# Check monitoring stack status
+kubectl get pods -n monitoring
+```
 
 ## troubleshooting 🕵️
 
 - **Pods pending:** Check PVC status (`kubectl get pvc`), node labels, and resources
 - **LoadBalancer pending:** Verify MetalLB is running and has available IPs
 - **Ingress 404:** Ensure cert-manager has issued certificates and ingress rules are correct
+- **Grafana not loading:** Check ingress and TLS certificate: `kubectl get ingress -n monitoring`
+- **Missing metrics:** Verify ServiceMonitors exist: `kubectl get servicemonitor -n monitoring`
 - **NFS mount issues:** Check NFS server exports and client packages on all nodes

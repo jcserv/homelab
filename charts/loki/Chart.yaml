@@ -1,0 +1,11 @@
+apiVersion: v2
+name: loki
+description: Loki log aggregation system for homelab Kubernetes cluster
+type: application
+version: 1.0.0
+appVersion: "3.0.0"
+
+dependencies:
+  - name: loki
+    version: 6.46.0
+    repository: https://grafana.github.io/helm-charts

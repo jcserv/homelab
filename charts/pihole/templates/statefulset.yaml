@@ -40,7 +40,7 @@ spec:
 
                   # Add custom DNS entries using Pi-hole v6 dns.hosts configuration
                   # This writes entries to /etc/pihole/hosts/custom.list and persists across restarts
-                  pihole-FTL --config dns.hosts "[\"10.0.0.200 nginx.home\",\"10.0.0.200 img.home\",\"10.0.0.200 assistant.home\",\"10.0.0.200 files.home\",\"10.0.0.200 pi.home\"]"
+                  pihole-FTL --config dns.hosts '[{{- range $index, $entry := .Values.customDnsEntries }}{{- if $index }},{{- end }}"{{ $entry }}"{{- end }}]'
 
                   # Wait for gravity.db to be created by Pi-hole
                   for i in {1..60}; do

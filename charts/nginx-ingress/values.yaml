@@ -37,6 +37,10 @@ ingress-nginx:
       enabled: true
       serviceMonitor:
         enabled: false
+        # Note: Enable this after installing monitoring stack, then upgrade:
+        # helm upgrade nginx-ingress ./charts/nginx-ingress -n ingress-nginx
+        additionalLabels:
+          release: prometheus
 
     # Allow snippets for advanced configuration
     allowSnippetAnnotations: true

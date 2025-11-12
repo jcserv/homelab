@@ -1,0 +1,131 @@
+loki:
+  # Deployment mode - single binary for homelab simplicity
+  deploymentMode: SingleBinary
+
+  loki:
+    # Authentication - disabled for internal use
+    auth_enabled: false
+
+    # Common config
+    commonConfig:
+      replication_factor: 1
+
+    # Storage configuration
+    storage:
+      type: filesystem
+
+    # Schema configuration
+    schemaConfig:
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+
+    # Limits configuration
+    limits_config:
+      retention_period: 168h  # 7 days
+      max_query_series: 10000
+      max_query_parallelism: 32
+      split_queries_by_interval: 15m
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+
+    # Server config
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9095
+
+  # Single binary deployment
+  singleBinary:
+    replicas: 1
+
+    # Resources
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+    # Persistence - single volume for everything
+    persistence:
+      enabled: true
+      storageClass: local-path
+      size: 20Gi
+
+    # Topology spread for HA
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: loki
+            app.kubernetes.io/component: single-binary
+
+  # Gateway (nginx) configuration
+  gateway:
+    enabled: true
+    replicas: 1
+
+    # Resources
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+    # Service
+    service:
+      type: ClusterIP
+      port: 80
+
+    # Ingress - disabled, accessed via Grafana
+    ingress:
+      enabled: false
+
+  # Backend - not needed in single binary mode
+  backend:
+    replicas: 0
+
+  # Read - not needed in single binary mode
+  read:
+    replicas: 0
+
+  # Write - not needed in single binary mode
+  write:
+    replicas: 0
+
+  # Monitoring
+  monitoring:
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: prometheus
+
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+
+    lokiCanary:
+      enabled: false
+
+  # Test - disabled
+  test:
+    enabled: false
+
+  # Chunk cache - disabled for simplicity
+  chunksCache:
+    enabled: false
+
+  # Results cache - disabled for simplicity
+  resultsCache:
+    enabled: false
