@@ -59,8 +59,6 @@ deploy-all:
 	helm install immich ./charts/immich
 	helm install home-assistant ./charts/home-assistant
 	helm install filebrowser ./charts/filebrowser
-	helm install beszel ./charts/beszel
-	helm install dozzle ./charts/dozzle
 	helm install restic-backup ./charts/restic-backup
 	@echo "✓ Services installed"
 
