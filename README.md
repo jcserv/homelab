@@ -54,12 +54,14 @@ curl -sfL https://get.k3s.io | sh -s - server \
   --server https://<pi4-1-ip>:6443 --token <token> \
   --disable traefik --disable servicelb --node-label storage=true
 
+sudo -E rpi-eeprom-config --edit
+# set BOOT_ORDER=0x1 (sd card only)
+
 # Pi 5 #2 (control plane + NUT)
 curl -sfL https://get.k3s.io | sh -s - server \
   --server https://<pi4-1-ip>:6443 --token <TOKEN> \
   --disable traefik \
   --disable servicelb
-
 ```
 
 ### 2. tool setup 🛠️

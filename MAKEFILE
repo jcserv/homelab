@@ -132,7 +132,6 @@ endif
 	@echo "Draining node $(NODE)..."
 	kubectl cordon $(NODE)
 	kubectl drain $(NODE) --ignore-daemonsets --delete-emptydir-data
-	@echo "✓ Node $(NodeDE) drained"
 	@echo "  Uncordon with: make uncordon NODE=$(NODE)"
 
 uncordon:
