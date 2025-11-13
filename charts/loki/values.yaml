@@ -58,18 +58,17 @@ loki:
       storageClass: local-path
       size: 10Gi
 
-    # Node affinity - prefer Pi5 nodes for better memory availability
+    # Node affinity - require Pi5 nodes, exclude Pi4 nodes
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
                 - key: kubernetes.io/hostname
-                  operator: In
+                  operator: NotIn
                   values:
-                    - pi5-01
-                    - pi5-02
+                    - pi4-01
+                    - pi4-02
 
     # Topology spread for HA
     topologySpreadConstraints:
