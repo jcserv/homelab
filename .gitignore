@@ -5,8 +5,6 @@ secrets/
 values/*-secrets.yaml
 values/production-secrets.yaml
 
-docs/SECURITY.md # the best security policy is the unknown security policy 🤫
-
 # Sealed secrets (private keys only, sealed manifests are safe to commit)
 sealed-secrets-key.yaml
 
