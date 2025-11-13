@@ -42,6 +42,13 @@ alloy:
             regex         = "Running"
           }
 
+          // Drop loki gateway access logs (noisy, creates unnecessary volume)
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            action        = "drop"
+            regex         = "loki-gateway.*"
+          }
+
           // Set namespace label
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
@@ -110,13 +117,21 @@ alloy:
             url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
 
             // Batching configuration - optimized for memory usage
-            batch_wait = "5s"
-            batch_size = "1MiB"
+            batch_wait = "10s"  // Increased to send less frequently
+            batch_size = "2MiB"  // Larger batches, fewer sends
+
+            // Queue configuration to limit memory usage
+            queue_config {
+              capacity = "3MiB"  // Reduced from 10MiB default to limit buffering
+            }
           }
 
           external_labels = {
             cluster = "homelab",
           }
+
+          // Limit number of active log streams to prevent unbounded memory growth
+          max_streams = 3000
         }
 
         // Prometheus remote write for collected metrics
@@ -125,10 +140,10 @@ alloy:
             url = "http://prometheus-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
 
             queue_config {
-              capacity             = 2500
+              capacity             = 1000  // Reduced from 2500 to limit memory
               max_shards           = 5
               min_shards           = 1
-              max_samples_per_send = 1000
+              max_samples_per_send = 500   // Reduced from 1000 to limit memory
               batch_send_deadline  = "5s"
               min_backoff          = "30ms"
               max_backoff          = "5s"
@@ -137,8 +152,10 @@ alloy:
         }
 
         // Discover Prometheus service monitors
+        // Scoped to specific namespaces to reduce cluster-wide API calls
         prometheus.operator.servicemonitors "default" {
-          forward_to = [prometheus.remote_write.default.receiver]
+          namespaces   = ["monitoring", "default", "kube-system"]
+          forward_to   = [prometheus.remote_write.default.receiver]
         }
 
   # Controller settings
