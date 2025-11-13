@@ -901,7 +901,7 @@
         "type": "loki",
         "uid": "$loki_datasource"
       },
-      "description": "Logs from all services running on the selected node(s)",
+      "description": "Logs from selected services/pods. Filtered by: node, pod, log level, and text search. Note: If node or log level filtering doesn't work, check your Loki label names (common variations: node/node_name/hostname for node, level/detected_level/severity for log level).",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -931,7 +931,7 @@
             "uid": "$loki_datasource"
           },
           "editorMode": "code",
-          "expr": "{job=~\".+\"}",
+          "expr": "{job=~\".+\", pod=~\"$pod\", node_name=~\"$node\"} | detected_level=~\"$log_level\" |~ \"(?i).*$log_filter.*\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -981,7 +981,7 @@
         "type": "datasource"
       },
       {
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "text": "All",
           "value": "$__all"
@@ -1005,7 +1005,7 @@
         "type": "query"
       },
       {
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "text": "All",
           "value": "$__all"
@@ -1028,31 +1028,100 @@
         "type": "query"
       },
       {
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "text": "All",
           "value": "$__all"
         },
-        "datasource": {
-          "uid": "$datasource"
-        },
-        "definition": "label_values(kube_pod_info, pod)",
-        "description": "Filter metrics by pod name",
+        "description": "Filter by pod name or service pattern (supports regex like alloy-.*, cert-manager-.*, etc.)",
         "includeAll": true,
         "label": "Pod",
         "multi": true,
         "name": "pod",
-        "options": [],
-        "query": {
-          "query": "label_values(kube_pod_info, pod)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "sort": 1,
-        "type": "query"
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "alloy-.*",
+            "value": "alloy-.*"
+          },
+          {
+            "selected": false,
+            "text": "cert-manager-.*",
+            "value": "cert-manager-.*"
+          },
+          {
+            "selected": false,
+            "text": "filebrowser-.*",
+            "value": "filebrowser-.*"
+          },
+          {
+            "selected": false,
+            "text": "home-assistant-.*",
+            "value": "home-assistant-.*"
+          },
+          {
+            "selected": false,
+            "text": "immich-.*",
+            "value": "immich-.*"
+          },
+          {
+            "selected": false,
+            "text": "prometheus-.*",
+            "value": "prometheus-.*"
+          },
+          {
+            "selected": false,
+            "text": "grafana-.*",
+            "value": "grafana-.*"
+          },
+          {
+            "selected": false,
+            "text": "alertmanager-.*",
+            "value": "alertmanager-.*"
+          },
+          {
+            "selected": false,
+            "text": "loki-.*",
+            "value": "loki-.*"
+          },
+          {
+            "selected": false,
+            "text": "metallb-.*",
+            "value": "metallb-.*"
+          },
+          {
+            "selected": false,
+            "text": "nginx-ingress-.*",
+            "value": "nginx-ingress-.*"
+          },
+          {
+            "selected": false,
+            "text": "pihole-.*",
+            "value": "pihole-.*"
+          },
+          {
+            "selected": false,
+            "text": "restic-backup-.*",
+            "value": "restic-backup-.*"
+          },
+          {
+            "selected": false,
+            "text": "sealed-secrets-.*",
+            "value": "sealed-secrets-.*"
+          }
+        ],
+        "query": "All,alloy-.*,cert-manager-.*,filebrowser-.*,home-assistant-.*,immich-.*,prometheus-.*,grafana-.*,alertmanager-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,restic-backup-.*,sealed-secrets-.*",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       },
       {
+        "allValue": ".+",
         "current": {
           "text": "All",
           "value": "$__all"
