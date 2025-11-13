@@ -33,7 +33,7 @@ componentAffinity:
     required: false
     preferredNodes:
       - key: kubernetes.io/hostname
-        value: pi4-01
+        value: pi5-01
         weight: 100
 
 resources:

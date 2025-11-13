@@ -25,14 +25,14 @@ loki:
             prefix: index_
             period: 24h
 
-    # Limits configuration
+    # Limits configuration - optimized for memory usage
     limits_config:
-      retention_period: 168h  # 7 days
+      retention_period: 72h  # 3 days (reduced from 7d)
       max_query_series: 10000
       max_query_parallelism: 32
       split_queries_by_interval: 15m
       reject_old_samples: true
-      reject_old_samples_max_age: 168h
+      reject_old_samples_max_age: 72h
 
     # Server config
     server:
@@ -43,20 +43,33 @@ loki:
   singleBinary:
     replicas: 1
 
-    # Resources
+    # Resources - optimized for memory usage
     resources:
       requests:
         cpu: 250m
-        memory: 512Mi
+        memory: 384Mi
       limits:
         cpu: 500m
-        memory: 1Gi
+        memory: 768Mi
 
-    # Persistence - single volume for everything
+    # Persistence - reduced to 10Gi (3d retention needs ~500MB-1GB max)
     persistence:
       enabled: true
       storageClass: local-path
-      size: 20Gi
+      size: 10Gi
+
+    # Node affinity - prefer Pi5 nodes for better memory availability
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - pi5-01
+                    - pi5-02
 
     # Topology spread for HA
     topologySpreadConstraints:

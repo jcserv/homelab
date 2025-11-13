@@ -103,8 +103,8 @@ alloy:
           endpoint {
             url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
 
-            // Batching configuration for better performance
-            batch_wait = "1s"
+            // Batching configuration - optimized for memory usage
+            batch_wait = "5s"
             batch_size = "1MiB"
           }
 
@@ -119,10 +119,10 @@ alloy:
             url = "http://prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
 
             queue_config {
-              capacity             = 10000
-              max_shards           = 10
+              capacity             = 2500
+              max_shards           = 5
               min_shards           = 1
-              max_samples_per_send = 5000
+              max_samples_per_send = 1000
               batch_send_deadline  = "5s"
               min_backoff          = "30ms"
               max_backoff          = "5s"
@@ -163,14 +163,14 @@ alloy:
       - effect: NoSchedule
         operator: Exists
 
-  # Resources
+  # Resources - updated to realistic values based on actual usage
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi
+      memory: 512Mi  # Increased from 128Mi to match optimized usage
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 300m      # Increased slightly for burst capacity
+      memory: 768Mi  # Increased from 256Mi to realistic limit
 
   # RBAC
   rbac:
