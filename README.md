@@ -41,6 +41,9 @@ Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.e
 - **loki** - Log aggregation and querying
 - **alloy** - Log and metrics collection agent
 
+<img src="docs/grafana-dashboard.png" width="100%" style="max-width: 800px;" />
+<br/>
+
 ## getting started ✅
 
 ### 1. k3s cluster setup
