@@ -15,7 +15,7 @@ help:
 	@echo "Management Commands:"
 	@echo "  make status             Show cluster status (nodes, pods, services)"
 	@echo "  make logs SERVICE=<name> View logs for a service"
-	@echo "  make upgrade SERVICE=<name> Upgrade a service"
+	@echo "  make upgrade SERVICE=<name> [NAMESPACE=<namespace>] Upgrade a service"
 	@echo "  make backup             Trigger manual backup job"
 	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
 	@echo ""
@@ -27,6 +27,7 @@ help:
 	@echo "Examples:"
 	@echo "  make logs SERVICE=immich"
 	@echo "  make upgrade SERVICE=pihole"
+	@echo "  make upgrade SERVICE=alloy NAMESPACE=monitoring"
 	@echo "  make drain NODE=pi5-01"
 	@echo "  kubectl create secret generic test --from-literal=key=val --dry-run=client -o yaml | make seal-secret CHART=immich SECRET=test"
 
@@ -116,13 +117,17 @@ endif
 upgrade:
 ifndef SERVICE
 	@echo "Error: SERVICE parameter required"
-	@echo "Usage: make upgrade SERVICE=<service-name>"
+	@echo "Usage: make upgrade SERVICE=<service-name> [NAMESPACE=<namespace>]"
 	@echo "Example: make upgrade SERVICE=immich"
+	@echo "Example: make upgrade SERVICE=alloy NAMESPACE=monitoring"
 	@exit 1
 endif
-	@echo "Upgrading $(SERVICE)..."
-	helm upgrade $(SERVICE) ./charts/$(SERVICE)
-	@echo "✓ $(SERVICE) upgraded"
+ifndef NAMESPACE
+	$(eval NAMESPACE=default)
+endif
+	@echo "Upgrading $(SERVICE) in namespace $(NAMESPACE)..."
+	helm upgrade $(SERVICE) ./charts/$(SERVICE) -n $(NAMESPACE)
+	@echo "✓ $(SERVICE) upgraded in namespace $(NAMESPACE)"
 
 backup:
 	@echo "Creating manual backup job..."
