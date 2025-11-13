@@ -42,6 +42,13 @@ alloy:
             regex         = "Running"
           }
 
+          // Drop monitoring namespace logs (prometheus, loki, grafana, etc.)
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            action        = "drop"
+            regex         = "monitoring"
+          }
+
           // Drop loki gateway access logs (noisy, creates unnecessary volume)
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
