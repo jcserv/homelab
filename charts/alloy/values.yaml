@@ -18,6 +18,12 @@ alloy:
         // Discover Kubernetes pods
         discovery.kubernetes "pods" {
           role = "pod"
+
+          // Only discover pods on this node to reduce CPU usage
+          selectors {
+            role  = "pod"
+            field = "spec.nodeName=" + env("HOSTNAME")
+          }
         }
 
         // Discover Kubernetes nodes
@@ -116,7 +122,7 @@ alloy:
         // Prometheus remote write for collected metrics
         prometheus.remote_write "default" {
           endpoint {
-            url = "http://prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+            url = "http://prometheus-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
 
             queue_config {
               capacity             = 2500
@@ -167,10 +173,10 @@ alloy:
   resources:
     requests:
       cpu: 100m
-      memory: 512Mi  # Increased from 128Mi to match optimized usage
+      memory: 512Mi
     limits:
-      cpu: 300m      # Increased slightly for burst capacity
-      memory: 768Mi  # Increased from 256Mi to realistic limit
+      cpu: 500m      # Increased to 500m to accommodate Pi4 workload with log collection
+      memory: 1536Mi # Increased to 1536Mi to handle all cluster pod logs
 
   # RBAC
   rbac:
