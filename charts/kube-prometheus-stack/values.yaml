@@ -74,14 +74,14 @@ kube-prometheus-stack:
       storageClassName: local-path
       size: 10Gi
 
-    # Resources
+    # Resources - optimized for memory usage
     resources:
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 192Mi
       limits:
         cpu: 500m
-        memory: 512Mi
+        memory: 384Mi
 
     # Data sources - Prometheus is auto-configured
     additionalDataSources:
@@ -128,20 +128,25 @@ kube-prometheus-stack:
     enabled: true
 
     prometheusSpec:
-      # Retention
-      retention: 15d
-      retentionSize: "45GB"
+      # Retention - optimized for memory usage
+      retention: 3d
+      retentionSize: "10GB"
 
-      # Resources
+      # Scrape interval - reduce frequency to save memory
+      scrapeInterval: 60s
+      scrapeTimeout: 10s
+      evaluationInterval: 60s
+
+      # Resources - optimized for memory usage
       resources:
         requests:
           cpu: 500m
-          memory: 1Gi
+          memory: 768Mi
         limits:
           cpu: 1000m
-          memory: 2Gi
+          memory: 1536Mi
 
-      # Storage
+      # Storage - reduced to 15Gi (3d retention needs ~1-2GB max)
       storageSpec:
         volumeClaimTemplate:
           spec:
@@ -149,7 +154,7 @@ kube-prometheus-stack:
             accessModes: ["ReadWriteOnce"]
             resources:
               requests:
-                storage: 50Gi
+                storage: 15Gi
 
       # Service monitors selector - match all
       serviceMonitorSelectorNilUsesHelmValues: false

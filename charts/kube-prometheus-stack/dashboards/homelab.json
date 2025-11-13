@@ -910,7 +910,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 52
       },
       "id": 7,
       "options": {
@@ -938,6 +938,489 @@
       ],
       "title": "Service Logs",
       "type": "logs"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "description": "Pod distribution across nodes with CPU and memory usage. Use this to identify nodes with high pod counts and resource usage for better workload distribution.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Node"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pod Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU Usage %"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory Usage %"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory Available"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              },
+              {
+                "id": "unit",
+                "value": "decgbytes"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "CPU Usage %"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "label_replace(count(kube_pod_info{node=~\"$node\"}) by (node), \"nodename\", \"$1\", \"node\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "PodCount"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "(\n  1 - sum(rate(node_cpu_seconds_total{job=\"node-exporter\", mode=\"idle\", instance=~\"$instance\"}[$__rate_interval])) by (instance)\n  /\n  sum(rate(node_cpu_seconds_total{job=\"node-exporter\", instance=~\"$instance\"}[$__rate_interval])) by (instance)\n) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\", nodename=~\"$node\"} * 100",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "CPUUsage"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "(1 - (node_memory_MemAvailable_bytes{job=\"node-exporter\", instance=~\"$instance\"} / node_memory_MemTotal_bytes{job=\"node-exporter\", instance=~\"$instance\"})) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\", nodename=~\"$node\"} * 100",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "MemoryUsage"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "node_memory_MemAvailable_bytes{job=\"node-exporter\", instance=~\"$instance\"} * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\", nodename=~\"$node\"} / 1024 / 1024 / 1024",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "MemoryAvailable"
+        }
+      ],
+      "title": "Pod Distribution & Node Resources",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "container": true,
+              "created_by_kind": true,
+              "created_by_name": true,
+              "endpoint": true,
+              "host_ip": true,
+              "host_network": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "node": true,
+              "pod": true,
+              "pod_ip": true,
+              "priority_class": true,
+              "uid": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "Value #CPUUsage": 3,
+              "Value #MemoryAvailable": 5,
+              "Value #MemoryUsage": 4,
+              "Value #PodCount": 2,
+              "nodename": 1
+            },
+            "renameByName": {
+              "Value #CPUUsage": "CPU Usage %",
+              "Value #MemoryAvailable": "Memory Available",
+              "Value #MemoryUsage": "Memory Usage %",
+              "Value #PodCount": "Pod Count",
+              "nodename": "Node"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "description": "Detailed view of individual pods, their assigned nodes, namespaces, and current resource usage. Sorted by CPU usage to identify resource-intensive pods.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pod"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 350
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Node"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU Usage"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory Usage"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "CPU Usage"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"$pod\", container!=\"\", node=~\"$node\"}[$__rate_interval])) by (pod, node, namespace)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "CPUUsage"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(container_memory_working_set_bytes{pod=~\"$pod\", container!=\"\", node=~\"$node\"}) by (pod, node, namespace) / 1024 / 1024",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "MemoryUsage"
+        }
+      ],
+      "title": "Pod Details by Node",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "Value #CPUUsage": 4,
+              "Value #MemoryUsage": 5,
+              "namespace": 3,
+              "node": 2,
+              "pod": 1
+            },
+            "renameByName": {
+              "Value #CPUUsage": "CPU Usage",
+              "Value #MemoryUsage": "Memory Usage",
+              "namespace": "Namespace",
+              "node": "Node",
+              "pod": "Pod"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "preload": false,
