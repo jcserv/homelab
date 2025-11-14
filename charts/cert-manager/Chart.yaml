@@ -7,6 +7,5 @@ appVersion: "v1.15.3"
 
 dependencies:
   - name: cert-manager
-    version: v1.19.1
+    version: v1.15.3
     repository: https://charts.jetstack.io
-# Test deploy workflow
