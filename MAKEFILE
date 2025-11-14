@@ -1,4 +1,4 @@
-.PHONY: help setup-repos build-deps install-infra install-monitoring deploy-all install-all status logs backup drain uncordon seal-secret upgrade-service
+.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup drain uncordon seal-secret upgrade-service
 
 # Default target
 help:
@@ -6,7 +6,8 @@ help:
 	@echo ""
 	@echo "Setup Commands:"
 	@echo "  make setup-repos        Add all required Helm repositories"
-	@echo "  make build-deps         Build chart dependencies"
+	@echo "  make build-deps         Build chart dependencies from Chart.lock"
+	@echo "  make update-deps        Update dependencies and regenerate Chart.lock files"
 	@echo "  make install-infra      Install infrastructure (MetalLB, cert-manager, etc.)"
 	@echo "  make install-monitoring Install monitoring stack (Prometheus, Grafana, Loki, Alloy)"
 	@echo "  make deploy-all   		 Deploy all application services"
@@ -52,6 +53,16 @@ build-deps:
 	helm dependency build ./charts/alloy
 	@echo "✓ Dependencies built"
 
+update-deps:
+	@echo "Updating chart dependencies and regenerating Chart.lock files..."
+	helm dependency update ./charts/metallb
+	helm dependency update ./charts/cert-manager
+	helm dependency update ./charts/sealed-secrets
+	helm dependency update ./charts/kube-prometheus-stack
+	helm dependency update ./charts/loki
+	helm dependency update ./charts/alloy
+	@echo "✓ Dependencies updated and Chart.lock files regenerated"
+
 install-infra:
 	@echo "Installing infrastructure components..."
 	helm install metallb ./charts/metallb -n metallb-system --create-namespace
@@ -87,7 +98,7 @@ deploy-all:
 install-all: setup-repos build-deps install-infra install-monitoring deploy-all
 	@echo ""
 	@echo "✓ Complete installation finished!"
-	@echo "  Configure your router DNS to 10.0.0.53 for .home domain resolution"
+	@echo "  Configure your router DNS to 10.0.0.202 for .home domain resolution"
 	@echo "  Access Grafana at: https://grafana.home (admin/admin)"
 
 # Management Commands
