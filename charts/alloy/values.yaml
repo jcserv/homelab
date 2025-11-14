@@ -1,23 +1,19 @@
 namespace: monitoring
 
 alloy:
-  # Alloy configuration
   alloy:
     # Clustering - disabled for simplicity
     clustering:
       enabled: false
 
-    # Configuration file
     configMap:
       create: true
       content: |-
-        // Logging configuration
         logging {
           level  = "info"
           format = "logfmt"
         }
 
-        // Discover Kubernetes pods
         discovery.kubernetes "pods" {
           role = "pod"
 
@@ -28,7 +24,6 @@ alloy:
           }
         }
 
-        // Discover Kubernetes nodes
         discovery.kubernetes "nodes" {
           role = "node"
         }
@@ -58,38 +53,32 @@ alloy:
             regex         = "loki-gateway.*"
           }
 
-          // Set namespace label
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
           }
 
-          // Set pod name label
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
           }
 
-          // Set container name label
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
           }
 
-          // Set job label to namespace/pod
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
             separator     = "/"
             target_label  = "job"
           }
 
-          // Set node name label
           rule {
             source_labels = ["__meta_kubernetes_pod_node_name"]
             target_label  = "node_name"
           }
 
-          // Set log path
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator     = "/"
@@ -120,7 +109,6 @@ alloy:
           forward_to = [loki.write.default.receiver]
         }
 
-        // Write logs to Loki
         loki.write "default" {
           endpoint {
             url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
@@ -167,9 +155,8 @@ alloy:
           forward_to   = [prometheus.remote_write.default.receiver]
         }
 
-  # Controller settings
   controller:
-    type: daemonset # Run on every node to collect logs
+    type: daemonset
 
     # Host paths for reading pod logs
     volumes:
@@ -195,7 +182,6 @@ alloy:
       - effect: NoSchedule
         operator: Exists
 
-  # Resources - updated to realistic values based on actual usage
   resources:
     requests:
       cpu: 100m
@@ -204,20 +190,16 @@ alloy:
       cpu: 500m # Increased to 500m to accommodate Pi4 workload with log collection
       memory: 2560Mi # Increased to 2.5GB based on actual usage (~2.7GB), with headroom for optimizations
 
-  # RBAC
   rbac:
     create: true
 
-  # Service account
   serviceAccount:
     create: true
 
-  # Service
   service:
     enabled: true
     type: ClusterIP
 
-  # Monitoring - expose metrics for Prometheus
   serviceMonitor:
     enabled: true
     additionalLabels:
