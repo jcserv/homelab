@@ -173,14 +173,15 @@ kube-prometheus-stack:
       scrapeTimeout: 10s
       evaluationInterval: 60s
 
-      # Resources - reduced based on metric optimizations
+      # Resources - temporarily higher to handle WAL replay with old data
+      # Will reduce once old high-cardinality data ages out
       resources:
         requests:
           cpu: 300m
-          memory: 512Mi
+          memory: 768Mi
         limits:
           cpu: 1000m
-          memory: 1024Mi
+          memory: 1536Mi
 
       # Storage - reduced for 2d retention
       storageSpec:
@@ -211,32 +212,36 @@ kube-prometheus-stack:
       # Additional scrape configs for services without serviceMonitor
       additionalScrapeConfigs: []
 
-      # Global metric relabelings to reduce cardinality and memory usage
-      # Applied to all scraped metrics before ingestion
+  # API Server monitoring - reduce high-cardinality metrics
+  kubeApiServer:
+    enabled: true
+    serviceMonitor:
       metricRelabelings:
-        # Drop high-cardinality apiserver histogram buckets (keep summaries)
+        # Drop high-cardinality histogram buckets (keep _count and _sum)
         - sourceLabels: [__name__]
           regex: 'apiserver_request_duration_seconds_bucket|apiserver_request_sli_duration_seconds_bucket|apiserver_response_sizes_bucket|apiserver_request_body_size_bytes_bucket|apiserver_watch_events_sizes_bucket'
           action: drop
-
-        # Drop high-cardinality etcd histogram buckets
-        - sourceLabels: [__name__]
-          regex: 'etcd_request_duration_seconds_bucket|etcd_disk_wal_fsync_duration_seconds_bucket|etcd_disk_backend_commit_duration_seconds_bucket'
-          action: drop
-
-        # Drop unnecessary workqueue histograms (keep counts/summaries)
-        - sourceLabels: [__name__]
-          regex: 'workqueue_queue_duration_seconds_bucket|workqueue_work_duration_seconds_bucket'
-          action: drop
-
-        # Drop apiserver watch cache metrics (usually not needed in homelab)
+        # Drop watch cache metrics
         - sourceLabels: [__name__]
           regex: 'apiserver_watch_cache.*'
           action: drop
-
-        # Drop some less useful apiserver admission metrics
+        # Drop admission controller histogram buckets
         - sourceLabels: [__name__]
           regex: 'apiserver_admission_.*_bucket'
+          action: drop
+        # Drop workqueue histogram buckets
+        - sourceLabels: [__name__]
+          regex: 'workqueue_.*_bucket'
+          action: drop
+
+  # Etcd monitoring - reduce high-cardinality metrics
+  kubeEtcd:
+    enabled: true
+    serviceMonitor:
+      metricRelabelings:
+        # Drop high-cardinality histogram buckets
+        - sourceLabels: [__name__]
+          regex: 'etcd_request_duration_seconds_bucket|etcd_disk_wal_fsync_duration_seconds_bucket|etcd_disk_backend_commit_duration_seconds_bucket'
           action: drop
 
   # Kube State Metrics
