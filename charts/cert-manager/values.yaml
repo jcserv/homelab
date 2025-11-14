@@ -1,13 +1,11 @@
-# cert-manager Configuration
 # This chart wraps the official cert-manager Helm chart
 
-# Pass-through values to the official cert-manager chart
+namespace: cert-manager
+
 cert-manager:
-  # Install CRDs as part of the Helm release
   crds:
     enabled: true
 
-  # Global configuration
   global:
     leaderElection:
       namespace: cert-manager
@@ -17,7 +15,6 @@ cert-manager:
       enabled: true
       minAvailable: 1
 
-  # Controller configuration
   controller:
     resources:
       requests:

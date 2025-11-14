@@ -1,3 +1,5 @@
+namespace: monitoring
+
 kube-prometheus-stack:
   # Default rules for monitoring
   defaultRules:

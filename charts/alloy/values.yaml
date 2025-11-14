@@ -1,3 +1,5 @@
+namespace: monitoring
+
 alloy:
   # Alloy configuration
   alloy:
@@ -167,7 +169,7 @@ alloy:
 
   # Controller settings
   controller:
-    type: daemonset  # Run on every node to collect logs
+    type: daemonset # Run on every node to collect logs
 
     # Host paths for reading pod logs
     volumes:
@@ -199,7 +201,7 @@ alloy:
       cpu: 100m
       memory: 512Mi
     limits:
-      cpu: 500m      # Increased to 500m to accommodate Pi4 workload with log collection
+      cpu: 500m # Increased to 500m to accommodate Pi4 workload with log collection
       memory: 1536Mi # Increased to 1536Mi to handle all cluster pod logs
 
   # RBAC

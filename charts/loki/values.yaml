@@ -1,3 +1,5 @@
+namespace: monitoring
+
 loki:
   # Deployment mode - single binary for homelab simplicity
   deploymentMode: SingleBinary
@@ -27,7 +29,7 @@ loki:
 
     # Limits configuration - optimized for memory usage
     limits_config:
-      retention_period: 72h  # 3 days (reduced from 7d)
+      retention_period: 72h # 3 days (reduced from 7d)
       max_query_series: 10000
       max_query_parallelism: 32
       split_queries_by_interval: 15m
