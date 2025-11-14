@@ -1,8 +1,6 @@
 # cert-manager Configuration
 # This chart wraps the official cert-manager Helm chart
 
-# Test deploy workflow
-
 # Pass-through values to the official cert-manager chart
 cert-manager:
   # Install CRDs as part of the Helm release
