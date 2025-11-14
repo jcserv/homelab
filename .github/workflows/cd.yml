@@ -73,6 +73,9 @@ jobs:
       - name: Deploy changed charts
         if: steps.list-changed.outputs.changed == 'true'
         run: |
+          # Charts to exclude from auto-deployment (gitignored values.yaml or manual-only due to persistent volumes)
+          EXCLUDED_CHARTS=("pihole" "power-monitor" "filebrowser" "immich")
+
           # Read the changed charts from the output
           changed_charts=$(cat <<'EOF'
           ${{ steps.list-changed.outputs.charts }}
@@ -83,6 +86,12 @@ jobs:
 
           for chart in $changed_charts; do
             chart_name=$(basename "$chart")
+
+            # Check if chart is excluded
+            if [[ " ${EXCLUDED_CHARTS[@]} " =~ " ${chart_name} " ]]; then
+              echo "⏭️  Skipping $chart_name (excluded from auto-deployment)"
+              continue
+            fi
 
             echo "📦 Processing chart: $chart_name"
 
