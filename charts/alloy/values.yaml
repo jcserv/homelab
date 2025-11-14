@@ -44,11 +44,11 @@ alloy:
             regex         = "Running"
           }
 
-          // Drop monitoring namespace logs (prometheus, loki, grafana, etc.)
+          // Drop monitoring and kube-system namespace logs (low value, high noise)
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             action        = "drop"
-            regex         = "monitoring"
+            regex         = "monitoring|kube-system"
           }
 
           // Drop loki gateway access logs (noisy, creates unnecessary volume)
@@ -126,12 +126,12 @@ alloy:
             url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
 
             // Batching configuration - optimized for memory usage
-            batch_wait = "10s"  // Increased to send less frequently
+            batch_wait = "15s"  // Increased to send less frequently, reduce memory churn
             batch_size = "2MiB"  // Larger batches, fewer sends
 
             // Queue configuration to limit memory usage
             queue_config {
-              capacity = "3MiB"  // Reduced from 10MiB default to limit buffering
+              capacity = "2MiB"  // Further reduced to limit buffering
             }
           }
 
@@ -140,7 +140,7 @@ alloy:
           }
 
           // Limit number of active log streams to prevent unbounded memory growth
-          max_streams = 3000
+          max_streams = 2000  // Reduced from 3000 to save ~30% stream overhead
         }
 
         // Prometheus remote write for collected metrics
@@ -149,10 +149,10 @@ alloy:
             url = "http://prometheus-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
 
             queue_config {
-              capacity             = 1000  // Reduced from 2500 to limit memory
-              max_shards           = 5
+              capacity             = 2000  // Increased from 1000 to prevent saturation (was at 99.95%)
+              max_shards           = 3     // Reduced from 5 to limit memory (3x2000 = 6000 max samples)
               min_shards           = 1
-              max_samples_per_send = 500   // Reduced from 1000 to limit memory
+              max_samples_per_send = 500   // Keep at 500 to limit per-batch memory
               batch_send_deadline  = "5s"
               min_backoff          = "30ms"
               max_backoff          = "5s"
@@ -163,7 +163,7 @@ alloy:
         // Discover Prometheus service monitors
         // Scoped to specific namespaces to reduce cluster-wide API calls
         prometheus.operator.servicemonitors "default" {
-          namespaces   = ["monitoring", "default", "kube-system"]
+          namespaces   = ["monitoring", "default"]  // Removed kube-system (all system ServiceMonitors are in monitoring namespace)
           forward_to   = [prometheus.remote_write.default.receiver]
         }
 
@@ -202,7 +202,7 @@ alloy:
       memory: 512Mi
     limits:
       cpu: 500m # Increased to 500m to accommodate Pi4 workload with log collection
-      memory: 1536Mi # Increased to 1536Mi to handle all cluster pod logs
+      memory: 2560Mi # Increased to 2.5GB based on actual usage (~2.7GB), with headroom for optimizations
 
   # RBAC
   rbac:
