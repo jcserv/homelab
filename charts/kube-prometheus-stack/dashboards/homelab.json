@@ -1591,9 +1591,14 @@
             "selected": false,
             "text": "sealed-secrets-.*",
             "value": "sealed-secrets-.*"
+          },
+          {
+            "selected": false,
+            "text": "systemd-journal",
+            "value": "systemd-journal"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,home-assistant-.*,immich-.*,prometheus-.*,grafana-.*,alertmanager-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,restic-backup-.*,sealed-secrets-.*",
+        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,home-assistant-.*,immich-.*,prometheus-.*,grafana-.*,alertmanager-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
