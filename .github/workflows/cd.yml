@@ -1,0 +1,114 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-ephemeral: true
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          # Tags are automatically applied based on OAuth client configuration (tag:github-actions)
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "charts<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$changed" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up kubeconfig
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Verify cluster connectivity
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Deploy changed charts
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          # Read the changed charts from the output
+          changed_charts=$(cat <<'EOF'
+          ${{ steps.list-changed.outputs.charts }}
+          EOF
+          )
+
+          echo "🚀 Deploying changed charts..."
+
+          for chart in $changed_charts; do
+            chart_name=$(basename "$chart")
+
+            echo "📦 Processing chart: $chart_name"
+
+            # Update dependencies if Chart.yaml has dependencies
+            if grep -q "dependencies:" "$chart/Chart.yaml" 2>/dev/null; then
+              echo "  ⬇️  Updating dependencies..."
+              helm dependency update "$chart"
+            fi
+
+            # Determine namespace from chart values or use chart name
+            namespace=$(yq eval '.namespace // "'$chart_name'"' "$chart/values.yaml" 2>/dev/null || echo "$chart_name")
+
+            # Create namespace if it doesn't exist
+            kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
+
+            # Deploy the chart
+            echo "  🔧 Deploying to namespace: $namespace"
+            helm upgrade --install "$chart_name" "$chart" \
+              --namespace "$namespace" \
+              --create-namespace \
+              --wait \
+              --timeout 5m \
+              --atomic
+
+            echo "  ✅ Successfully deployed $chart_name"
+          done
+
+          echo "🎉 All charts deployed successfully!"
+
+      - name: Deployment summary
+        if: always() && steps.list-changed.outputs.changed == 'true'
+        run: |
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Changed charts:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.list-changed.outputs.charts }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

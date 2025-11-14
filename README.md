@@ -2,12 +2,18 @@
 
 A 4-node HA Kubernetes cluster on Raspberry Pi hardware running self-hosted services with automated backups.
 
+## features 🚀
+1. highly-available pods (for the most part 😅)
+2. dns server w/ ad-blocking via pihole
+3. graceful shutdown in the event of a power outage
+> my setup is a bit scuffed because my UPS does not have a direct connection to monitor its status, so instead I plugged the UPS into a smart plug and read off of that (see charts/power-monitor) to coordinate the shutdown of nodes
+
 ## hardware ⚙️
 
 - `pi4-01` (4GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + lightweight services
 - `pi4-02` (4GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + Zigbee worker (Home Assistant)
 - `pi5-01` (8GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + storage worker with HDD
-- `pi5-02` (8GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + [NUT server](https://networkupstools.org/index.html)
+- `pi5-02` (8GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + [NUT-like server](https://networkupstools.org/index.html)
 
 Case: [DeskPi T1 Rackmate](https://deskpi.com/products/deskpi-rackmate-t1-2)
 
