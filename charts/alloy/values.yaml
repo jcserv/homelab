@@ -106,6 +106,43 @@ alloy:
             }
           }
 
+          // Drop nginx-ingress successful requests (non-5XX) to reduce log volume
+          // Only keep error logs (5XX status codes)
+          stage.match {
+            selector = "{namespace=\"ingress-nginx\"}"
+
+            // Drop logs with status codes 1XX, 2XX, 3XX, 4XX
+            // Nginx access log format: "METHOD /path HTTP/x.x" STATUS ...
+            stage.drop {
+              expression = "\"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\\s.*?HTTP/[0-9.]+\"\\s+[1-4][0-9]{2}\\s"
+            }
+          }
+
+          forward_to = [loki.write.default.receiver]
+        }
+
+        // Collect systemd journal (system logs)
+        loki.source.journal "system_logs" {
+          path          = "/var/log/journal"
+          forward_to    = [loki.process.system_logs.receiver]
+
+          // Add labels to match pod log format
+          labels = {
+            job       = "systemd-journal",
+            pod       = "systemd-journal",
+            node_name = env("HOSTNAME"),
+          }
+        }
+
+        // Process system logs
+        loki.process "system_logs" {
+          // Extract priority level and map to standard levels
+          stage.labels {
+            values = {
+              priority = "",
+            }
+          }
+
           forward_to = [loki.write.default.receiver]
         }
 
@@ -131,34 +168,10 @@ alloy:
           max_streams = 2000  // Reduced from 3000 to save ~30% stream overhead
         }
 
-        // Prometheus remote write for collected metrics
-        prometheus.remote_write "default" {
-          endpoint {
-            url = "http://prometheus-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
-
-            queue_config {
-              capacity             = 2000  // Increased from 1000 to prevent saturation (was at 99.95%)
-              max_shards           = 3     // Reduced from 5 to limit memory (3x2000 = 6000 max samples)
-              min_shards           = 1
-              max_samples_per_send = 500   // Keep at 500 to limit per-batch memory
-              batch_send_deadline  = "5s"
-              min_backoff          = "30ms"
-              max_backoff          = "5s"
-            }
-          }
-        }
-
-        // Discover Prometheus service monitors
-        // Scoped to specific namespaces to reduce cluster-wide API calls
-        prometheus.operator.servicemonitors "default" {
-          namespaces   = ["monitoring", "default"]  // Removed kube-system (all system ServiceMonitors are in monitoring namespace)
-          forward_to   = [prometheus.remote_write.default.receiver]
-        }
-
   controller:
     type: daemonset
 
-    # Host paths for reading pod logs
+    # Host paths for reading pod logs and system journal
     volumes:
       extra:
         - name: varlog
@@ -167,6 +180,9 @@ alloy:
         - name: varlibdockercontainers
           hostPath:
             path: /var/lib/docker/containers
+        - name: journal
+          hostPath:
+            path: /var/log/journal
 
     volumeMounts:
       extra:
@@ -175,6 +191,9 @@ alloy:
           readOnly: true
         - name: varlibdockercontainers
           mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: journal
+          mountPath: /var/log/journal
           readOnly: true
 
     # Tolerations to run on all nodes including control plane
@@ -188,7 +207,7 @@ alloy:
       memory: 512Mi
     limits:
       cpu: 500m # Increased to 500m to accommodate Pi4 workload with log collection
-      memory: 2560Mi # Increased to 2.5GB based on actual usage (~2.7GB), with headroom for optimizations
+      memory: 2048Mi # Set to 2GB - alloy now only handles log collection (metrics handled by Prometheus directly)
 
   rbac:
     create: true
