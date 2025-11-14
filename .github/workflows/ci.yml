@@ -170,6 +170,7 @@ jobs:
             helm upgrade --install "$chart_name" "$chart" \
               --namespace "$namespace" \
               --create-namespace \
+              --reset-values \
               --wait \
               --timeout 5m \
               --atomic
