@@ -34,17 +34,27 @@ jobs:
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
-      - name: Run chart-testing (list-changed)
+      - name: Detect changed charts
         id: list-changed
         run: |
-          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
-          if [[ -n "$changed" ]]; then
+          # Find charts that changed in the last commit
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files:"
+          echo "$changed_files"
+
+          # Extract unique chart directories from changed files
+          changed_charts=$(echo "$changed_files" | grep '^charts/' | cut -d/ -f1,2 | sort -u)
+
+          if [[ -n "$changed_charts" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "charts<<EOF" >> "$GITHUB_OUTPUT"
-            echo "$changed" >> "$GITHUB_OUTPUT"
+            echo "$changed_charts" >> "$GITHUB_OUTPUT"
             echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "Detected changed charts:"
+            echo "$changed_charts"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No chart changes detected"
           fi
 
       - name: Set up kubeconfig
