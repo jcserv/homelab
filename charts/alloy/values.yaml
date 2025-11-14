@@ -98,19 +98,18 @@ alloy:
         loki.process "pod_logs" {
           // Extract log level if present (case-insensitive)
           stage.regex {
-            expression = "(?i)(?P<detected_level>(debug|info|warn|error|fatal|panic))"
+            expression = "(?i)(?P<detected_level>debug|info|warn|error|fatal|panic)"
           }
 
-          // Normalize log level to lowercase for consistent filtering
+          // Create normalized lowercase level field for consistent filtering
           stage.template {
-            source   = "detected_level"
-            template = "{{ ToLower .Value }}"
+            source   = "level"
+            template = "{{`{{ ToLower .detected_level }}`}}"
           }
 
           stage.labels {
             values = {
-              level          = "",
-              detected_level = "",
+              level = "",
             }
           }
 
