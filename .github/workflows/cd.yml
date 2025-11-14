@@ -1,7 +1,10 @@
 name: Continuous Deployment
 
 on:
-  push:
+  workflow_run:
+    workflows: ["ci"]
+    types:
+      - completed
     branches:
       - main
 
@@ -11,6 +14,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,10 +32,9 @@ jobs:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
-          oauth-ephemeral: true
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          # Tags are automatically applied based on OAuth client configuration (tag:github-actions)
+          tags: tag:github-actions
 
       - name: Run chart-testing (list-changed)
         id: list-changed
