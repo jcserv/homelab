@@ -207,3 +207,13 @@ kube-prometheus-stack:
     tolerations:
       - effect: NoSchedule
         operator: Exists
+
+    # ServiceMonitor configuration to prevent duplicate series during rolling updates
+    prometheus:
+      monitor:
+        enabled: true
+        relabelings:
+          # Drop the pod label to prevent duplicates during rolling updates
+          # We care about node metrics, not which pod collected them
+          - action: labeldrop
+            regex: pod

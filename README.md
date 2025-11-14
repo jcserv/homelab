@@ -48,7 +48,6 @@ Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.e
 - **alloy** - Log and metrics collection agent
 
 <img src="docs/grafana-dashboard.png" width="100%" style="max-width: 800px;" />
-<br/>
 
 ## getting started ✅
 
@@ -64,13 +63,14 @@ curl -sfL https://get.k3s.io | sh -s - server \
   --server https://<pi4-1-ip>:6443 --token <token> \
   --disable traefik --disable servicelb --node-label zigbee=true
 
+sudo -E rpi-eeprom-config --edit
+# set BOOT_ORDER=0x1 (sd card only)
+
 # Pi 5 #1 (control plane + storage) - Mount HDD at /mnt/hd1 first
 curl -sfL https://get.k3s.io | sh -s - server \
   --server https://<pi4-1-ip>:6443 --token <token> \
   --disable traefik --disable servicelb --node-label storage=true
 
-sudo -E rpi-eeprom-config --edit
-# set BOOT_ORDER=0x1 (sd card only)
 
 # Pi 5 #2 (control plane + NUT)
 curl -sfL https://get.k3s.io | sh -s - server \
