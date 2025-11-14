@@ -42,6 +42,40 @@ kube-prometheus-stack:
     enabled: true
     namespace: kube-system
 
+    # Reduce kubelet metric collection frequency
+    serviceMonitor:
+      # Additional metric relabelings for cadvisor to reduce cardinality
+      cAdvisorMetricRelabelings:
+        # Drop all container metrics for pause/POD containers (huge cardinality reduction)
+        - sourceLabels: [container]
+          regex: '^$'
+          action: drop
+
+        # Drop high-cardinality per-cpu metrics (keep aggregated cpu totals)
+        - sourceLabels: [__name__]
+          regex: 'container_cpu_cfs_(periods|throttled)_total'
+          action: drop
+
+        # Drop less useful container metrics
+        - sourceLabels: [__name__]
+          regex: 'container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|threads|file_descriptors|sockets|processes|ulimits_soft)'
+          action: drop
+
+        # Drop most container filesystem metrics (keep basic usage)
+        - sourceLabels: [__name__]
+          regex: 'container_fs_(reads.*|writes.*|io_.*|sector.*|inodes_total|inodes_free)'
+          action: drop
+
+        # Drop container spec metrics (static metadata we don't need)
+        - sourceLabels: [__name__]
+          regex: 'container_spec_.*'
+          action: drop
+
+        # Drop last_seen (not useful for monitoring)
+        - sourceLabels: [__name__]
+          regex: 'container_last_seen'
+          action: drop
+
   # Grafana configuration
   grafana:
     enabled: true
@@ -131,24 +165,24 @@ kube-prometheus-stack:
 
     prometheusSpec:
       # Retention - optimized for memory usage
-      retention: 3d
-      retentionSize: "10GB"
+      retention: 2d
+      retentionSize: "8GB"
 
       # Scrape interval - reduce frequency to save memory
       scrapeInterval: 60s
       scrapeTimeout: 10s
       evaluationInterval: 60s
 
-      # Resources - optimized for memory usage
+      # Resources - reduced based on metric optimizations
       resources:
         requests:
-          cpu: 500m
-          memory: 768Mi
+          cpu: 300m
+          memory: 512Mi
         limits:
           cpu: 1000m
-          memory: 1536Mi
+          memory: 1024Mi
 
-      # Storage - reduced to 15Gi (3d retention needs ~1-2GB max)
+      # Storage - reduced for 2d retention
       storageSpec:
         volumeClaimTemplate:
           spec:
@@ -156,7 +190,7 @@ kube-prometheus-stack:
             accessModes: ["ReadWriteOnce"]
             resources:
               requests:
-                storage: 15Gi
+                storage: 10Gi
 
       # Service monitors selector - match all
       serviceMonitorSelectorNilUsesHelmValues: false
@@ -176,6 +210,34 @@ kube-prometheus-stack:
 
       # Additional scrape configs for services without serviceMonitor
       additionalScrapeConfigs: []
+
+      # Global metric relabelings to reduce cardinality and memory usage
+      # Applied to all scraped metrics before ingestion
+      metricRelabelings:
+        # Drop high-cardinality apiserver histogram buckets (keep summaries)
+        - sourceLabels: [__name__]
+          regex: 'apiserver_request_duration_seconds_bucket|apiserver_request_sli_duration_seconds_bucket|apiserver_response_sizes_bucket|apiserver_request_body_size_bytes_bucket|apiserver_watch_events_sizes_bucket'
+          action: drop
+
+        # Drop high-cardinality etcd histogram buckets
+        - sourceLabels: [__name__]
+          regex: 'etcd_request_duration_seconds_bucket|etcd_disk_wal_fsync_duration_seconds_bucket|etcd_disk_backend_commit_duration_seconds_bucket'
+          action: drop
+
+        # Drop unnecessary workqueue histograms (keep counts/summaries)
+        - sourceLabels: [__name__]
+          regex: 'workqueue_queue_duration_seconds_bucket|workqueue_work_duration_seconds_bucket'
+          action: drop
+
+        # Drop apiserver watch cache metrics (usually not needed in homelab)
+        - sourceLabels: [__name__]
+          regex: 'apiserver_watch_cache.*'
+          action: drop
+
+        # Drop some less useful apiserver admission metrics
+        - sourceLabels: [__name__]
+          regex: 'apiserver_admission_.*_bucket'
+          action: drop
 
   # Kube State Metrics
   kube-state-metrics:
