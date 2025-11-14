@@ -1,3 +1,5 @@
+namespace: default
+
 replicaCount: 1
 
 image:
@@ -14,15 +16,15 @@ affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - pi4-02
-        - key: zigbee
-          operator: In
-          values:
-          - "true"
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - pi4-02
+            - key: zigbee
+              operator: In
+              values:
+                - "true"
 
 # Resource limits
 resources:
@@ -48,7 +50,7 @@ storage:
 # - /dev/serial/by-id/usb-<your-device-id>
 usb:
   enabled: true
-  devicePath: /dev/ttyUSB0  # UPDATE THIS with your actual device path
+  devicePath: /dev/ttyUSB0 # UPDATE THIS with your actual device path
 
 # Host network mode (required for Bluetooth and mDNS discovery)
 # IMPORTANT: When hostNetwork is enabled, the pod uses the host's network namespace
@@ -63,10 +65,10 @@ privileged: true
 securityContext:
   capabilities:
     add:
-    - NET_ADMIN
-    - NET_RAW
-    - SYS_ADMIN  # Required for Bluetooth adapter access
-    - SYS_RAWIO  # Required for raw I/O operations
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_ADMIN # Required for Bluetooth adapter access
+      - SYS_RAWIO # Required for raw I/O operations
 
 # Service configuration
 service:
@@ -100,8 +102,8 @@ config:
     # Trust nginx proxy
     use_x_forwarded_for: true
     trusted_proxies:
-      - 10.42.0.0/16     # Pod network (nginx ingress pods run here)
-      - 10.43.0.0/16     # Service network
-      - 10.0.0.0/24      # Local network (for direct access)
-      - 127.0.0.1        # Localhost
-      - ::1              # IPv6 localhost
+      - 10.42.0.0/16 # Pod network (nginx ingress pods run here)
+      - 10.43.0.0/16 # Service network
+      - 10.0.0.0/24 # Local network (for direct access)
+      - 127.0.0.1 # Localhost
+      - ::1 # IPv6 localhost

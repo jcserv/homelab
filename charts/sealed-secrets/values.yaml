@@ -1,5 +1,6 @@
-# Sealed Secrets Configuration
 # This chart wraps the official sealed-secrets Helm chart
+
+namespace: kube-system
 
 # Pass-through values to the official sealed-secrets chart
 sealed-secrets:

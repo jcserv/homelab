@@ -1,5 +1,6 @@
-# NGINX Ingress Controller Configuration
 # This chart wraps the official ingress-nginx Helm chart
+
+namespace: ingress-nginx
 
 # Pass-through values to the official ingress-nginx chart
 ingress-nginx:

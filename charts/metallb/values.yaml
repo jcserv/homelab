@@ -1,9 +1,8 @@
-# MetalLB Configuration
 # This chart wraps the official MetalLB Helm chart and adds custom IP pool configuration
 
-# Pass-through values to the official MetalLB chart
+namespace: metallb-system
+
 metallb:
-  # Controller configuration
   controller:
     enabled: true
     image:
