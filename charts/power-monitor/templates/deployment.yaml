@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: power-monitor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: power-monitor
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: power-monitor
+  template:
+    metadata:
+      labels:
+        app: power-monitor
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+
+      # Pin to the critical node (pi4-02) that has Home Assistant
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.criticalNode }}
+
+      # Ensure it runs on the same node as Home Assistant
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - {{ .Values.criticalNode }}
+
+      containers:
+      - name: power-monitor
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+        env:
+        # Home Assistant configuration
+        - name: HA_URL
+          value: {{ .Values.homeAssistant.url | quote }}
+        - name: HA_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: power-monitor-secrets
+              key: ha-token
+        - name: POWER_SENSOR
+          value: {{ .Values.homeAssistant.powerSensor | quote }}
+        - name: POLL_INTERVAL
+          value: {{ .Values.monitoring.pollInterval | quote }}
+
+        # Shutdown timing configuration
+        - name: SHUTDOWN_PI5_01_DELAY
+          value: {{ .Values.shutdown.priorityDelay | quote }}
+        - name: SHUTDOWN_OTHERS_DELAY
+          value: {{ .Values.shutdown.secondaryDelay | quote }}
+
+        # Node configuration
+        - name: CRITICAL_NODE
+          value: {{ .Values.criticalNode | quote }}
+        - name: PRIORITY_NODES
+          value: {{ .Values.shutdown.priorityNodes | join "," | quote }}
+        - name: SECONDARY_NODES
+          value: {{ .Values.shutdown.secondaryNodes | join "," | quote }}
+
+        # SSH configuration
+        - name: SSH_USER
+          value: {{ .Values.ssh.user | quote }}
+        - name: SSH_KEY_PATH
+          value: "/root/.ssh/id_rsa"
+
+        # Testing configuration
+        - name: DRY_RUN
+          value: {{ .Values.testing.dryRun | quote }}
+        - name: SKIP_SHUTDOWN
+          value: {{ .Values.testing.skipShutdown | quote }}
+        - name: TEST_MODE
+          value: {{ .Values.testing.testMode | quote }}
+
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+
+        # Security context
+        securityContext:
+          # Run as root for SSH operations
+          runAsUser: 0
+          runAsGroup: 0
+
+        # Mount SSH key for node shutdowns
+        {{- if .Values.ssh.privateKey }}
+        volumeMounts:
+        - name: ssh-key
+          mountPath: /root/.ssh/id_rsa
+          subPath: id_rsa
+          readOnly: true
+        {{- end }}
+
+      {{- if .Values.ssh.privateKey }}
+      volumes:
+      - name: ssh-key
+        secret:
+          secretName: power-monitor-ssh-key
+          defaultMode: 0600
+      {{- end }}
+
+      restartPolicy: Always
+      # Use host network for easier Home Assistant communication
+      hostNetwork: {{ .Values.hostNetwork }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
