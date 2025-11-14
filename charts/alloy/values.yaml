@@ -1,5 +1,6 @@
 namespace: monitoring
 
+# Grafana Alloy configuration for log collection
 alloy:
   alloy:
     # Clustering - disabled for simplicity
