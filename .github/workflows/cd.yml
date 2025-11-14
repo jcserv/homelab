@@ -73,8 +73,16 @@ jobs:
       - name: Deploy changed charts
         if: steps.list-changed.outputs.changed == 'true'
         run: |
-          # Charts to exclude from auto-deployment (gitignored values.yaml or manual-only due to persistent volumes)
-          EXCLUDED_CHARTS=("pihole" "power-monitor" "filebrowser" "immich")
+          # Charts to exclude from auto-deployment:
+          # - Charts with gitignored values.yaml (contain secrets)
+          # - Charts with complex PVs that need manual intervention
+          EXCLUDED_CHARTS=(
+            "pihole"           # gitignored values.yaml
+            "power-monitor"    # gitignored values.yaml
+            "immich"           # complex PVs + database
+            "home-assistant"   # complex PVs + USB devices
+            "filebrowser"      # PVs with existing ownership issues
+          )
 
           # Read the changed charts from the output
           changed_charts=$(cat <<'EOF'
@@ -95,9 +103,12 @@ jobs:
 
             echo "📦 Processing chart: $chart_name"
 
-            # Update dependencies if Chart.yaml has dependencies
-            if grep -q "dependencies:" "$chart/Chart.yaml" 2>/dev/null; then
-              echo "  ⬇️  Updating dependencies..."
+            # Build dependencies from Chart.lock if it exists, otherwise update
+            if [ -f "$chart/Chart.lock" ]; then
+              echo "  ⬇️  Building dependencies from Chart.lock..."
+              helm dependency build "$chart"
+            elif grep -q "dependencies:" "$chart/Chart.yaml" 2>/dev/null; then
+              echo "  ⬇️  Updating dependencies (no Chart.lock found)..."
               helm dependency update "$chart"
             fi
 
