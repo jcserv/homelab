@@ -1,0 +1,6 @@
+apiVersion: v2
+name: power-monitor
+description: UPS power monitoring and graceful shutdown orchestration
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
