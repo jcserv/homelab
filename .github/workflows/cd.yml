@@ -89,9 +89,6 @@ jobs:
           EXCLUDED_CHARTS=(
             "pihole"           # gitignored values.yaml
             "power-monitor"    # gitignored values.yaml
-            "immich"           # complex PVs + database
-            "home-assistant"   # complex PVs + USB devices
-            "filebrowser"      # PVs with existing ownership issues
           )
 
           # Read the changed charts from the output

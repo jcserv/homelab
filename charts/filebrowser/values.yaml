@@ -1,3 +1,5 @@
+namespace: default
+
 replicaCount: 1
 
 image:
@@ -13,11 +15,11 @@ affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: storage-type
-          operator: In
-          values:
-          - "hdd"
+        - matchExpressions:
+            - key: storage-type
+              operator: In
+              values:
+                - "hdd"
 
 # Resource limits
 resources:
@@ -31,11 +33,11 @@ resources:
 # Storage configuration
 storage:
   files:
-    storageClass: ""  # Use empty string for hostPath PVs
+    storageClass: "" # Use empty string for hostPath PVs
     size: 100Gi
     hostPath: /mnt/hd1/Files
   database:
-    storageClass: local-path  # K3s default dynamic provisioner
+    storageClass: local-path # K3s default dynamic provisioner
     size: 100Mi
 
 # Service configuration
