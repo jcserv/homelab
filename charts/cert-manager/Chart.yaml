@@ -9,3 +9,4 @@ dependencies:
   - name: cert-manager
     version: v1.15.3
     repository: https://charts.jetstack.io
+# Test deploy workflow
