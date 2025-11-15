@@ -102,11 +102,19 @@ alloy:
             expression = "(?i)(?P<detected_level>debug|info|log|warn|warning|error|fatal|panic)"
           }
 
+          // Parse Redis/Valkey log levels (uses symbols instead of words)
+          // Redis format: "1:M 15 Nov 2025 04:15:15.187 * Message"
+          // Symbols: . (debug), - (verbose), * (notice), # (warning)
+          stage.regex {
+            expression = "\\d+:\\w+\\s+\\d+\\s+\\w+\\s+\\d+\\s+[\\d:\\.]+\\s+(?P<detected_level>[.#*-])"
+          }
+
           // Create normalized lowercase level field for consistent filtering
           // Map NestJS "LOG" and "WARNING" to standard levels
+          // Map Redis symbols to standard levels
           stage.template {
             source   = "level"
-            template = "{{`{{ if eq (ToLower .detected_level) \"log\" }}info{{ else if eq (ToLower .detected_level) \"warning\" }}warn{{ else }}{{ ToLower .detected_level }}{{ end }}`}}"
+            template = "{{`{{ if eq .detected_level \"*\" }}info{{ else if eq .detected_level \".\" }}debug{{ else if eq .detected_level \"-\" }}debug{{ else if eq .detected_level \"#\" }}warn{{ else if eq (ToLower .detected_level) \"log\" }}info{{ else if eq (ToLower .detected_level) \"warning\" }}warn{{ else }}{{ ToLower .detected_level }}{{ end }}`}}"
           }
 
           stage.labels {
@@ -132,7 +140,7 @@ alloy:
 
         // Collect systemd journal (system logs)
         loki.source.journal "system_logs" {
-          path          = "/var/log/journal"
+          path          = "/run/log/journal"
           forward_to    = [loki.process.system_logs.receiver]
 
           // Add labels to match pod log format
@@ -145,6 +153,106 @@ alloy:
 
         // Process system logs
         loki.process "system_logs" {
+          // Drop noisy Kubernetes verbose operations
+          stage.drop {
+            expression = "RemoveContainer|UnmountVolume|MountVolume|operationExecutor|orphaned pod volumes|Volume detached|Volume attached"
+          }
+
+          // Drop Tailscale networking chatter
+          stage.drop {
+            expression = "magicsock|portmapper|router: portUpdate|LinkChange|monitor: (\\[unexpected\\]|RTM_)|dns: (Set|Resolvercfg|OScfg)|wgengine: set DNS|control: NetInfo|post-rebind ping|Rebind; defIf"
+          }
+
+          // Drop CRD finalizer retry errors (benign)
+          stage.drop {
+            expression = "crd_finalizer.go.*tailscale.com"
+          }
+
+          // Drop routine systemd kubepods and container runtime mount/unmount messages
+          stage.drop {
+            expression = "(kubepods|run-k3s-containerd|run-netns-cni|var-lib-kubelet).*\\.mount: (Deactivated|Succeeded)"
+          }
+
+          // Drop systemd slice management for containers
+          stage.drop {
+            expression = "(Removed|Stopping|Stopped) (slice|Slice) (kubepods|libcontainer)"
+          }
+
+          // Drop scope messages for Kubernetes containers
+          stage.drop {
+            expression = "scope.go.*RemoveContainer"
+          }
+
+          // Drop container runtime scope deactivation messages
+          stage.drop {
+            expression = "cri-containerd-.*\\.scope: Deactivated"
+          }
+
+          // Drop network interface lifecycle messages
+          stage.drop {
+            expression = "Withdrawing (workstation service|address record)|left (promiscuous|allmulticast) mode|entered disabled state|Leaving mDNS multicast|Interface.*no longer relevant for mDNS"
+          }
+
+          // Drop benign ARM NUMA sysinfo warnings (Pi has no NUMA nodes)
+          stage.drop {
+            expression = "sysinfo.go.*Found node without any CPU"
+          }
+
+          // Drop benign k3s garbage collector CronJob v1beta1 errors
+          stage.drop {
+            expression = "garbagecollector.go.*unable to get REST mapping for batch/v1beta1/CronJob"
+          }
+
+          // Drop container not found messages (benign cleanup logs)
+          stage.drop {
+            expression = "pod_container_deletor.go.*Container not found"
+          }
+
+          // Drop benign ICMPv6 Router Solicitation UFW blocks (Type 133)
+          // These are just IPv6 neighbor discovery within CNI network
+          stage.drop {
+            expression = "\\[UFW BLOCK\\].*PROTO=ICMPv6 TYPE=133"
+          }
+
+          // Extract log level - Kubernetes-style prefix (E1115, I1115, W1115, etc.)
+          stage.regex {
+            expression = "(?P<detected_level>[EWIDF])\\d{4}\\s\\d{2}:\\d{2}:\\d{2}"
+          }
+
+          // Extract log level - bracketed format [ERROR], [INFO], etc.
+          stage.regex {
+            expression = "(?i)\\[(?P<detected_level>debug|info|warn|warning|error|fatal|panic|trace)\\]"
+          }
+
+          // Extract log level - colon format (ERROR:, error:, etc.)
+          stage.regex {
+            expression = "(?i)(?P<detected_level>debug|info|warn|warning|error|fatal|panic|trace):"
+          }
+
+          // Extract log level - quoted strings like "Unhandled Error"
+          stage.regex {
+            expression = "(?i)\"[^\"]*(?P<detected_level>error|fatal|panic)[^\"]*\""
+          }
+
+          // Extract log level - general word matching (original pattern)
+          stage.regex {
+            expression = "(?i)\\b(?P<detected_level>debug|info|log|warn|warning|error|fatal|panic|trace)\\b"
+          }
+
+          // Create normalized level field for consistent filtering
+          // Map Kubernetes prefixes: E->error, W->warn, I->info, D->debug, F->fatal
+          // Map standard levels to lowercase
+          stage.template {
+            source   = "level"
+            template = "{{`{{ if eq .detected_level \"E\" }}error{{ else if eq .detected_level \"W\" }}warn{{ else if eq .detected_level \"I\" }}info{{ else if eq .detected_level \"D\" }}debug{{ else if eq .detected_level \"F\" }}fatal{{ else if eq (ToLower .detected_level) \"log\" }}info{{ else if eq (ToLower .detected_level) \"warning\" }}warn{{ else if eq (ToLower .detected_level) \"trace\" }}debug{{ else }}{{ ToLower .detected_level }}{{ end }}`}}"
+          }
+
+          stage.labels {
+            values = {
+              level = "",
+            }
+          }
+
           // Extract priority level and map to standard levels
           stage.labels {
             values = {
@@ -177,6 +285,19 @@ alloy:
           max_streams = 2000  // Reduced from 3000 to save ~30% stream overhead
         }
 
+    # Volume mounts for Alloy container
+    mounts:
+      extra:
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: journal
+          mountPath: /run/log/journal
+          readOnly: true
+
   controller:
     type: daemonset
 
@@ -191,19 +312,7 @@ alloy:
             path: /var/lib/docker/containers
         - name: journal
           hostPath:
-            path: /var/log/journal
-
-    volumeMounts:
-      extra:
-        - name: varlog
-          mountPath: /var/log
-          readOnly: true
-        - name: varlibdockercontainers
-          mountPath: /var/lib/docker/containers
-          readOnly: true
-        - name: journal
-          mountPath: /var/log/journal
-          readOnly: true
+            path: /run/log/journal
 
     # Tolerations to run on all nodes including control plane
     tolerations:
