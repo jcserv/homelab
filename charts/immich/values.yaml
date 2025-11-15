@@ -42,10 +42,10 @@ resources:
   server:
     requests:
       memory: "1Gi"
-      cpu: "500m"
+      cpu: "1000m"
     limits:
       memory: "2Gi"
-      cpu: "2000m"
+      cpu: "3000m"
   machinelearning:
     requests:
       memory: "1Gi"
