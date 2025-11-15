@@ -901,6 +901,328 @@
         "type": "loki",
         "uid": "$loki_datasource"
       },
+      "description": "Log level distribution by node over the last 5 minutes. Shows counts of error, warn, info, and debug logs per node.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.9,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*error.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*warn.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*info.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*debug.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "$loki_datasource"
+          },
+          "editorMode": "code",
+          "expr": "sum by (node_name, level) (count_over_time({job=~\".+\", node_name=~\"$node\", level=~\"${log_level:pipe}\"}[$__interval]))",
+          "legendFormat": "{{node_name}} - {{level}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Log Level Summary by Node",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "$loki_datasource"
+      },
+      "description": "Log level distribution by pod over the last 5 minutes. Shows counts of error, warn, info, and debug logs per pod.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.9,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*error.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*warn.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*info.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*debug.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "$loki_datasource"
+          },
+          "editorMode": "code",
+          "expr": "sum by (pod, level) (count_over_time({job=~\".+\", pod=~\"${pod:pipe}\", node_name=~\"$node\", level=~\"${log_level:pipe}\"}[$__interval]))",
+          "legendFormat": "{{pod}} - {{level}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Log Level Summary by Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "$loki_datasource"
+      },
       "description": "Logs from selected services/pods. Filtered by: node, pod, log level, and text search. Note: If node or log level filtering doesn't work, check your Loki label names (common variations: node/node_name/hostname for node, level/detected_level/severity for log level).",
       "fieldConfig": {
         "defaults": {},
@@ -910,7 +1232,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 52
       },
       "id": 7,
       "options": {
@@ -1524,6 +1846,11 @@
         "options": [
           {
             "selected": false,
+            "text": "alertmanager-.*",
+            "value": "alertmanager-.*"
+          },
+          {
+            "selected": false,
             "text": "alloy-.*",
             "value": "alloy-.*"
           },
@@ -1539,6 +1866,11 @@
           },
           {
             "selected": false,
+            "text": "grafana-.*",
+            "value": "grafana-.*"
+          },
+          {
+            "selected": false,
             "text": "home-assistant-.*",
             "value": "home-assistant-.*"
           },
@@ -1546,21 +1878,6 @@
             "selected": false,
             "text": "immich-.*",
             "value": "immich-.*"
-          },
-          {
-            "selected": false,
-            "text": "prometheus-.*",
-            "value": "prometheus-.*"
-          },
-          {
-            "selected": false,
-            "text": "grafana-.*",
-            "value": "grafana-.*"
-          },
-          {
-            "selected": false,
-            "text": "alertmanager-.*",
-            "value": "alertmanager-.*"
           },
           {
             "selected": false,
@@ -1584,6 +1901,16 @@
           },
           {
             "selected": false,
+            "text": "power-monitor-.*",
+            "value": "power-monitor-.*"
+          },
+          {
+            "selected": false,
+            "text": "prometheus-.*",
+            "value": "prometheus-.*"
+          },
+          {
+            "selected": false,
             "text": "restic-backup-.*",
             "value": "restic-backup-.*"
           },
@@ -1598,7 +1925,7 @@
             "value": "systemd-journal"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,home-assistant-.*,immich-.*,prometheus-.*,grafana-.*,alertmanager-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal",
+        "query": "alertmanager-.*,alloy-.*,cert-manager-.*,filebrowser-.*,grafana-.*,home-assistant-.*,immich-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
