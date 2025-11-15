@@ -97,14 +97,16 @@ alloy:
         // Process pod logs
         loki.process "pod_logs" {
           // Extract log level if present (case-insensitive)
+          // Note: NestJS uses "LOG" for info-level logs
           stage.regex {
-            expression = "(?i)(?P<detected_level>debug|info|warn|error|fatal|panic)"
+            expression = "(?i)(?P<detected_level>debug|info|log|warn|warning|error|fatal|panic)"
           }
 
           // Create normalized lowercase level field for consistent filtering
+          // Map NestJS "LOG" and "WARNING" to standard levels
           stage.template {
             source   = "level"
-            template = "{{`{{ ToLower .detected_level }}`}}"
+            template = "{{`{{ if eq (ToLower .detected_level) \"log\" }}info{{ else if eq (ToLower .detected_level) \"warning\" }}warn{{ else }}{{ ToLower .detected_level }}{{ end }}`}}"
           }
 
           stage.labels {
