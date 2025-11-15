@@ -65,10 +65,8 @@ env:
   # WEBPASSWORD - Admin password for Pi-hole web interface
   # WEBPASSWORD: "changeme"
 
-  FTLCONF_LOCAL_IPV4: "10.0.0.202"
   DNS1: "1.1.1.1" # Cloudflare upstream
   DNS2: "1.0.0.1" # Cloudflare upstream
-  DNSMASQ_LISTENING: "all"
 
 # Custom DNS entries
 customDnsEntries:
