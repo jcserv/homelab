@@ -23,6 +23,11 @@ spec:
       - name: pihole
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          capabilities:
+            add:
+              - CAP_SYS_TIME  # Allow NTP client to set system time
+              - CAP_SYS_NICE  # Allow setting process priority
         lifecycle:
           postStart:
             exec:
@@ -85,16 +90,10 @@ spec:
             secretKeyRef:
               name: {{ include "pihole.fullname" . }}-secrets
               key: WEBPASSWORD
-        - name: FTLCONF_LOCAL_IPV4
-          value: {{ .Values.env.FTLCONF_LOCAL_IPV4 }}
         - name: DNS1
           value: {{ .Values.env.DNS1 }}
         - name: DNS2
           value: {{ .Values.env.DNS2 }}
-        - name: DNSMASQ_LISTENING
-          value: {{ .Values.env.DNSMASQ_LISTENING }}
-        - name: FTLCONF_LISTENING_MODE
-          value: all
         volumeMounts:
         - name: config
           mountPath: /etc/pihole
