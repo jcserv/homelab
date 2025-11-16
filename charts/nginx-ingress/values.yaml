@@ -33,6 +33,16 @@ ingress-nginx:
         cpu: 500m
         memory: 256Mi
 
+    # Graceful shutdown configuration
+    terminationGracePeriodSeconds: 120
+    lifecycle:
+      preStop:
+        exec:
+          command:
+            - /bin/sh
+            - -c
+            - /wait-shutdown
+
     # Metrics for monitoring
     metrics:
       enabled: true

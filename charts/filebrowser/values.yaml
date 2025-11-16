@@ -64,11 +64,11 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: files.home
+    - host: files.jarrodservilla.com
       paths:
         - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - files.home
-      secretName: wildcard-home-tls
+        - files.jarrodservilla.com
+      secretName: wildcard-jarrodservilla-tls
