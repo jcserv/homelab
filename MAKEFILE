@@ -90,6 +90,9 @@ install-monitoring:
 
 deploy-all:
 	@echo "Installing application services..."
+	helm install unbound ./charts/unbound
+	@echo "Waiting for Unbound to be ready..."
+	@kubectl wait --for=condition=ready pod -l app=unbound --timeout=120s
 	helm install pihole ./charts/pihole
 	helm install immich ./charts/immich
 	helm install home-assistant ./charts/home-assistant
