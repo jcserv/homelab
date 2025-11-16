@@ -1,0 +1,110 @@
+# Unbound Recursive DNS Resolver Configuration
+
+# Number of replicas for high availability
+replicaCount: 2
+
+image:
+  repository: mvance/unbound
+  tag: "1.20.0"
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 53
+  protocol: UDP
+  # LoadBalancer IPs for each instance
+  loadBalancerIPs:
+    - "10.0.0.205"  # unbound-0
+    - "10.0.0.206"  # unbound-1
+  # MetalLB annotation for IP assignment
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "10.0.0.205,10.0.0.206"
+
+# Resource limits
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
+
+# Pod anti-affinity to spread replicas across nodes
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - unbound
+          topologyKey: kubernetes.io/hostname
+
+# Unbound configuration
+config:
+  # Server configuration
+  server:
+    # Network settings
+    interface: "0.0.0.0"
+    port: 53
+    doIp4: "yes"
+    doIp6: "no"
+    doUdp: "yes"
+    doTcp: "yes"
+
+    # Access control (allow queries from cluster network)
+    accessControl:
+      - "10.0.0.0/8 allow"
+      - "127.0.0.0/8 allow"
+      - "0.0.0.0/0 refuse"
+
+    # Privacy settings
+    hideIdentity: "yes"
+    hideVersion: "yes"
+    qnameMinimisation: "yes"
+    aggressiveNsec: "yes"
+
+    # DNSSEC settings
+    moduleConfig: "validator iterator"
+    autoTrustAnchorFile: "/opt/unbound/etc/unbound/root.key"
+    valCleanAdditional: "yes"
+
+    # Performance tuning
+    numThreads: 2
+    msgCacheSlabs: 4
+    rrsetCacheSlabs: 4
+    infraCacheSlabs: 4
+    keyCacheSlabs: 4
+
+    # Cache settings (aggressive caching)
+    cacheMinTtl: 3600        # 1 hour minimum
+    cacheMaxTtl: 86400       # 24 hours maximum
+    msgCacheSize: "50m"
+    rrsetCacheSize: "100m"
+
+    # Prefetching
+    prefetch: "yes"
+    prefetchKey: "yes"
+
+    # Serve expired records while fetching fresh data
+    serveExpired: "yes"
+    serveExpiredTtl: 3600
+    serveExpiredTtlReset: "yes"
+
+    # Logging (minimal for production)
+    verbosity: 1
+    logQueries: "no"
+
+    # Security
+    unwantedReplyThreshold: 10000
+    privateAddress:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "192.168.0.0/16"
+      - "169.254.0.0/16"
+      - "fd00::/8"
+      - "fe80::/10"
