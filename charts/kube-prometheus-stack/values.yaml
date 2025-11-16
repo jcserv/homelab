@@ -79,7 +79,12 @@ kube-prometheus-stack:
   # Grafana configuration
   grafana:
     enabled: true
-    adminPassword: admin
+
+    # Admin credentials from sealed secret
+    admin:
+      existingSecret: grafana-admin-secret
+      userKey: admin-user
+      passwordKey: admin-password
 
     # Sidecar for dashboards
     sidecar:
@@ -109,6 +114,10 @@ kube-prometheus-stack:
       enabled: true
       storageClassName: local-path
       size: 10Gi
+
+    # Disable init container that causes permission issues with local-path
+    initChownData:
+      enabled: false
 
     # Resources - optimized for memory usage
     resources:
