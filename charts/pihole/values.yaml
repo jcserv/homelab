@@ -73,8 +73,8 @@ env:
   # WEBPASSWORD: ""
 
   FTLCONF_LOCAL_IPV4: "10.0.0.202"
-  DNS1: "1.1.1.1" # Cloudflare upstream
-  DNS2: "1.0.0.1" # Cloudflare upstream
+  DNS1: "10.0.0.205" # Unbound instance 0
+  DNS2: "10.0.0.206" # Unbound instance 1
   DNSMASQ_LISTENING: "all"
 
 # Custom DNS entries

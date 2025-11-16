@@ -62,8 +62,3 @@ data:
         {{- range .Values.config.server.privateAddress }}
         private-address: {{ . }}
         {{- end }}
-
-    # Remote control configuration (for health checks)
-    remote-control:
-        control-enable: yes
-        control-interface: 127.0.0.1

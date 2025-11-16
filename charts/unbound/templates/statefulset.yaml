@@ -40,21 +40,15 @@ spec:
               subPath: unbound.conf
               readOnly: true
           livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - "unbound-control status"
+            tcpSocket:
+              port: 53
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - "unbound-control status"
+            tcpSocket:
+              port: 53
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
