@@ -14,6 +14,9 @@ A 4-node HA Kubernetes cluster on Raspberry Pi hardware running self-hosted serv
 - `pi4-02` (4GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + Zigbee worker (Home Assistant)
 - `pi5-01` (8GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + storage worker with HDD
 - `pi5-02` (8GB RAM w/ [PoE+ Hat](https://www.raspberrypi.com/products/poe-plus-hat/)): Control plane + [NUT-like server](https://networkupstools.org/index.html)
+  
+<img src="docs/homelab.png" width="100%" style="max-width: 400px;" />
+<br/>
 
 Case: [DeskPi T1 Rackmate](https://deskpi.com/products/deskpi-rackmate-t1-2)
 
@@ -22,6 +25,8 @@ Pi Mount: [DeskPi 2U Rack Mount](https://deskpi.com/products/deskpi-rackmate-10-
 Network Switch: [TP-Link 8-Port Gigabit Easy Smart Switch with 4-Port PoE+](https://www.tp-link.com/us/business-networking/poe-switch/tl-sg108pe/)
 
 Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.eaton.com/standby-ups-600va-300w-4-outlets-120v-energy-star~BC600R)
+
+Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://sonoff.tech/products/sonoff-zigbee-3-0-usb-dongle-plus-zbdongle-p)
 
 ## architecture 🗺️
 
