@@ -35,6 +35,12 @@ spec:
                 - /bin/bash
                 - -c
                 - |
+                  # Install sqlite3 if not available
+                  if ! command -v sqlite3 &> /dev/null; then
+                    echo "Installing sqlite3..."
+                    apk add --no-cache sqlite
+                  fi
+
                   # Configure Pi-hole to listen on all interfaces (not just local)
                   pihole-FTL --config dns.listeningMode all
 
@@ -55,18 +61,26 @@ spec:
                     sleep 2
                   done
 
-                  # Check if adlists are already populated
-                  COUNT=$(sqlite3 /etc/pihole/gravity.db "SELECT COUNT(*) FROM adlist;" 2>/dev/null || echo "0")
+                  # Idempotent adlist initialization - add missing lists only
+                  echo "Checking for missing adlists..."
+                  ADDED_COUNT=0
 
-                  if [ "$COUNT" -eq "0" ]; then
-                    echo "Initializing adlists..."
-                    sqlite3 /etc/pihole/gravity.db <<'EOF'
                   {{- range .Values.adlists }}
-                    INSERT INTO adlist (address, enabled, comment) VALUES ('{{ . }}', 1, 'Auto-added');
+                  # Check if {{ . }} exists
+                  EXISTS=$(sqlite3 /etc/pihole/gravity.db "SELECT COUNT(*) FROM adlist WHERE address='{{ . }}';" 2>/dev/null || echo "0")
+                  if [ "$EXISTS" -eq "0" ]; then
+                    echo "Adding missing adlist: {{ . }}"
+                    sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('{{ . }}', 1, 'Auto-added');"
+                    ADDED_COUNT=$((ADDED_COUNT + 1))
+                  fi
                   {{- end }}
-                  EOF
-                    echo "Adlists initialized, running gravity update..."
+
+                  # Only run gravity update if new lists were added
+                  if [ "$ADDED_COUNT" -gt "0" ]; then
+                    echo "Added $ADDED_COUNT new adlist(s), running gravity update..."
                     pihole -g
+                  else
+                    echo "All adlists already present, no gravity update needed."
                   fi
 
                   # Reload DNS to apply all custom configurations
