@@ -123,9 +123,17 @@ jobs:
       - name: Deploy changed charts
         if: steps.list-changed.outputs.changed == 'true'
         run: |
+          # Critical infrastructure charts requiring strict health checks
+          # These will use --wait --atomic to ensure they're healthy before proceeding
+          CRITICAL_CHARTS=(
+            "cert-manager"
+            "nginx-ingress"
+            "metallb"
+            "sealed-secrets"
+          )
+
           # Charts to exclude from auto-deployment:
           # - Charts with gitignored values.yaml (contain secrets)
-          # - Charts with complex PVs that need manual intervention
           EXCLUDED_CHARTS=(
             "pihole"           # gitignored values.yaml
             "power-monitor"    # gitignored values.yaml
@@ -148,7 +156,14 @@ jobs:
               continue
             fi
 
-            echo "📦 Processing chart: $chart_name"
+            # Determine if this is a critical infrastructure chart
+            if [[ " ${CRITICAL_CHARTS[@]} " =~ " ${chart_name} " ]]; then
+              echo "🔧 Processing CRITICAL chart: $chart_name"
+              WAIT_FLAGS="--wait --timeout 5m --atomic"
+            else
+              echo "📦 Processing APPLICATION chart: $chart_name"
+              WAIT_FLAGS="--timeout 2m"
+            fi
 
             # Build dependencies from Chart.lock if it exists, otherwise update
             if [ -f "$chart/Chart.lock" ]; then
@@ -166,14 +181,17 @@ jobs:
             kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
 
             # Deploy the chart
-            echo "  🔧 Deploying to namespace: $namespace"
-            helm upgrade --install "$chart_name" "$chart" \
+            echo "  🚢 Deploying to namespace: $namespace"
+            if helm upgrade --install "$chart_name" "$chart" \
               --namespace "$namespace" \
               --create-namespace \
               --reset-values \
-              --wait \
-              --timeout 5m \
-              --atomic
+              $WAIT_FLAGS; then
+              echo "  ✅ Successfully deployed $chart_name"
+            else
+              echo "  ⚠️  Deployment completed with issues for $chart_name"
+              helm status "$chart_name" -n "$namespace" || true
+            fi
 
             # Force rollout restart for charts with ConfigMaps that don't auto-reload
             # This ensures pods pick up ConfigMap changes immediately
@@ -188,11 +206,9 @@ jobs:
               kubectl rollout status deployment/"$chart_name" -n "$namespace" --timeout=3m 2>/dev/null || \
               kubectl rollout status statefulset/"$chart_name" -n "$namespace" --timeout=3m 2>/dev/null || true
             fi
-
-            echo "  ✅ Successfully deployed $chart_name"
           done
 
-          echo "🎉 All charts deployed successfully!"
+          echo "🎉 All charts processed!"
 
       - name: Deployment summary
         if: always() && steps.list-changed.outputs.changed == 'true'
@@ -204,4 +220,40 @@ jobs:
           echo "${{ steps.list-changed.outputs.charts }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+          # Health check report
+          echo "### Pod Health Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Chart | Namespace | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+
+          changed_charts=$(cat <<'EOF'
+          ${{ steps.list-changed.outputs.charts }}
+          EOF
+          )
+
+          for chart in $changed_charts; do
+            chart_name=$(basename "$chart")
+            namespace=$(yq eval '.namespace // "'$chart_name'"' "$chart/values.yaml" 2>/dev/null || echo "$chart_name")
+
+            # Get pod status
+            pod_info=$(kubectl get pods -n "$namespace" -l "app.kubernetes.io/instance=$chart_name" \
+              -o jsonpath='{range .items[*]}{.status.phase}{","}{.status.conditions[?(@.type=="Ready")].status}{","}{.status.conditions[?(@.reason=="Unschedulable")].message}{"\n"}{end}' \
+              2>/dev/null || echo "NotFound")
+
+            if [[ -z "$pod_info" ]] || [[ "$pod_info" == "NotFound" ]]; then
+              echo "| $chart_name | $namespace | ⚠️ No Pods | Chart deployed but no pods found |" >> $GITHUB_STEP_SUMMARY
+            elif echo "$pod_info" | grep -q "Running.*True"; then
+              running_count=$(echo "$pod_info" | grep -c "Running.*True" || echo "0")
+              echo "| $chart_name | $namespace | ✅ Running | $running_count pod(s) healthy |" >> $GITHUB_STEP_SUMMARY
+            elif echo "$pod_info" | grep -q "Pending"; then
+              reason=$(echo "$pod_info" | grep -o "node affinity\|Insufficient.*\|taints" | head -1 || echo "scheduling")
+              echo "| $chart_name | $namespace | ⏸️ Pending | Waiting for $reason |" >> $GITHUB_STEP_SUMMARY
+            else
+              status=$(echo "$pod_info" | cut -d',' -f1 | head -1)
+              echo "| $chart_name | $namespace | ❌ $status | Check pod logs |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

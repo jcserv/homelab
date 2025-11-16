@@ -48,6 +48,7 @@ build-deps:
 	helm dependency build ./charts/metallb
 	helm dependency build ./charts/cert-manager
 	helm dependency build ./charts/sealed-secrets
+	helm dependency build ./charts/nginx-ingress
 	helm dependency build ./charts/kube-prometheus-stack
 	helm dependency build ./charts/loki
 	helm dependency build ./charts/alloy
@@ -58,6 +59,7 @@ update-deps:
 	helm dependency update ./charts/metallb
 	helm dependency update ./charts/cert-manager
 	helm dependency update ./charts/sealed-secrets
+	helm dependency update ./charts/nginx-ingress
 	helm dependency update ./charts/kube-prometheus-stack
 	helm dependency update ./charts/loki
 	helm dependency update ./charts/alloy
