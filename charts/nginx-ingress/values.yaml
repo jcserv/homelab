@@ -22,7 +22,7 @@ ingress-nginx:
     # Enable SSL passthrough for services that handle their own TLS
     extraArgs:
       enable-ssl-passthrough: true
-      default-ssl-certificate: "cert-manager/wildcard-home-tls"
+      default-ssl-certificate: "cert-manager/wildcard-jarrodservilla-tls"
 
     # Resource limits
     resources:

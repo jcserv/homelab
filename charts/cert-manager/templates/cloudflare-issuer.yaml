@@ -1,0 +1,23 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cloudflare-issuer
+spec:
+  acme:
+    # Let's Encrypt production server
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: jarrod@jarrodservilla.com
+    privateKeySecretRef:
+      name: cloudflare-issuer-account-key
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
+          # Zone ID for jarrodservilla.com (public identifier, not sensitive)
+          zoneID: 53d7862702f8185764083da9309dd1d3
+      selector:
+        dnsZones:
+        - jarrodservilla.com
