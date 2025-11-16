@@ -1,22 +1,22 @@
 ---
-# Wildcard certificate for *.home domain
+# Wildcard certificate for *.jarrodservilla.com domain
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-home-cert
+  name: wildcard-jarrodservilla-cert
   namespace: cert-manager
 spec:
-  secretName: wildcard-home-tls
-  duration: 8760h # 1 year
+  secretName: wildcard-jarrodservilla-tls
+  duration: 2160h # 90 days (Let's Encrypt default)
   renewBefore: 720h # 30 days
-  commonName: "*.home"
+  commonName: "*.jarrodservilla.com"
   dnsNames:
-    - "*.home"
-    - "home"
+    - "*.jarrodservilla.com"
+    - "jarrodservilla.com"
   privateKey:
     algorithm: RSA
     size: 2048
   issuerRef:
-    name: homelab-ca-issuer
+    name: cloudflare-issuer
     kind: ClusterIssuer
     group: cert-manager.io
