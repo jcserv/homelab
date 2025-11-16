@@ -4,8 +4,8 @@
 replicaCount: 2
 
 image:
-  repository: mvance/unbound
-  tag: "1.20.0"
+  repository: klutchell/unbound
+  tag: "1.24.1"
   pullPolicy: IfNotPresent
 
 # Service configuration
@@ -15,8 +15,8 @@ service:
   protocol: UDP
   # LoadBalancer IPs for each instance
   loadBalancerIPs:
-    - "10.0.0.205"  # unbound-0
-    - "10.0.0.206"  # unbound-1
+    - "10.0.0.205" # unbound-0
+    - "10.0.0.206" # unbound-1
   # MetalLB annotation for IP assignment
   annotations:
     metallb.universe.tf/loadBalancerIPs: "10.0.0.205,10.0.0.206"
@@ -70,7 +70,7 @@ config:
 
     # DNSSEC settings
     moduleConfig: "validator iterator"
-    autoTrustAnchorFile: "/opt/unbound/etc/unbound/root.key"
+    autoTrustAnchorFile: "/opt/unbound/etc/unbound/var/root.key"
     valCleanAdditional: "yes"
 
     # Performance tuning
@@ -81,8 +81,8 @@ config:
     keyCacheSlabs: 4
 
     # Cache settings (aggressive caching)
-    cacheMinTtl: 3600        # 1 hour minimum
-    cacheMaxTtl: 86400       # 24 hours maximum
+    cacheMinTtl: 3600 # 1 hour minimum
+    cacheMaxTtl: 86400 # 24 hours maximum
     msgCacheSize: "50m"
     rrsetCacheSize: "100m"
 
