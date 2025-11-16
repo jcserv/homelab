@@ -14,13 +14,3 @@ data:
     addn-hosts=/etc/pihole/custom.list
     # Return NODATA for IPv6 (AAAA) queries on .home domains to prevent ERR_ADDRESS_UNREACHABLE in Chromium
     filter-AAAA=home
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "pihole.fullname" . }}-custom-blocklist
-  labels:
-    app: {{ include "pihole.name" . }}
-data:
-  pihole-blocklist.txt: |
-{{ .Values.customBlocklist | indent 4 }}

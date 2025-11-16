@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: pihole-custom-blocklist
+  namespace: default
+spec:
+  encryptedData:
+    pihole-blocklist.txt: AgBjdrh1eRty7nx6ZG3qp4pwyC4PZqi0qyWEiXl36DRtO42uMJLYbH26URVbdNTCVjftZEVVdGk/8zNFv+QJzylurR1nvdTR4chfLJtDSXhaOUN6uCWJ5N2+Q9JJk/2Qfkf7IoEc8RiUyXz8B6UvgF6NKVIxJtmG+nSpgIT2oSI0ah7wnyL/4Cj1BMUiA+Oavcuwy/1x94lHBDQD5SBPEKwZORdNtUBf0IngjSitTx6L1dXoCllgJNoQgckzYHJr6nDb8/dDA0bm/CxKCeyJRASWmvyYjabCrtLOpJRe5gSggQll9eKAw3PynMOqqBrLi/u8FTQ6u6F/uYobt6hguKOWYQqyr6HYeXG2BjxLD+nxpPwLohMY8rwfztexIa8ndBuXfJQxO2AqLkcmKr2XHWxSw+YleXeZH0VA2TB/gkhMvjEkL0C+7CfK5nLTyjTWjtMQtGauKdNR056EQKho1Zy+/FqNtsZjzvZbx40MvUpEx5MBCz40tmaO9FX7mdMOoxe+qexC4JFOf5iJZI/jTvbNmxO7PwGHmwY8rjqGBrKVCUfZmZ+4xG72+/OmjYLLtwg7XyjIxEzIFa+XZ5Vbfg+6dn2pyUB4cb+ZUBlxmZr2OI78Ue+WpDZd2hxS46aeo0zQ48NnDODe3BQwYPb2k/cDG2B5/jO1S78ibatlCG48UJ8/L7DSamqsX7mQp82LXgSVj/xJIehvyZt3GcMRAHDGDV7nABEa9GjJccmJrvD4b61TifvLzzcEYwacQM6K/Kl9UgJ6aP+TuqI8S0bAFqRz1zV9TCrTpkabAoD+vQTYC3ZZ2zSrU3u2kkpIJrC1DVKRiGIx4CGJNU7GHGsAx/SGhhBDulzSw/+R7QCOkU6+3O1mUK/o7/IAicfKaZjdxcLbwhvf3NdM+NPVeL+omBZcCrhEIpvx+cjLNBab0C84qSLMzbdHMWEXPRjhfuDw4p0c9bDQG/E8HqQ8/jWQa/11g6HqTGhBK06fLkNBlSZ8s9TOphwalTd2Z6w=
+  template:
+    metadata:
+      name: pihole-custom-blocklist
+      namespace: default
+    type: Opaque

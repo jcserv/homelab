@@ -1,3 +1,6 @@
+# Deployment namespace
+namespace: default
+
 replicaCount: 2 # Two instances for high availability (synced via nebula-sync)
 
 image:
@@ -6,16 +9,19 @@ image:
   pullPolicy: IfNotPresent
 
 # Spread pods across different hosts for high availability
+# Using preferred (not required) to allow scheduling when fewer nodes are available
 affinity:
   podAntiAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-            - key: app
-              operator: In
-              values:
-                - pihole
-        topologyKey: kubernetes.io/hostname
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - pihole
+          topologyKey: kubernetes.io/hostname
 
 resources:
   requests:
@@ -26,8 +32,8 @@ resources:
     cpu: "500m"
 
 storage:
-  type: nfs-client # Using NFS for ReadWriteMany support (HA)
-  storageClass: nfs-client
+  type: local-path # Using local storage - nebula-sync handles replication
+  storageClass: local-path
   config:
     size: 1Gi
   dnsmasq:
@@ -63,10 +69,13 @@ env:
   TZ: "America/New_York"
 
   # WEBPASSWORD - Admin password for Pi-hole web interface
-  # WEBPASSWORD: "changeme"
+  # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-secrets-sealed.yaml)
+  # WEBPASSWORD: ""
 
+  FTLCONF_LOCAL_IPV4: "10.0.0.202"
   DNS1: "1.1.1.1" # Cloudflare upstream
   DNS2: "1.0.0.1" # Cloudflare upstream
+  DNSMASQ_LISTENING: "all"
 
 # Custom DNS entries
 customDnsEntries:
@@ -78,14 +87,15 @@ customDnsEntries:
   - "10.0.0.200 grafana.jarrodservilla.com"
 
 # Custom blocklist entries
-customBlocklist: |
-  # ------------------------------------[FILTERS]-------------------------------------
-  udcm.yahoo.com
-  api-adservices.apple.com
-  books-analytics-events.apple.com
-  grs.hicloud.com
-  appmetrica.yandex.ru
-  business-api.tiktok.com
+# Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
+# customBlocklist: |
+#   # ------------------------------------[FILTERS]-------------------------------------
+#   udcm.yahoo.com
+#   api-adservices.apple.com
+#   books-analytics-events.apple.com
+#   grs.hicloud.com
+#   appmetrica.yandex.ru
+#   business-api.tiktok.com
 
 # Adlists to bootstrap on initialization
 adlists:

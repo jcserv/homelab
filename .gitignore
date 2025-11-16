@@ -19,9 +19,6 @@ sealed-secrets-key.yaml
 *.tgz
 charts/*/charts/
 
-# Chart values with secrets (use values.example.yaml as template)
-# Only ignore values.yaml for charts that contain sensitive data
-charts/pihole/values.yaml
 charts/power-monitor/values.yaml
 
 # Kubernetes

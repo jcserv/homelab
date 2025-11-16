@@ -133,10 +133,8 @@ jobs:
           )
 
           # Charts to exclude from auto-deployment:
-          # - Charts with gitignored values.yaml (contain secrets)
           EXCLUDED_CHARTS=(
-            "pihole"           # gitignored values.yaml
-            "power-monitor"    # gitignored values.yaml
+            "power-monitor"    # need to build the image first
           )
 
           # Read the changed charts from the output

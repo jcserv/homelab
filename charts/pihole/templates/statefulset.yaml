@@ -126,8 +126,8 @@ spec:
         configMap:
           name: {{ include "pihole.fullname" . }}-custom-dns
       - name: custom-blocklist
-        configMap:
-          name: {{ include "pihole.fullname" . }}-custom-blocklist
+        secret:
+          secretName: pihole-custom-blocklist
   volumeClaimTemplates:
   - metadata:
       name: config
