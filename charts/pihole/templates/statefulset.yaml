@@ -49,6 +49,17 @@ spec:
                     pihole setpassword "$WEBPASSWORD"
                   fi
 
+                  # Update upstream DNS servers in pihole.toml
+                  # This ensures DNS1/DNS2 env vars are synced to the persistent config
+                  echo "Updating upstream DNS servers to $DNS1 and $DNS2..."
+                  if [ -f /etc/pihole/pihole.toml ]; then
+                    # Use pihole-FTL config command to set upstream DNS servers
+                    pihole-FTL --config dns.upstreams "[ \"$DNS1\", \"$DNS2\" ]"
+                    echo "Upstream DNS servers updated"
+                  else
+                    echo "Warning: pihole.toml not found yet, DNS env vars will be used on first init"
+                  fi
+
                   # Add custom DNS entries using Pi-hole v6 dns.hosts configuration
                   # This writes entries to /etc/pihole/hosts/custom.list and persists across restarts
                   pihole-FTL --config dns.hosts '[{{- range $index, $entry := .Values.customDnsEntries }}{{- if $index }},{{- end }}"{{ $entry }}"{{- end }}]'

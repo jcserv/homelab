@@ -1,7 +1,5 @@
-# Unbound Recursive DNS Resolver Configuration
-
-# Number of replicas for high availability
-replicaCount: 2
+namespace: default
+replicaCount: 2 # high availability
 
 image:
   repository: klutchell/unbound
