@@ -95,14 +95,14 @@ kube-prometheus-stack:
       enabled: true
       ingressClassName: nginx
       annotations:
-        cert-manager.io/cluster-issuer: homelab-ca-issuer
+        cert-manager.io/cluster-issuer: cloudflare-issuer
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
       hosts:
-        - grafana.home
+        - grafana.jarrodservilla.com
       tls:
         - hosts:
-            - grafana.home
-          secretName: wildcard-home-tls
+            - grafana.jarrodservilla.com
+          secretName: wildcard-jarrodservilla-tls
 
     # Persistence
     persistence:

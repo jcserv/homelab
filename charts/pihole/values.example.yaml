@@ -49,12 +49,12 @@ service:
     ports:
       http: 80
 
-# Ingress configuration for HTTPS access via pi.home
+# Ingress configuration for HTTPS access via pi.jarrodservilla.com
 ingress:
   enabled: true
   className: nginx
-  host: pi.home
-  tlsSecretName: wildcard-home-tls
+  host: pi.jarrodservilla.com
+  tlsSecretName: wildcard-jarrodservilla-tls
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
@@ -70,11 +70,12 @@ env:
 
 # Custom DNS entries
 customDnsEntries:
-  - "10.0.0.200 nginx.home"
-  - "10.0.0.200 img.home"
-  - "10.0.0.200 assistant.home"
-  - "10.0.0.200 files.home"
-  - "10.0.0.200 pi.home"
+  - "10.0.0.200 nginx.jarrodservilla.com"
+  - "10.0.0.200 img.jarrodservilla.com"
+  - "10.0.0.200 homeassistant.jarrodservilla.com"
+  - "10.0.0.200 files.jarrodservilla.com"
+  - "10.0.0.200 pi.jarrodservilla.com"
+  - "10.0.0.200 grafana.jarrodservilla.com"
 
 # Custom blocklist entries
 customBlocklist: |

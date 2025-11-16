@@ -125,7 +125,7 @@ env:
   DB_USERNAME: postgres
   REDIS_HOSTNAME: immich-redis
   REDIS_PORT: "6379"
-  IMMICH_WEB_URL: https://img.home
+  IMMICH_WEB_URL: https://img.jarrodservilla.com
   IMMICH_SERVER_URL: http://immich:2283
 
 # Secrets Configuration
@@ -141,11 +141,11 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
   hosts:
-    - host: img.home
+    - host: img.jarrodservilla.com
       paths:
         - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - img.home
-      secretName: wildcard-home-tls
+        - img.jarrodservilla.com
+      secretName: wildcard-jarrodservilla-tls
