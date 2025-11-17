@@ -48,37 +48,38 @@ kube-prometheus-stack:
       cAdvisorMetricRelabelings:
         # Drop all container metrics for pause/POD containers (huge cardinality reduction)
         - sourceLabels: [container]
-          regex: '^$'
+          regex: "^$"
           action: drop
 
         # Drop high-cardinality per-cpu metrics (keep aggregated cpu totals)
         - sourceLabels: [__name__]
-          regex: 'container_cpu_cfs_(periods|throttled)_total'
+          regex: "container_cpu_cfs_(periods|throttled)_total"
           action: drop
 
         # Drop less useful container metrics
         - sourceLabels: [__name__]
-          regex: 'container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|threads|file_descriptors|sockets|processes|ulimits_soft)'
+          regex: "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|threads|file_descriptors|sockets|processes|ulimits_soft)"
           action: drop
 
         # Drop most container filesystem metrics (keep basic usage)
         - sourceLabels: [__name__]
-          regex: 'container_fs_(reads.*|writes.*|io_.*|sector.*|inodes_total|inodes_free)'
+          regex: "container_fs_(reads.*|writes.*|io_.*|sector.*|inodes_total|inodes_free)"
           action: drop
 
         # Drop container spec metrics (static metadata we don't need)
         - sourceLabels: [__name__]
-          regex: 'container_spec_.*'
+          regex: "container_spec_.*"
           action: drop
 
         # Drop last_seen (not useful for monitoring)
         - sourceLabels: [__name__]
-          regex: 'container_last_seen'
+          regex: "container_last_seen"
           action: drop
 
   # Grafana configuration
   grafana:
     enabled: true
+    defaultDashboardsEnabled: false
 
     # Admin credentials from sealed secret
     admin:
@@ -228,19 +229,19 @@ kube-prometheus-stack:
       metricRelabelings:
         # Drop high-cardinality histogram buckets (keep _count and _sum)
         - sourceLabels: [__name__]
-          regex: 'apiserver_request_duration_seconds_bucket|apiserver_request_sli_duration_seconds_bucket|apiserver_response_sizes_bucket|apiserver_request_body_size_bytes_bucket|apiserver_watch_events_sizes_bucket'
+          regex: "apiserver_request_duration_seconds_bucket|apiserver_request_sli_duration_seconds_bucket|apiserver_response_sizes_bucket|apiserver_request_body_size_bytes_bucket|apiserver_watch_events_sizes_bucket"
           action: drop
         # Drop watch cache metrics
         - sourceLabels: [__name__]
-          regex: 'apiserver_watch_cache.*'
+          regex: "apiserver_watch_cache.*"
           action: drop
         # Drop admission controller histogram buckets
         - sourceLabels: [__name__]
-          regex: 'apiserver_admission_.*_bucket'
+          regex: "apiserver_admission_.*_bucket"
           action: drop
         # Drop workqueue histogram buckets
         - sourceLabels: [__name__]
-          regex: 'workqueue_.*_bucket'
+          regex: "workqueue_.*_bucket"
           action: drop
 
   # Etcd monitoring - reduce high-cardinality metrics
@@ -250,7 +251,7 @@ kube-prometheus-stack:
       metricRelabelings:
         # Drop high-cardinality histogram buckets
         - sourceLabels: [__name__]
-          regex: 'etcd_request_duration_seconds_bucket|etcd_disk_wal_fsync_duration_seconds_bucket|etcd_disk_backend_commit_duration_seconds_bucket'
+          regex: "etcd_request_duration_seconds_bucket|etcd_disk_wal_fsync_duration_seconds_bucket|etcd_disk_backend_commit_duration_seconds_bucket"
           action: drop
 
   # Kube State Metrics
