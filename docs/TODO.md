@@ -1,5 +1,4 @@
 future extensions:
 1. add a NAS
-2. tailscale
-3. gitops
-4. sso + mfa
+2. sso + mfa
+3. bitwarden
