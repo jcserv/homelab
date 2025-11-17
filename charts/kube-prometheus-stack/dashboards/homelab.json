@@ -1197,7 +1197,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "sum(rate(velero_backup_duration_seconds_sum{job=~\"velero\"}[$__rate_interval])) / sum(rate(velero_backup_duration_seconds_count{job=~\"velero\"}[$__rate_interval]))",
+          "expr": "sum by (job) (rate(velero_backup_duration_seconds_sum{job=~\"velero\"}[$__rate_interval])) / sum by (job) (rate(velero_backup_duration_seconds_count{job=~\"velero\"}[$__rate_interval]))",
           "legendFormat": "{{job}}",
           "range": true,
           "refId": "Velero"
