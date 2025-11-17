@@ -627,9 +627,19 @@
           },
           "editorMode": "code",
           "expr": "(\n  (1 - (node_filesystem_avail_bytes{job=\"node-exporter\", instance=~\"$instance\", mountpoint=\"/\", fstype!=\"rootfs\"} / node_filesystem_size_bytes{job=\"node-exporter\", instance=~\"$instance\", mountpoint=\"/\", fstype!=\"rootfs\"}))\n  * on(instance) group_left(nodename)\n  node_uname_info{job=\"node-exporter\", nodename=~\"$node\"}\n) * 100",
-          "legendFormat": "{{nodename}}",
+          "legendFormat": "{{nodename}} - root",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "(\n  (1 - (node_filesystem_avail_bytes{job=\"node-exporter\", instance=~\"$instance\", mountpoint=\"/mnt/hd1\", fstype!=\"rootfs\"} / node_filesystem_size_bytes{job=\"node-exporter\", instance=~\"$instance\", mountpoint=\"/mnt/hd1\", fstype!=\"rootfs\"}))\n  * on(instance) group_left(nodename)\n  node_uname_info{job=\"node-exporter\", nodename=~\"$node\"}\n) * 100",
+          "legendFormat": "{{nodename}} - /mnt/hd1",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Disk Usage",
