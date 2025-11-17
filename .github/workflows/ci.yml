@@ -135,6 +135,7 @@ jobs:
           # Charts to exclude from auto-deployment:
           EXCLUDED_CHARTS=(
             "power-monitor"    # need to build the image first
+            "velero"
           )
 
           # Read the changed charts from the output

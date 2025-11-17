@@ -1,0 +1,34 @@
+{{- range $name, $schedule := .Values.velero.schedules }}
+{{- if not $schedule.disabled }}
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: velero
+spec:
+  schedule: {{ $schedule.schedule | quote }}
+  template:
+    includedNamespaces:
+{{- range $schedule.template.includedNamespaces }}
+      - {{ . }}
+{{- end }}
+{{- if $schedule.template.labelSelector }}
+    labelSelector:
+      matchLabels:
+{{- range $key, $value := $schedule.template.labelSelector.matchLabels }}
+        {{ $key }}: {{ $value }}
+{{- end }}
+{{- end }}
+    includedResources:
+{{- range $schedule.template.includedResources }}
+      - {{ . }}
+{{- end }}
+    storageLocation: {{ $schedule.template.storageLocation }}
+    ttl: {{ $schedule.template.ttl }}
+    snapshotVolumes: {{ $schedule.template.snapshotVolumes }}
+    defaultVolumesToFsBackup: true
+{{- end }}
+{{- end }}

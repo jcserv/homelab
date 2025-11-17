@@ -1,0 +1,14 @@
+{{- range .Values.velero.configuration.volumeSnapshotLocation }}
+---
+apiVersion: velero.io/v1
+kind: VolumeSnapshotLocation
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: velero
+spec:
+  provider: {{ .provider }}
+  config:
+{{ toYaml .config | indent 4 }}
+{{- end }}
