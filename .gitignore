@@ -13,6 +13,9 @@ sealed-secrets-key.yaml
 *.swp
 *.swo
 *~
+venv/
+__pycache__/
+*.pyc
 
 # Helm
 .helm/

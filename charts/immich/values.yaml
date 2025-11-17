@@ -129,9 +129,9 @@ env:
   IMMICH_SERVER_URL: http://immich:2283
 
 # Secrets Configuration
-secrets:
-  DB_PASSWORD: "changeme" # PostgreSQL password for immich database
-  JWT_SECRET: "changeme" # JWT signing secret for authentication tokens
+# NOTE: Secrets are managed via SealedSecrets in sealed-secrets/immich-secrets-sealed.yaml
+# Do not define secrets here as they will override the sealed secrets
+secrets: {}
 
 # Ingress configuration
 ingress:
