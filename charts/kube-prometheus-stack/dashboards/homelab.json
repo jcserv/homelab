@@ -996,7 +996,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Status timeline showing success (green) or failure (red) for all backup jobs. Velero backups run daily, Restic monthly, Nebula-sync is aggregated hourly.",
+      "description": "Status timeline showing success (green) or failure (red) for all jobs. Velero runs daily, Restic monthly, Nebula-sync is aggregated hourly.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1069,7 +1069,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[2h]), 1) or on() vector(0)",
+          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[2h]), 1) or on() vector(0)",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Velero"
@@ -1080,7 +1080,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "label_replace(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}, \"schedule\", \"restic-monthly\", \"\", \"\")",
+          "expr": "max(label_replace(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}, \"schedule\", \"restic-monthly\", \"\", \"\")) by (schedule)",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Restic"
@@ -1091,13 +1091,13 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "label_replace(clamp_max(sum_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h]), 1), \"schedule\", \"nebula-sync-hourly\", \"\", \"\")",
+          "expr": "max(label_replace(clamp_max(sum_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h]), 1), \"schedule\", \"nebula-sync-hourly\", \"\", \"\")) by (schedule)",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Nebula"
         }
       ],
-      "title": "Backup Job Status Timeline",
+      "title": "Job Status Timeline",
       "type": "status-history"
     },
     {
@@ -1105,7 +1105,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Duration of backup jobs in seconds. Shows trends over time to identify performance degradation.",
+      "description": "Duration of jobs in seconds. Shows trends over time to identify performance degradation.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1197,7 +1197,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "velero_backup_duration_seconds{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}",
+          "expr": "velero_backup_duration_seconds{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Velero"
@@ -1208,7 +1208,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "label_replace((kube_job_status_completion_time{job_name=~\"restic-backup.*\"} - kube_job_status_start_time{job_name=~\"restic-backup.*\"}), \"schedule\", \"restic-monthly\", \"\", \"\")",
+          "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"restic-backup.*\"} - kube_job_status_start_time{job_name=~\"restic-backup.*\"}), \"schedule\", \"restic-monthly\", \"\", \"\"))",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Restic"
@@ -1219,13 +1219,13 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "label_replace((kube_job_status_completion_time{job_name=~\"pihole-nebula-sync.*\"} - kube_job_status_start_time{job_name=~\"pihole-nebula-sync.*\"}), \"schedule\", \"nebula-sync\", \"\", \"\")",
+          "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"pihole-nebula-sync.*\"} - kube_job_status_start_time{job_name=~\"pihole-nebula-sync.*\"}), \"schedule\", \"nebula-sync\", \"\", \"\"))",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Nebula"
         }
       ],
-      "title": "Backup Duration",
+      "title": "Job Duration",
       "type": "timeseries"
     },
     {
@@ -1233,7 +1233,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Success rate percentage for each backup job over time. Calculated as successful backups / total backup attempts.",
+      "description": "Success rate percentage for each job over time. Calculated as successful / total attempts.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1325,7 +1325,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "(sum(rate(velero_backup_success_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[6h])) by (schedule) / (sum(rate(velero_backup_success_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[6h])) by (schedule) + sum(rate(velero_backup_failure_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[6h])) by (schedule))) * 100",
+          "expr": "(sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule) / (sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule) + sum(rate(velero_backup_failure_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule))) * 100",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Velero"
@@ -1336,7 +1336,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "label_replace((sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"restic-backup.*\"}))) * 100, \"schedule\", \"restic-monthly\", \"\", \"\")",
+          "expr": "max by (schedule) (label_replace((sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"restic-backup.*\"}))) * 100, \"schedule\", \"restic-monthly\", \"\", \"\"))",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Restic"
@@ -1347,13 +1347,13 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "label_replace((sum(rate(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h])) / (sum(rate(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h])) + sum(rate(kube_job_status_failed{job_name=~\"pihole-nebula-sync.*\"}[1h])))) * 100, \"schedule\", \"nebula-sync\", \"\", \"\")",
+          "expr": "max by (schedule) (label_replace((sum(rate(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h])) / (sum(rate(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h])) + sum(rate(kube_job_status_failed{job_name=~\"pihole-nebula-sync.*\"}[1h])))) * 100, \"schedule\", \"nebula-sync\", \"\", \"\"))",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Nebula"
         }
       ],
-      "title": "Backup Success Rate",
+      "title": "Job Success Rate",
       "type": "timeseries"
     },
     {
