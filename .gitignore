@@ -22,6 +22,7 @@ __pycache__/
 *.tgz
 charts/*/charts/
 
+charts/velero/velero-values.yaml
 charts/power-monitor/values.yaml
 
 # Kubernetes

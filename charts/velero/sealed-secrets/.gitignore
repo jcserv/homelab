@@ -1,0 +1,9 @@
+# Ignore unencrypted credentials
+credentials
+*.txt
+*.key
+
+# Only commit sealed secrets
+!*-sealed.yaml
+!README.md
+!.gitignore
