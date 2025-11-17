@@ -993,6 +993,371 @@
     },
     {
       "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "Status timeline showing success (green) or failure (red) for all backup jobs. Velero backups run daily, Restic monthly, Nebula-sync is aggregated hourly.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "fillOpacity": 70,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "Failed"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Success"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 52
+      },
+      "id": 14,
+      "options": {
+        "alignValue": "left",
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "never",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[2h]), 1) or on() vector(0)",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Velero"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}, \"schedule\", \"restic-monthly\", \"\", \"\")",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Restic"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(clamp_max(sum_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h]), 1), \"schedule\", \"nebula-sync-hourly\", \"\", \"\")",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Nebula"
+        }
+      ],
+      "title": "Backup Job Status Timeline",
+      "type": "status-history"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "Duration of backup jobs in seconds. Shows trends over time to identify performance degradation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 600
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 60
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "velero_backup_duration_seconds{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Velero"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "label_replace((kube_job_status_completion_time{job_name=~\"restic-backup.*\"} - kube_job_status_start_time{job_name=~\"restic-backup.*\"}), \"schedule\", \"restic-monthly\", \"\", \"\")",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Restic"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "label_replace((kube_job_status_completion_time{job_name=~\"pihole-nebula-sync.*\"} - kube_job_status_start_time{job_name=~\"pihole-nebula-sync.*\"}), \"schedule\", \"nebula-sync\", \"\", \"\")",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Nebula"
+        }
+      ],
+      "title": "Backup Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "Success rate percentage for each backup job over time. Calculated as successful backups / total backup attempts.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 90
+              },
+              {
+                "color": "green",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 60
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "(sum(rate(velero_backup_success_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[6h])) by (schedule) / (sum(rate(velero_backup_success_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[6h])) by (schedule) + sum(rate(velero_backup_failure_total{schedule=~\"immich-daily|home-assistant-daily|filebrowser-daily\"}[6h])) by (schedule))) * 100",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Velero"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "label_replace((sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"restic-backup.*\"}))) * 100, \"schedule\", \"restic-monthly\", \"\", \"\")",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Restic"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "label_replace((sum(rate(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h])) / (sum(rate(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h])) + sum(rate(kube_job_status_failed{job_name=~\"pihole-nebula-sync.*\"}[1h])))) * 100, \"schedule\", \"nebula-sync\", \"\", \"\")",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "Nebula"
+        }
+      ],
+      "title": "Backup Success Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
         "type": "loki",
         "uid": "$loki_datasource"
       },
@@ -1115,7 +1480,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 52
+        "y": 68
       },
       "id": 12,
       "options": {
@@ -1276,7 +1641,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 52
+        "y": 68
       },
       "id": 13,
       "options": {
@@ -1327,7 +1692,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 76
       },
       "id": 7,
       "options": {
@@ -2018,9 +2383,14 @@
             "selected": false,
             "text": "unbound-.*",
             "value": "unbound-.*"
+          },
+          {
+            "selected": false,
+            "text": "velero-.*",
+            "value": "velero-.*"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,grafana-.*,home-assistant-.*,immich-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*",
+        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,grafana-.*,home-assistant-.*,immich-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*,velero-.*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"

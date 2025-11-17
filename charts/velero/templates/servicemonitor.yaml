@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: velero
+  namespace: default
+  labels:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/instance: velero
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: velero
+      app.kubernetes.io/instance: velero
+  endpoints:
+    - port: http-monitoring
+      interval: 30s
+      scrapeTimeout: 10s
+      path: /metrics
