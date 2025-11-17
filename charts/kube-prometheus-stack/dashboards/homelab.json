@@ -1069,7 +1069,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[2h]), 1) or on() vector(0)",
+          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[$__rate_interval]), 1) or on() vector(0)",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Velero"
@@ -1091,7 +1091,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "max(label_replace(clamp_max(sum_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[1h]), 1), \"schedule\", \"nebula-sync-hourly\", \"\", \"\")) by (schedule)",
+          "expr": "max(label_replace(clamp_max(sum_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync.*\"}[$__rate_interval]), 1), \"schedule\", \"nebula-sync-hourly\", \"\", \"\")) by (schedule)",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Nebula"
@@ -1219,21 +1219,16 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"pihole-nebula-sync.*\"} - kube_job_status_start_time{job_name=~\"pihole-nebula-sync.*\"}), \"schedule\", \"nebula-sync\", \"\", \"\"))",
-          "legendFormat": "{{schedule}}",
+          "expr": "((sum(max_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval]))) / ((sum(max_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval]))) + (sum(max_over_time(kube_job_status_failed{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval])))) * 100) by (job)",
+          "legendFormat": "pihole-nebula-sync",
           "range": true,
           "refId": "Nebula"
         }
       ],
-      "title": "Job Duration",
+      "title": "Job Success Rate",
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "description": "Success rate percentage for each job over time. Calculated as successful / total attempts.",
       "fieldConfig": {
         "defaults": {
           "color": {
