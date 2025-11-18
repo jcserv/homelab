@@ -1219,7 +1219,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "((sum(max_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval]))) / ((sum(max_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval]))) + (sum(max_over_time(kube_job_status_failed{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval])))) * 100) by (job)",
+          "expr": "sum(max_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval])) / (sum(max_over_time(kube_job_status_succeeded{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval])) + sum(max_over_time(kube_job_status_failed{job_name=~\"pihole-nebula-sync-.*\"}[$__rate_interval]))) * 100",
           "legendFormat": "pihole-nebula-sync",
           "range": true,
           "refId": "Nebula"
