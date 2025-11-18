@@ -1,13 +1,11 @@
+---
 # Deployment namespace
 namespace: default
-
-replicaCount: 2 # Two instances for high availability (synced via nebula-sync)
-
+replicaCount: 2  # Two instances for high availability (synced via nebula-sync)
 image:
   repository: pihole/pihole
-  tag: "2025.11.0" # Pi-hole v6 required for nebula-sync
+  tag: 2025.11.0  # Pi-hole v6 required for nebula-sync
   pullPolicy: IfNotPresent
-
 # Spread pods across different hosts for high availability
 # Using preferred (not required) to allow scheduling when fewer nodes are available
 affinity:
@@ -19,26 +17,22 @@ affinity:
             matchExpressions:
               - key: app
                 operator: In
-                values:
-                  - pihole
+                values: [pihole]
           topologyKey: kubernetes.io/hostname
-
 resources:
   requests:
-    memory: "200Mi"
-    cpu: "100m"
+    memory: 200Mi
+    cpu: 100m
   limits:
-    memory: "300Mi"
-    cpu: "500m"
-
+    memory: 300Mi
+    cpu: 500m
 storage:
-  type: local-path # Using local storage - nebula-sync handles replication
+  type: local-path  # Using local storage - nebula-sync handles replication
   storageClass: local-path
   config:
     size: 1Gi
   dnsmasq:
     size: 500Mi
-
 service:
   dns:
     type: LoadBalancer
@@ -54,7 +48,6 @@ service:
     type: ClusterIP
     ports:
       http: 80
-
 # Ingress configuration for HTTPS access via pi.jarrodservilla.com
 ingress:
   enabled: true
@@ -62,30 +55,26 @@ ingress:
   host: pi.jarrodservilla.com
   tlsSecretName: wildcard-jarrodservilla-tls
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
 # Environment variables
 env:
-  TZ: "America/New_York"
+  TZ: America/New_York
 
   # WEBPASSWORD - Admin password for Pi-hole web interface
   # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-secrets-sealed.yaml)
   # WEBPASSWORD: ""
-
-  FTLCONF_LOCAL_IPV4: "10.0.0.202"
-  DNS1: "10.0.0.205" # Unbound instance 0
-  DNS2: "10.0.0.206" # Unbound instance 1
-  DNSMASQ_LISTENING: "all"
-
+  FTLCONF_LOCAL_IPV4: 10.0.0.202
+  DNS1: 10.0.0.205  # Unbound instance 0
+  DNS2: 10.0.0.206  # Unbound instance 1
+  DNSMASQ_LISTENING: all
 # Custom DNS entries
 customDnsEntries:
-  - "10.0.0.200 nginx.jarrodservilla.com"
-  - "10.0.0.200 img.jarrodservilla.com"
-  - "10.0.0.200 homeassistant.jarrodservilla.com"
-  - "10.0.0.200 files.jarrodservilla.com"
-  - "10.0.0.200 pi.jarrodservilla.com"
-  - "10.0.0.200 grafana.jarrodservilla.com"
-
+  - 10.0.0.200 nginx.jarrodservilla.com
+  - 10.0.0.200 img.jarrodservilla.com
+  - 10.0.0.200 homeassistant.jarrodservilla.com
+  - 10.0.0.200 files.jarrodservilla.com
+  - 10.0.0.200 pi.jarrodservilla.com
+  - 10.0.0.200 grafana.jarrodservilla.com
 # Custom blocklist entries
 # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
 # customBlocklist: |
@@ -96,7 +85,6 @@ customDnsEntries:
 #   grs.hicloud.com
 #   appmetrica.yandex.ru
 #   business-api.tiktok.com
-
 # Adlists to bootstrap on initialization
 adlists:
   - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
@@ -111,16 +99,14 @@ adlists:
   - https://blocklistproject.github.io/Lists/scam.txt
   - https://blocklistproject.github.io/Lists/tracking.txt
   - file:///var/www/html/pihole-blocklist.txt
-
 # nebula-sync configuration for syncing between instances
 nebulaSync:
   enabled: true
   image: ghcr.io/lovelaze/nebula-sync:latest
-  schedule: "*/5 * * * *" # Every 5 minutes (reduced frequency to avoid timing issues)
+  schedule: '*/5 * * * *'  # Every 5 minutes (reduced frequency to avoid timing issues)
   fullSync: true
-  runGravity: false # Disabled to prevent connection issues during sync
-
+  runGravity: false  # Disabled to prevent connection issues during sync
 
   # IMPORTANT: These passwords MUST match env.WEBPASSWORD for authentication
-  # primaryPassword: "changeme" # Should match env.WEBPASSWORD
-  # replicaPassword: "changeme" # Should match env.WEBPASSWORD
+  # primaryPassword: "changeme"  # Should match env.WEBPASSWORD
+  # replicaPassword: "changeme"  # Should match env.WEBPASSWORD
