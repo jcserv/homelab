@@ -5,7 +5,7 @@ replicaCount: 2 # Two instances for high availability (synced via nebula-sync)
 
 image:
   repository: pihole/pihole
-  tag: "2025.10.2" # Pi-hole v6 required for nebula-sync
+  tag: "2025.11.0" # Pi-hole v6 required for nebula-sync
   pullPolicy: IfNotPresent
 
 # Spread pods across different hosts for high availability
