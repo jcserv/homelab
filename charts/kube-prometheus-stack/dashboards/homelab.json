@@ -1225,7 +1225,7 @@
           "refId": "Nebula"
         }
       ],
-      "title": "Job Success Rate",
+      "title": "Job Duration",
       "type": "timeseries"
     },
     {
