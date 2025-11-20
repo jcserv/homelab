@@ -18,7 +18,7 @@ help:
 	@echo "  make logs SERVICE=<name> View logs for a service"
 	@echo "  make upgrade SERVICE=<name> [NAMESPACE=<namespace>] Upgrade a service"
 	@echo "  make backup             Trigger manual Restic backup job"
-	@echo "  make backup-app APP=<name> Create manual Velero backup (filebrowser, home-assistant, immich)"
+	@echo "  make backup-app APP=<name> Create manual Velero backup (home-assistant, immich)"
 	@echo "  make backup-status      Show Velero backup status"
 	@echo "  make velero-logs        View Velero logs"
 	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
@@ -99,7 +99,6 @@ deploy-all:
 	helm install pihole ./charts/pihole
 	helm install immich ./charts/immich
 	helm install home-assistant ./charts/home-assistant
-	helm install filebrowser ./charts/filebrowser
 	helm install restic-backup ./charts/restic-backup
 	helm install velero ./charts/velero
 	@echo "✓ Services installed"
@@ -107,7 +106,7 @@ deploy-all:
 install-all: setup-repos build-deps install-infra install-monitoring deploy-all
 	@echo ""
 	@echo "✓ Complete installation finished!"
-	@echo "  Configure your router DNS to 10.0.0.202 for .home domain resolution"
+	@echo "  Configure your router DNS to 10.2.1.202 for .home domain resolution"
 	@echo "  Access Grafana at: https://grafana.home (admin/admin)"
 
 # Management Commands
@@ -173,7 +172,7 @@ ifndef APP
 	@echo "Error: APP parameter required"
 	@echo "Usage: make backup-app APP=<app-name>"
 	@echo "Example: make backup-app APP=immich"
-	@echo "Valid apps: filebrowser, home-assistant, immich"
+	@echo "Valid apps: home-assistant, immich"
 	@exit 1
 endif
 	@echo "Creating manual backup for $(APP)..."
