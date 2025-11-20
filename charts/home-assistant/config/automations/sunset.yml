@@ -1,0 +1,14 @@
+alias: Sunset -> Close Curtains
+description: ""
+triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+conditions: []
+actions:
+  - action: cover.close_cover
+    metadata: {}
+    data: {}
+    target:
+      entity_id: cover.curtains
+mode: single

@@ -1,0 +1,32 @@
+alias: Door opened / Lock opened -> Lock after 1 minute
+description: ""
+triggers:
+  - type: not_opened
+    device_id: 3f41a0b1e902cde46fd0a01b7b553b31
+    entity_id: e1462098a47ca2e1b82528287fc42fcd
+    domain: binary_sensor
+    trigger: device
+  - type: opened
+    device_id: efcc35bd423c261d1aeea1a661c7758c
+    entity_id: 6d2811d58eb88b75aead663a135646cb
+    domain: binary_sensor
+    trigger: device
+conditions: []
+actions:
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+    enabled: true
+  - if:
+      - condition: state
+        entity_id: lock.lock
+        state:
+          - unlocked
+    then:
+      - device_id: efcc35bd423c261d1aeea1a661c7758c
+        domain: lock
+        entity_id: 676a6914bdf0caa0a65b2c431885f479
+        type: lock
+mode: single

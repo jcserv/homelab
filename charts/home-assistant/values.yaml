@@ -74,7 +74,7 @@ securityContext:
 service:
   type: LoadBalancer
   port: 8123
-  loadBalancerIP: 10.0.0.203
+  loadBalancerIP: 10.2.1.203
 
 # Ingress configuration for HTTPS access
 ingress:
@@ -104,6 +104,6 @@ config:
     trusted_proxies:
       - 10.42.0.0/16 # Pod network (nginx ingress pods run here)
       - 10.43.0.0/16 # Service network
-      - 10.0.0.0/24 # Local network (for direct access)
+      - 10.2.1.0/24 # Local network (for direct access)
       - 127.0.0.1 # Localhost
       - ::1 # IPv6 localhost

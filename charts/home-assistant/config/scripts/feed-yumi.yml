@@ -1,0 +1,14 @@
+sequence:
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.daily_meal_count
+  - action: input_datetime.set_datetime
+    metadata: {}
+    data:
+      datetime: "{{ now().isoformat() }}"
+    target:
+      entity_id: input_datetime.yumi_last_fed
+alias: Feed Yumi
+description: ""
