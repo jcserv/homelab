@@ -54,7 +54,7 @@ ipAddressPool:
   addresses:
     # IP range for LoadBalancer services
     # Adjust this range based on your network DHCP configuration
-    - 10.0.0.200-10.0.0.210
+    - 10.2.1.200-10.2.1.210
   autoAssign: true
 
 # L2 Advertisement Configuration

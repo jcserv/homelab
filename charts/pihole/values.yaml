@@ -36,7 +36,8 @@ storage:
 service:
   dns:
     type: LoadBalancer
-    loadBalancerIP: 10.0.0.202
+    loadBalancerIP: 10.2.1.202
+    externalTrafficPolicy: Local
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-dns
     ports:
@@ -63,18 +64,18 @@ env:
   # WEBPASSWORD - Admin password for Pi-hole web interface
   # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-secrets-sealed.yaml)
   # WEBPASSWORD: ""
-  FTLCONF_LOCAL_IPV4: 10.0.0.202
-  DNS1: 10.0.0.205  # Unbound instance 0
-  DNS2: 10.0.0.206  # Unbound instance 1
+  FTLCONF_LOCAL_IPV4: 10.2.1.202
+  DNS1: 1.1.1.1  # Cloudflare DNS
+  DNS2: 2606:4700:4700::1111  # Cloudflare DNS IPv6
   DNSMASQ_LISTENING: all
 # Custom DNS entries
 customDnsEntries:
-  - 10.0.0.200 nginx.jarrodservilla.com
-  - 10.0.0.200 img.jarrodservilla.com
-  - 10.0.0.200 homeassistant.jarrodservilla.com
-  - 10.0.0.200 files.jarrodservilla.com
-  - 10.0.0.200 pi.jarrodservilla.com
-  - 10.0.0.200 grafana.jarrodservilla.com
+  - 10.2.1.200 nginx.jarrodservilla.com
+  - 10.2.1.200 img.jarrodservilla.com
+  - 10.2.1.200 homeassistant.jarrodservilla.com
+  - 10.2.1.200 files.jarrodservilla.com
+  - 10.2.1.200 pi.jarrodservilla.com
+  - 10.2.1.200 grafana.jarrodservilla.com
 # Custom blocklist entries
 # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
 # customBlocklist: |

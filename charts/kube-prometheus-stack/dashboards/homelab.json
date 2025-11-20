@@ -1069,7 +1069,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[$__rate_interval]), 1) or on() vector(0)",
+          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily\"}[$__rate_interval]), 1) or on() vector(0)",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Velero"
@@ -1320,7 +1320,7 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "(sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule) / (sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule) + sum(rate(velero_backup_failure_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule))) * 100",
+          "expr": "(sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily\"}[6h])) by (schedule) / (sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily\"}[6h])) by (schedule) + sum(rate(velero_backup_failure_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily\"}[6h])) by (schedule))) * 100",
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Velero"
@@ -2311,11 +2311,6 @@
           },
           {
             "selected": false,
-            "text": "filebrowser-.*",
-            "value": "filebrowser-.*"
-          },
-          {
-            "selected": false,
             "text": "grafana-.*",
             "value": "grafana-.*"
           },
@@ -2385,7 +2380,7 @@
             "value": "velero-.*"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,grafana-.*,home-assistant-.*,immich-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*,velero-.*",
+        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,immich-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*,velero-.*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"

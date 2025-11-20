@@ -182,13 +182,6 @@ prometheus-blackbox-exporter:
           service: immich
           type: http
 
-      - name: filebrowser-http
-        url: http://filebrowser.default.svc.cluster.local
-        module: http_2xx_auth
-        labels:
-          service: filebrowser
-          type: http
-
   # Resource limits for homelab
   resources:
     limits:

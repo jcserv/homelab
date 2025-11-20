@@ -13,6 +13,9 @@ spec:
   {{- if .Values.service.dns.loadBalancerIP }}
   loadBalancerIP: {{ .Values.service.dns.loadBalancerIP }}
   {{- end }}
+  {{- if .Values.service.dns.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.dns.externalTrafficPolicy }}
+  {{- end }}
   ports:
   - port: {{ .Values.service.dns.ports.tcp }}
     targetPort: dns-tcp
