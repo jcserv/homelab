@@ -1,0 +1,23 @@
+alias: Start Roomba
+description: ""
+triggers:
+  - trigger: time
+    at: "08:00:00"
+    weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+  - trigger: time
+    at: "10:00:00"
+    weekday:
+      - sun
+      - sat
+conditions: []
+actions:
+  - device_id: e1f3b58f7b4f5dd56bb619c19f256758
+    domain: vacuum
+    entity_id: 28a631c7692d9729c3adc3ccd80168b0
+    type: clean
+mode: single

@@ -1,0 +1,36 @@
+alias: Doors opened -> Turn off HVAC
+description: ""
+triggers:
+  - type: opened
+    device_id: 3f41a0b1e902cde46fd0a01b7b553b31
+    entity_id: e1462098a47ca2e1b82528287fc42fcd
+    domain: binary_sensor
+    trigger: device
+  - type: opened
+    device_id: 53c02bdce43c92d3007ea5b53546bd4e
+    entity_id: 33fc0dbb3b5e317ffd80b1bc08b7c03b
+    domain: binary_sensor
+    trigger: device
+conditions:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: climate.my_ecobee
+        state: "off"
+actions:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.previous_hvac_mode
+    data:
+      value: "{{ states('climate.my_ecobee') }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.previous_temperature
+    data:
+      value: "{{ state_attr('climate.my_ecobee', 'temperature') | float(20) }}"
+  - device_id: be39c178aee2459375eef96a04fbf1db
+    domain: climate
+    entity_id: dc8325e62b3cede331eb2d75f9402fec
+    type: set_hvac_mode
+    hvac_mode: "off"
+mode: single

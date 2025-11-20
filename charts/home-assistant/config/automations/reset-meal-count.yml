@@ -1,0 +1,13 @@
+alias: Reset Yumi Meal Count @ Midnight
+description: ""
+triggers:
+  - trigger: time
+    at: "00:00:00"
+conditions: []
+actions:
+  - action: counter.reset
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.daily_meal_count
+mode: single
