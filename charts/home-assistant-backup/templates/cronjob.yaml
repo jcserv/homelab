@@ -1,0 +1,121 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "home-assistant-backup.fullname" . }}
+  labels:
+    {{- include "home-assistant-backup.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.jobSettings.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.jobSettings.failedJobsHistoryLimit }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "home-assistant-backup.selectorLabels" . | nindent 8 }}
+    spec:
+      backoffLimit: {{ .Values.jobSettings.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.jobSettings.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            {{- include "home-assistant-backup.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: {{ .Values.jobSettings.restartPolicy }}
+          # Run on the same node as Home Assistant to access the PVC
+          nodeSelector:
+            kubernetes.io/hostname: pi4-02
+          containers:
+          # Upload to B2 using rclone
+          - name: rclone-upload
+            image: "{{ .Values.rclone_image.repository }}:{{ .Values.rclone_image.tag }}"
+            imagePullPolicy: {{ .Values.rclone_image.pullPolicy }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+
+              # Configure rclone for B2
+              mkdir -p /root/.config/rclone
+              cat > /root/.config/rclone/rclone.conf <<EOF
+              [b2]
+              type = s3
+              provider = Other
+              access_key_id = ${AWS_ACCESS_KEY_ID}
+              secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+              endpoint = https://{{ .Values.backup.endpoint }}
+              acl = private
+              EOF
+
+              # Find the latest backup file in Home Assistant backups directory
+              echo "Looking for backups in /ha-config/backups/..."
+
+              if [ ! -d "/ha-config/backups" ]; then
+                echo "Error: /ha-config/backups directory not found"
+                exit 1
+              fi
+
+              # List all backup files
+              ls -lh /ha-config/backups/ || echo "Backups directory is empty"
+
+              # Get the latest backup file
+              BACKUP_FILE=$(ls -t /ha-config/backups/*.tar 2>/dev/null | head -1)
+
+              if [ -z "$BACKUP_FILE" ]; then
+                echo "Error: No .tar backup files found in /ha-config/backups/"
+                echo "Contents of backups directory:"
+                ls -la /ha-config/backups/ || true
+                exit 1
+              fi
+
+              BACKUP_FILENAME=$(basename "${BACKUP_FILE}")
+              echo "Found latest backup: ${BACKUP_FILENAME}"
+              echo "Backup size: $(du -h ${BACKUP_FILE} | cut -f1)"
+
+              echo "Uploading ${BACKUP_FILENAME} to B2..."
+              rclone copy "${BACKUP_FILE}" "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/" \
+                --progress \
+                --transfers 4 \
+                --checkers 8 \
+                --s3-no-check-bucket
+
+              echo "Upload completed successfully!"
+
+              # List current backups
+              echo "Current backups in B2:"
+              rclone ls "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/" | grep "\.tar$" || true
+
+              # Clean up old backups (keep last {{ .Values.backup.retention }})
+              echo "Cleaning up old backups (keeping last {{ .Values.backup.retention }})..."
+              rclone lsf "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/" \
+                | grep "\.tar$" \
+                | sort -r \
+                | tail -n +$(({{ .Values.backup.retention }} + 1)) \
+                | while read old_file; do
+                    echo "Deleting old backup: ${old_file}"
+                    rclone delete "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/${old_file}"
+                  done || echo "No old backups to delete"
+
+              echo "Backup completed successfully!"
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2Secret.name }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2Secret.name }}
+                  key: AWS_SECRET_ACCESS_KEY
+            volumeMounts:
+            - name: ha-config
+              mountPath: /ha-config
+              readOnly: true
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+          volumes:
+          - name: ha-config
+            persistentVolumeClaim:
+              claimName: home-assistant-config-pvc
+              readOnly: true
