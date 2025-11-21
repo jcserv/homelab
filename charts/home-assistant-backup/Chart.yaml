@@ -1,0 +1,6 @@
+apiVersion: v2
+name: home-assistant-backup
+description: Daily backup upload for Home Assistant to Backblaze B2
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
