@@ -11,7 +11,7 @@ ingress-nginx:
     # Expose via LoadBalancer on a dedicated IP
     service:
       type: LoadBalancer
-      loadBalancerIP: 10.0.0.200
+      loadBalancerIP: 10.2.1.200
       annotations:
         metallb.universe.tf/allow-shared-ip: nginx-ingress
       # Enable HTTPS

@@ -1,0 +1,26 @@
+alias: Doors closed -> Restore HVAC
+description: ""
+triggers:
+  - type: not_opened
+    device_id: 3f41a0b1e902cde46fd0a01b7b553b31
+    entity_id: e1462098a47ca2e1b82528287fc42fcd
+    domain: binary_sensor
+    trigger: device
+  - type: not_opened
+    device_id: 53c02bdce43c92d3007ea5b53546bd4e
+    entity_id: 33fc0dbb3b5e317ffd80b1bc08b7c03b
+    domain: binary_sensor
+    trigger: device
+conditions: []
+actions:
+  - action: climate.set_hvac_mode
+    target:
+      entity_id: climate.my_ecobee
+    data:
+      hvac_mode: "{{ states('input_text.previous_hvac_mode') }}"
+  - action: climate.set_temperature
+    target:
+      entity_id: climate.my_ecobee
+    data:
+      temperature: "{{ states('input_number.previous_temperature') | float }}"
+mode: single

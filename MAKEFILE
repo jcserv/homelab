@@ -1,4 +1,4 @@
-.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-status backup-app velero-logs drain uncordon seal-secret upgrade-service
+.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service
 
 # Default target
 help:
@@ -18,9 +18,8 @@ help:
 	@echo "  make logs SERVICE=<name> View logs for a service"
 	@echo "  make upgrade SERVICE=<name> [NAMESPACE=<namespace>] Upgrade a service"
 	@echo "  make backup             Trigger manual Restic backup job"
-	@echo "  make backup-app APP=<name> Create manual Velero backup (filebrowser, home-assistant, immich)"
-	@echo "  make backup-status      Show Velero backup status"
-	@echo "  make velero-logs        View Velero logs"
+	@echo "  make backup-immich-db   Trigger manual Immich database backup"
+	@echo "  make backup-homeassistant Trigger manual Home Assistant backup"
 	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
 	@echo ""
 	@echo "Maintenance Commands:"
@@ -99,15 +98,15 @@ deploy-all:
 	helm install pihole ./charts/pihole
 	helm install immich ./charts/immich
 	helm install home-assistant ./charts/home-assistant
-	helm install filebrowser ./charts/filebrowser
 	helm install restic-backup ./charts/restic-backup
-	helm install velero ./charts/velero
+	helm install immich-db-backup ./charts/immich-db-backup
+	helm install home-assistant-backup ./charts/home-assistant-backup
 	@echo "✓ Services installed"
 
 install-all: setup-repos build-deps install-infra install-monitoring deploy-all
 	@echo ""
 	@echo "✓ Complete installation finished!"
-	@echo "  Configure your router DNS to 10.0.0.202 for .home domain resolution"
+	@echo "  Configure your router DNS to 10.2.1.202 for .home domain resolution"
 	@echo "  Access Grafana at: https://grafana.home (admin/admin)"
 
 # Management Commands
@@ -155,50 +154,17 @@ backup:
 	@echo "✓ Backup job created"
 	@echo "  Monitor with: kubectl logs -l app=restic-backup -f"
 
-backup-status:
-	@echo "=== Velero Backup Status ==="
-	@kubectl get backups 2>/dev/null || echo "No backups found. Velero may not be installed."
-	@echo ""
-	@echo "=== Recent Backups (Last 10) ==="
-	@kubectl get backups --sort-by=.metadata.creationTimestamp 2>/dev/null | tail -n 11 || echo "No backups found."
-	@echo ""
-	@echo "=== Backup Schedules ==="
-	@kubectl get schedules 2>/dev/null || echo "No schedules found."
-	@echo ""
-	@echo "=== Backup Storage Locations ==="
-	@kubectl get backupstoragelocation 2>/dev/null || echo "No backup storage locations found."
+backup-immich-db:
+	@echo "Creating manual Immich database backup job..."
+	kubectl create job --from=cronjob/immich-db-backup manual-immich-db-backup-$(shell date +%Y%m%d-%H%M%S)
+	@echo "✓ Immich database backup job created"
+	@echo "  Monitor with: kubectl logs -l app.kubernetes.io/name=immich-db-backup -f"
 
-backup-app:
-ifndef APP
-	@echo "Error: APP parameter required"
-	@echo "Usage: make backup-app APP=<app-name>"
-	@echo "Example: make backup-app APP=immich"
-	@echo "Valid apps: filebrowser, home-assistant, immich"
-	@exit 1
-endif
-	@echo "Creating manual backup for $(APP)..."
-	@echo "apiVersion: velero.io/v1" > /tmp/velero-backup-$(APP).yaml
-	@echo "kind: Backup" >> /tmp/velero-backup-$(APP).yaml
-	@echo "metadata:" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  name: $(APP)-manual-$(shell date +%Y%m%d-%H%M%S)" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  namespace: default" >> /tmp/velero-backup-$(APP).yaml
-	@echo "spec:" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  includedNamespaces:" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  - default" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  labelSelector:" >> /tmp/velero-backup-$(APP).yaml
-	@echo "    matchLabels:" >> /tmp/velero-backup-$(APP).yaml
-	@echo "      app: $(APP)" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  storageLocation: default" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  ttl: 720h" >> /tmp/velero-backup-$(APP).yaml
-	@echo "  defaultVolumesToFsBackup: true" >> /tmp/velero-backup-$(APP).yaml
-	@kubectl apply -f /tmp/velero-backup-$(APP).yaml
-	@rm -f /tmp/velero-backup-$(APP).yaml
-	@echo "✓ Backup created for $(APP)"
-	@echo "  Monitor with: kubectl get backup -w"
-
-velero-logs:
-	@echo "Showing Velero logs..."
-	kubectl logs -l app=velero --tail=100 -f
+backup-homeassistant:
+	@echo "Creating manual Home Assistant backup job..."
+	kubectl create job --from=cronjob/home-assistant-backup manual-homeassistant-backup-$(shell date +%Y%m%d-%H%M%S)
+	@echo "✓ Home Assistant backup job created"
+	@echo "  Monitor with: kubectl logs -l app.kubernetes.io/name=home-assistant-backup -f"
 
 seal-secret:
 ifndef CHART

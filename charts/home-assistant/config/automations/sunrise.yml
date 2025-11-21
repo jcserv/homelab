@@ -1,0 +1,14 @@
+alias: Sunrise -> Open Curtains
+description: ""
+triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 0
+conditions: []
+actions:
+  - action: cover.open_cover
+    metadata: {}
+    data: {}
+    target:
+      entity_id: cover.curtains
+mode: single

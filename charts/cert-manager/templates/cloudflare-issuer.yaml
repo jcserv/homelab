@@ -16,8 +16,6 @@ spec:
           apiTokenSecretRef:
             name: cloudflare-api-token-secret
             key: api-token
-          # Zone ID for jarrodservilla.com (public identifier, not sensitive)
-          zoneID: 53d7862702f8185764083da9309dd1d3
       selector:
         dnsZones:
         - jarrodservilla.com
