@@ -28,7 +28,7 @@ b2Secret:
 # Image settings
 postgres_image:
   repository: "postgres"
-  tag: "14-alpine"
+  tag: "18-alpine"
   pullPolicy: IfNotPresent
 
 rclone_image:
