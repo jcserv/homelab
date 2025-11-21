@@ -1,6 +1,0 @@
-apiVersion: v2
-name: velero
-description: Velero backup solution for Kubernetes with Backblaze B2 storage
-type: application
-version: 1.0.0
-appVersion: "1.17.1"
