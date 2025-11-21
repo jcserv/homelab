@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "unbound.name" -}}
+{{- define "immich-db-backup.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "unbound.fullname" -}}
+{{- define "immich-db-backup.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "unbound.chart" -}}
+{{- define "immich-db-backup.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "unbound.labels" -}}
-helm.sh/chart: {{ include "unbound.chart" . }}
-{{ include "unbound.selectorLabels" . }}
+{{- define "immich-db-backup.labels" -}}
+helm.sh/chart: {{ include "immich-db-backup.chart" . }}
+{{ include "immich-db-backup.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,8 +43,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "unbound.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "unbound.name" . }}
+{{- define "immich-db-backup.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "immich-db-backup.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app: unbound
 {{- end }}

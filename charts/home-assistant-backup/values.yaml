@@ -1,0 +1,62 @@
+# Schedule for backup (cron format)
+schedule: "30 3 * * *"  # Daily at 3:30 AM
+
+# Home Assistant connection details
+homeassistant:
+  # URL to Home Assistant instance
+  url: "http://home-assistant.default.svc.cluster.local:8123"
+  # Secret containing HA API token
+  secretName: "homeassistant-backup-secrets"
+  secretKey: "HA_API_TOKEN"
+
+# Backup configuration
+backup:
+  # B2 bucket settings
+  bucket: "homelab-backups-431118"
+  path: "homeassistant"
+  endpoint: "s3.ca-east-006.backblazeb2.com"
+  # Number of backups to keep
+  retention: 7
+
+# B2 credentials secret (shared with immich-db-backup)
+b2Secret:
+  name: "app-backups-b2-secrets"
+
+# Image settings
+alpine_image:
+  repository: "alpine"
+  tag: "3.19"
+  pullPolicy: IfNotPresent
+
+rclone_image:
+  repository: "rclone/rclone"
+  tag: "1.68"
+  pullPolicy: IfNotPresent
+
+# Job settings
+jobSettings:
+  backoffLimit: 2
+  restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  # Job timeout (seconds)
+  activeDeadlineSeconds: 3600
+
+# Resource limits
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheusRule:
+    enabled: true
+    # Alert if backup hasn't succeeded in 25 hours
+    backupMissingHours: 25
+    # Alert if backup takes longer than 30 minutes
+    backupDurationMinutes: 30

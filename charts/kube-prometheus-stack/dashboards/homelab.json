@@ -996,7 +996,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Status timeline showing success (green) or failure (red) for all jobs. Velero runs daily, Restic monthly, Nebula-sync is aggregated hourly.",
+      "description": "Status timeline showing success (green) or failure (red) for all jobs. Restic runs monthly, backup jobs run daily, Nebula-sync is aggregated hourly.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1069,17 +1069,6 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "clamp_max(increase(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[$__rate_interval]), 1) or on() vector(0)",
-          "legendFormat": "{{schedule}}",
-          "range": true,
-          "refId": "Velero"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "editorMode": "code",
           "expr": "max(label_replace(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}, \"schedule\", \"restic-monthly\", \"\", \"\")) by (schedule)",
           "legendFormat": "{{schedule}}",
           "range": true,
@@ -1095,6 +1084,28 @@
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Nebula"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max(label_replace(kube_job_status_succeeded{job_name=~\"immich-db-backup.*\"}, \"schedule\", \"immich-db-backup-daily\", \"\", \"\")) by (schedule)",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "ImmichBackup"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max(label_replace(kube_job_status_succeeded{job_name=~\"home-assistant-backup.*\"}, \"schedule\", \"homeassistant-backup-daily\", \"\", \"\")) by (schedule)",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "HABackup"
         }
       ],
       "title": "Job Status Timeline",
@@ -1197,17 +1208,6 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "sum by (job) (rate(velero_backup_duration_seconds_sum{job=~\"velero\"}[$__rate_interval])) / sum by (job) (rate(velero_backup_duration_seconds_count{job=~\"velero\"}[$__rate_interval]))",
-          "legendFormat": "{{job}}",
-          "range": true,
-          "refId": "Velero"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "editorMode": "code",
           "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"restic-backup.*\"} - kube_job_status_start_time{job_name=~\"restic-backup.*\"}), \"schedule\", \"restic-monthly\", \"\", \"\"))",
           "legendFormat": "{{schedule}}",
           "range": true,
@@ -1223,6 +1223,28 @@
           "legendFormat": "pihole-nebula-sync",
           "range": true,
           "refId": "Nebula"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"immich-db-backup.*\"} - kube_job_status_start_time{job_name=~\"immich-db-backup.*\"}), \"schedule\", \"immich-db-backup-daily\", \"\", \"\"))",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "ImmichBackup"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"home-assistant-backup.*\"} - kube_job_status_start_time{job_name=~\"home-assistant-backup.*\"}), \"schedule\", \"homeassistant-backup-daily\", \"\", \"\"))",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "HABackup"
         }
       ],
       "title": "Job Duration",
@@ -1320,17 +1342,6 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "(sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule) / (sum(rate(velero_backup_success_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule) + sum(rate(velero_backup_failure_total{schedule=~\"velero-immich-daily|velero-home-assistant-daily|velero-filebrowser-daily\"}[6h])) by (schedule))) * 100",
-          "legendFormat": "{{schedule}}",
-          "range": true,
-          "refId": "Velero"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "editorMode": "code",
           "expr": "max by (schedule) (label_replace((sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"restic-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"restic-backup.*\"}))) * 100, \"schedule\", \"restic-monthly\", \"\", \"\"))",
           "legendFormat": "{{schedule}}",
           "range": true,
@@ -1346,6 +1357,28 @@
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "Nebula"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max by (schedule) (label_replace((sum(kube_job_status_succeeded{job_name=~\"immich-db-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"immich-db-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"immich-db-backup.*\"}))) * 100, \"schedule\", \"immich-db-backup-daily\", \"\", \"\"))",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "ImmichBackup"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max by (schedule) (label_replace((sum(kube_job_status_succeeded{job_name=~\"home-assistant-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"home-assistant-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"home-assistant-backup.*\"}))) * 100, \"schedule\", \"homeassistant-backup-daily\", \"\", \"\"))",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "HABackup"
         }
       ],
       "title": "Job Success Rate",
@@ -2311,11 +2344,6 @@
           },
           {
             "selected": false,
-            "text": "filebrowser-.*",
-            "value": "filebrowser-.*"
-          },
-          {
-            "selected": false,
             "text": "grafana-.*",
             "value": "grafana-.*"
           },
@@ -2326,8 +2354,18 @@
           },
           {
             "selected": false,
+            "text": "home-assistant-backup-.*",
+            "value": "home-assistant-backup-.*"
+          },
+          {
+            "selected": false,
             "text": "immich-.*",
             "value": "immich-.*"
+          },
+          {
+            "selected": false,
+            "text": "immich-db-backup-.*",
+            "value": "immich-db-backup-.*"
           },
           {
             "selected": false,
@@ -2378,14 +2416,9 @@
             "selected": false,
             "text": "unbound-.*",
             "value": "unbound-.*"
-          },
-          {
-            "selected": false,
-            "text": "velero-.*",
-            "value": "velero-.*"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,filebrowser-.*,grafana-.*,home-assistant-.*,immich-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*,velero-.*",
+        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"

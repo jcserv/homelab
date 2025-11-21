@@ -8,7 +8,7 @@ image:
 # Node affinity - force to run on pi4-02 with Zigbee adapter
 nodeSelector:
   kubernetes.io/hostname: pi4-02
-  zigbee: 'true'
+  zigbee: "true"
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -20,7 +20,7 @@ affinity:
             - key: zigbee
               operator: In
               values:
-                - 'true'
+                - "true"
 # Resource limits
 resources:
   requests:
@@ -43,7 +43,7 @@ storage:
 # - /dev/serial/by-id/usb-<your-device-id>
 usb:
   enabled: true
-  devicePath: /dev/ttyUSB0  # UPDATE THIS with your actual device path
+  devicePath: /dev/ttyUSB0 # UPDATE THIS with your actual device path
 # Host network mode (required for Bluetooth and mDNS discovery)
 # IMPORTANT: When hostNetwork is enabled, the pod uses the host's network namespace
 # This means it can access Bluetooth adapters directly
@@ -58,13 +58,14 @@ securityContext:
     add:
       - NET_ADMIN
       - NET_RAW
-      - SYS_ADMIN  # Required for Bluetooth adapter access
-      - SYS_RAWIO  # Required for raw I/O operations
+      - SYS_ADMIN # Required for Bluetooth adapter access
+      - SYS_RAWIO # Required for raw I/O operations
 # Service configuration
 service:
   type: LoadBalancer
   port: 8123
-  loadBalancerIP: 10.0.0.203
+  loadBalancerIP: 10.2.1.203
+
 # Ingress configuration for HTTPS access
 ingress:
   enabled: true
@@ -72,13 +73,13 @@ ingress:
   host: homeassistant.jarrodservilla.com
   tlsSecretName: wildcard-jarrodservilla-tls
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     # WebSocket support for Home Assistant
     nginx.ingress.kubernetes.io/websocket-services: home-assistant
     # Increase timeout for long-running connections
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: '3600'
-    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
-    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
 # Environment variables
 env:
   TZ: America/New_York
@@ -89,8 +90,8 @@ config:
     # Trust nginx proxy
     use_x_forwarded_for: true
     trusted_proxies:
-      - 10.42.0.0/16  # Pod network (nginx ingress pods run here)
-      - 10.43.0.0/16   # Service network
-      - 10.0.0.0/24    # Local network (for direct access)
-      - 127.0.0.1      # Localhost
-      - ::1            # IPv6 localhost
+      - 10.42.0.0/16 # Pod network (nginx ingress pods run here)
+      - 10.43.0.0/16 # Service network
+      - 10.2.1.0/24 # Local network (for direct access)
+      - 127.0.0.1 # Localhost
+      - ::1 # IPv6 localhost

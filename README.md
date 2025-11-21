@@ -34,13 +34,12 @@ Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://son
 <br/>
 
 **services:**
-- **immich** - Photo management (10.0.0.101 / https://img.home)
-- **homeassistant** - Home automation with Zigbee (10.0.0.102 / https://assistant.home)
-- **pihole** - DNS + ad blocking (10.0.0.53 / https://pi.home)
-- **filebrowser** - Web file manager (10.0.0.103 / https://files.home)
+- **immich** - Photo management (10.2.1.204 / https://img.home)
+- **homeassistant** - Home automation with Zigbee (10.2.1.203 / https://assistant.home)
+- **pihole** - DNS + ad blocking (10.2.1.202 / https://pi.home)
 
 **infra:**
-- **nginx** - Reverse proxy with TLS (10.0.0.200)
+- **nginx** - Reverse proxy with TLS (10.2.1.200)
 - **metallb** - LoadBalancer implementation
 - **cert-manager** - Automatic TLS certificates
 - **sealed-secrets** - Encrypted secrets in Git

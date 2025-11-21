@@ -132,7 +132,7 @@ prometheus-blackbox-exporter:
     targets:
       # Pi-hole DNS check
       - name: pihole-dns
-        url: 10.0.0.202:53
+        url: 10.2.1.202:53
         module: dns_udp
         labels:
           service: pihole
@@ -180,13 +180,6 @@ prometheus-blackbox-exporter:
         module: http_2xx_auth
         labels:
           service: immich
-          type: http
-
-      - name: filebrowser-http
-        url: http://filebrowser.default.svc.cluster.local
-        module: http_2xx_auth
-        labels:
-          service: filebrowser
           type: http
 
   # Resource limits for homelab
