@@ -43,10 +43,10 @@ storage:
 # - /dev/serial/by-id/usb-<your-device-id>
 usb:
   enabled: true
-  devicePath: /dev/ttyUSB0 # UPDATE THIS with your actual device path
+  devicePath: /dev/ttyUSB0  # UPDATE THIS with your actual device path
 # Host network mode (required for Bluetooth and mDNS discovery)
-# IMPORTANT: When hostNetwork is enabled, the pod uses the host's network namespace
-# This means it can access Bluetooth adapters directly
+# IMPORTANT: When hostNetwork is enabled, the pod uses the host's
+# network namespace. This means it can access Bluetooth adapters directly
 hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
 
@@ -58,8 +58,8 @@ securityContext:
     add:
       - NET_ADMIN
       - NET_RAW
-      - SYS_ADMIN # Required for Bluetooth adapter access
-      - SYS_RAWIO # Required for raw I/O operations
+      - SYS_ADMIN  # Required for Bluetooth adapter access
+      - SYS_RAWIO  # Required for raw I/O operations
 # Service configuration
 service:
   type: LoadBalancer
@@ -90,8 +90,8 @@ config:
     # Trust nginx proxy
     use_x_forwarded_for: true
     trusted_proxies:
-      - 10.42.0.0/16 # Pod network (nginx ingress pods run here)
-      - 10.43.0.0/16 # Service network
-      - 10.2.1.0/24 # Local network (for direct access)
-      - 127.0.0.1 # Localhost
-      - ::1 # IPv6 localhost
+      - 10.42.0.0/16  # Pod network (nginx ingress pods run here)
+      - 10.43.0.0/16  # Service network
+      - 10.2.1.0/24  # Local network (for direct access)
+      - 127.0.0.1  # Localhost
+      - ::1  # IPv6 localhost
