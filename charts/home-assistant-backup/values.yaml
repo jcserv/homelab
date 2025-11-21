@@ -25,7 +25,7 @@ b2Secret:
 # Image settings
 alpine_image:
   repository: "alpine"
-  tag: "3.19"
+  tag: "3.22"
   pullPolicy: IfNotPresent
 
 rclone_image:
