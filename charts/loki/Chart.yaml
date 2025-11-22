@@ -4,6 +4,8 @@ description: Loki log aggregation system for homelab Kubernetes cluster
 type: application
 version: 1.0.0
 appVersion: "3.0.0"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: loki

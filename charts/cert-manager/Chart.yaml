@@ -4,6 +4,8 @@ description: cert-manager for TLS certificate management in homelab Kubernetes c
 type: application
 version: 1.0.0
 appVersion: "v1.15.3"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: cert-manager

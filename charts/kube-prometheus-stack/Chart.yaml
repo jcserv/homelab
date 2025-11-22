@@ -4,6 +4,8 @@ description: Prometheus, Grafana, and Alertmanager stack for homelab Kubernetes 
 type: application
 version: 1.0.0
 appVersion: "v0.68.0"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: kube-prometheus-stack

@@ -4,6 +4,8 @@ description: Grafana Alloy - OpenTelemetry collector for logs and metrics
 type: application
 version: 1.0.0
 appVersion: "v1.0.0"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: alloy

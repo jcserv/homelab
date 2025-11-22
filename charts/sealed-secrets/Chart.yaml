@@ -4,6 +4,8 @@ description: Sealed Secrets for GitOps-friendly secret management in homelab Kub
 type: application
 version: 1.0.0
 appVersion: "v0.27.1"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: sealed-secrets

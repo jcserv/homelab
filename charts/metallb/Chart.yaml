@@ -4,6 +4,8 @@ description: MetalLB load balancer for homelab Kubernetes cluster
 type: application
 version: 1.0.0
 appVersion: "0.15.2"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: metallb
