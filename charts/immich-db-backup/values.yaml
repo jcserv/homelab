@@ -1,3 +1,6 @@
+# Namespace to deploy to
+namespace: default
+
 # Schedule for backup (cron format)
 schedule: "0 3 * * *"  # Daily at 3:00 AM
 
