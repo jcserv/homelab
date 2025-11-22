@@ -30,4 +30,10 @@ data:
         {{- end }}
       {{- end }}
     {{- end }}
+    {{- if .logger }}
+    logger:
+      {{- if .logger.default }}
+      default: {{ .logger.default }}
+      {{- end }}
+    {{- end }}
     {{- end }}
