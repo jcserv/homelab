@@ -2,7 +2,7 @@ apiVersion: v2
 name: loki
 description: Loki log aggregation system for homelab Kubernetes cluster
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "3.0.0"
 maintainers:
   - name: homelab
