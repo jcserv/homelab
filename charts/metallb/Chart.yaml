@@ -2,8 +2,10 @@ apiVersion: v2
 name: metallb
 description: MetalLB load balancer for homelab Kubernetes cluster
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "0.15.2"
+maintainers:
+  - name: homelab
 
 dependencies:
   - name: metallb
