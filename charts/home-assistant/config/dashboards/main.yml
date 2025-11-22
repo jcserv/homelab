@@ -1,0 +1,129 @@
+views:
+  - title: Home
+    sections:
+      - type: grid
+        cards:
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.forecast_home
+            forecast_type: daily
+          - type: logbook
+            target:
+              entity_id:
+                - binary_sensor.front_door_contact
+                - binary_sensor.back_door_contact
+          - type: markdown
+            content: |-
+              # Wi-Fi
+
+              SSID: ServillaRogers
+              Password: DC346Rogers
+      - type: grid
+        cards:
+          - type: thermostat
+            entity: climate.my_ecobee
+            show_current_as_primary: true
+            name: Ecobee
+            features:
+              - type: climate-hvac-modes
+          - type: custom:vacuum-card
+            entity: vacuum.dj_roomba_ii
+      - type: grid
+        cards:
+          - type: tile
+            entity: lock.lock
+            name: Front Door
+            vertical: false
+            features_position: bottom
+            grid_options:
+              columns: full
+              rows: 1
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: script.feed_yumi
+                icon: mdi:food-drumstick
+                hide_state: true
+                vertical: false
+                tap_action:
+                  action: perform-action
+                  perform_action: script.feed_yumi
+                  target: {}
+                icon_tap_action:
+                  action: perform-action
+                  perform_action: script.feed_yumi
+                  target: {}
+                features_position: bottom
+              - type: markdown
+                content: >-
+                  **Last Fed**: {{
+                  strptime(states('input_datetime.yumi_last_fed'),
+                  '%H:%M:%S').strftime('%-I:%M %p') }}
+
+
+                  **Meal Count**: {{ states('counter.daily_meal_count') }} / 5
+          - type: tile
+            entity: light.living_room_lamp
+            vertical: false
+            features_position: bottom
+          - type: tile
+            entity: cover.curtains
+            vertical: false
+            features_position: bottom
+          - type: tile
+            entity: light.den_lights
+            vertical: false
+            features_position: bottom
+          - type: tile
+            entity: switch.tz3210_xej4kukg_ts011f
+            name: Office
+            vertical: false
+            features_position: bottom
+          - chart_type: line
+            period: 5minute
+            type: statistics-graph
+            entities:
+              - sensor.tz3210_xej4kukg_ts011f_power
+              - sensor.bathroom_smart_plug_power
+              - sensor.homelab_smart_plug_power
+              - sensor.smart_plug_heater_power
+            stat_types:
+              - mean
+            title: Power Usage
+    badges:
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.front_door_contact
+        icon: mdi:door
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.back_door_contact
+        icon: mdi:door-sliding
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: sensor.washer_remaining_time
+        visibility:
+          - condition: state
+            entity: sensor.washer_remaining_time
+            state_not: unknown
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: sensor.washtower_remaining_time
+        visibility:
+          - condition: state
+            entity: sensor.washtower_remaining_time
+            state_not: unknown
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: cover.curtains
