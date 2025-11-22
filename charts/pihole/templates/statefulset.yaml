@@ -64,6 +64,16 @@ spec:
                   # This writes entries to /etc/pihole/hosts/custom.list and persists across restarts
                   pihole-FTL --config dns.hosts '[{{- range $index, $entry := .Values.customDnsEntries }}{{- if $index }},{{- end }}"{{ $entry }}"{{- end }}]'
 
+                  # Wait for custom blocklist file to be mounted
+                  echo "Waiting for custom blocklist file to be mounted..."
+                  for i in {1..30}; do
+                    if [ -f /var/www/html/pihole-blocklist.txt ]; then
+                      echo "Custom blocklist file found"
+                      break
+                    fi
+                    sleep 1
+                  done
+
                   # Wait for gravity.db to be created by Pi-hole
                   for i in {1..60}; do
                     if [ -f /etc/pihole/gravity.db ]; then
