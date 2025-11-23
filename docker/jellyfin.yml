@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ugreen/jellyfin:v1 # downloaded via UGREEN app store
+    tty: true
+    restart: always
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ./config:/config
+      - ./cache:/cache
+      - /volume1/Media:/data
+      - /volume1/Config/Jellyfin:/config/plugins
+    network_mode: bridge
+    ports:
+      - "8899:8096"
+    environment:
+      - TZ=America/Indianapolis

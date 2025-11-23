@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=XYZ
+      - SERVER_COUNTRIES=ABC
+    ports:
+      - 8888:8888 # qBittorrent WebUI
+      - 6888:6888 # qBittorrent torrent port
+      - 6888:6888/udp
+    healthcheck:
+      test: ["CMD", "ping", "-c", "1", "1.1.1.1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "container:gluetun"
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=America/Indianapolis
+      - WEBUI_PORT=8888
+    volumes:
+      - /volume1/Config/Gluetun/qbittorrent:/config
+      - /volume1/Downloads:/downloads
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: always
