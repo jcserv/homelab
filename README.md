@@ -6,7 +6,7 @@ A 4-node HA Kubernetes cluster on Raspberry Pi hardware running self-hosted serv
 1. highly-available pods (for the most part 😅)
 2. dns server w/ ad-blocking via pihole
 3. graceful shutdown in the event of a power outage
-> my setup is a bit scuffed because my UPS does not have a direct connection to monitor its status, so instead I plugged the UPS into a smart plug and read off of that (see charts/power-monitor) to coordinate the shutdown of nodes
+> my setup is a bit scuffed because my UPS does not have a direct connection to monitor its status, so instead I have an automation in Home Assistant to safe shutdown
 
 ## hardware ⚙️
 

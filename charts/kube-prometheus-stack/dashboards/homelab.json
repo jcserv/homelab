@@ -2389,11 +2389,6 @@
           },
           {
             "selected": false,
-            "text": "power-monitor-.*",
-            "value": "power-monitor-.*"
-          },
-          {
-            "selected": false,
             "text": "prometheus-.*",
             "value": "prometheus-.*"
           },
@@ -2418,7 +2413,7 @@
             "value": "unbound-.*"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,power-monitor-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*",
+        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
