@@ -1,0 +1,21 @@
+{{- range $name, $config := .Values.services }}
+{{- if $config.enabled }}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+subsets:
+  - addresses:
+      - ip: {{ $.Values.nasIP }}
+    ports:
+      - name: http
+        port: {{ $config.port }}
+        protocol: TCP
+{{- end }}
+{{- end }}

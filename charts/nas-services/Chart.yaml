@@ -1,0 +1,13 @@
+apiVersion: v2
+name: nas-services
+description: Ingress routing for media services running on NAS
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - media
+  - nas
+  - external-services
+  - ingress
+maintainers:
+  - name: homelab
