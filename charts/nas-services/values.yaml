@@ -49,3 +49,9 @@ services:
     enabled: true
     port: 8899
     subdomain: jellyfin
+
+# Monitoring configuration
+monitoring:
+  nodeExporter:
+    enabled: true
+    port: 9100
