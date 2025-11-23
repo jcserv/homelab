@@ -1,0 +1,51 @@
+# NAS Services Configuration
+# Routes traffic from nginx-ingress to services running on NAS
+
+# NAS IP address where all services are running
+nasIP: "10.2.1.147"
+
+# Base domain for all services
+baseDomain: "jarrodservilla.com"
+
+# TLS secret name (wildcard certificate managed by cert-manager)
+tlsSecretName: "wildcard-jarrodservilla-tls"
+
+# Ingress class to use
+ingressClassName: "nginx"
+
+# Service definitions
+services:
+  qbittorrent:
+    enabled: true
+    port: 8888
+    subdomain: qbittorrent
+
+  radarr:
+    enabled: true
+    port: 7878
+    subdomain: radarr
+
+  sonarr:
+    enabled: true
+    port: 8989
+    subdomain: sonarr
+
+  bazarr:
+    enabled: true
+    port: 6767
+    subdomain: bazarr
+
+  prowlarr:
+    enabled: true
+    port: 9696
+    subdomain: prowlarr
+
+  jellyseerr:
+    enabled: true
+    port: 5055
+    subdomain: jellyseerr
+
+  jellyfin:
+    enabled: true
+    port: 8899
+    subdomain: jellyfin

@@ -76,6 +76,14 @@ customDnsEntries:
   - 10.2.1.200 files.jarrodservilla.com
   - 10.2.1.200 pi.jarrodservilla.com
   - 10.2.1.200 grafana.jarrodservilla.com
+  # NAS services
+  - 10.2.1.200 qbittorrent.jarrodservilla.com
+  - 10.2.1.200 radarr.jarrodservilla.com
+  - 10.2.1.200 sonarr.jarrodservilla.com
+  - 10.2.1.200 bazarr.jarrodservilla.com
+  - 10.2.1.200 prowlarr.jarrodservilla.com
+  - 10.2.1.200 jellyseerr.jarrodservilla.com
+  - 10.2.1.200 jellyfin.jarrodservilla.com
 # Custom blocklist entries
 # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
 # customBlocklist: |

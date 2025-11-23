@@ -1,0 +1,31 @@
+{{- range $name, $config := .Values.services }}
+{{- if $config.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+spec:
+  ingressClassName: {{ $.Values.ingressClassName }}
+  tls:
+    - hosts:
+        - {{ $config.subdomain }}.{{ $.Values.baseDomain }}
+      secretName: {{ $.Values.tlsSecretName }}
+  rules:
+    - host: {{ $config.subdomain }}.{{ $.Values.baseDomain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $name }}
+                port:
+                  number: {{ $config.port }}
+{{- end }}
+{{- end }}
