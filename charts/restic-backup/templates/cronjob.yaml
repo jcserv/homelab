@@ -46,14 +46,11 @@ spec:
                 echo "Repository already initialized"
               fi
 
-              # Run backup with excludes
+              # Run backup of Files and Library folders
               echo "Running backup..."
-              restic backup {{ .Values.backup.sourcePath }} \
+              restic backup {{ .Values.backup.filesPath }} {{ .Values.backup.libraryPath }} \
                 --tag {{ .Values.backup.tag }} \
                 --tag "$(hostname)" \
-                {{- range .Values.backup.excludePatterns }}
-                --exclude {{ . | quote }} \
-                {{- end }}
                 --verbose
 
               # Cleanup old snapshots and prune
@@ -96,13 +93,18 @@ spec:
                   name: {{ .Values.b2.existingSecret }}
                   key: RESTIC_PASSWORD
             volumeMounts:
-            - name: backup-source
-              mountPath: {{ .Values.backup.sourcePath }}
+            - name: backup-files
+              mountPath: {{ .Values.backup.filesPath }}
+              readOnly: true
+            - name: backup-library
+              mountPath: {{ .Values.backup.libraryPath }}
               readOnly: true
             resources:
               {{- toYaml .Values.resources | nindent 14 }}
           volumes:
-          - name: backup-source
-            hostPath:
-              path: {{ .Values.backup.sourcePath }}
-              type: Directory
+          - name: backup-files
+            persistentVolumeClaim:
+              claimName: {{ include "restic-backup.fullname" . }}-files-pvc
+          - name: backup-library
+            persistentVolumeClaim:
+              claimName: {{ include "restic-backup.fullname" . }}-library-pvc
