@@ -9,19 +9,10 @@ image:
   tag: "latest"
   pullPolicy: IfNotPresent
 
-# Node affinity - run on storage node with HDD to access backup data
-nodeSelector:
-  storage-type: "hdd"
+# Node affinity - NFS can run on any node, no restrictions needed
+nodeSelector: {}
 
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: storage-type
-              operator: In
-              values:
-                - "hdd"
+affinity: {}
 
 # Resource limits
 resources:
@@ -32,12 +23,26 @@ resources:
     memory: "512Mi"
     cpu: "2000m"
 
-# Backup source path
+# Backup source configuration
 backup:
-  sourcePath: /mnt/hd1
-  tag: raspberry-pi
-  excludePatterns:
-    - /mnt/hd1/lost+found
+  filesPath: /mnt/nas/files
+  libraryPath: /mnt/nas/library
+  tag: ugreen-nas
+
+# NFS storage configuration
+storage:
+  files:
+    storageClass: "" # Use empty string for static PVs
+    size: 500Gi
+    nfs:
+      server: 10.2.1.147
+      path: /volume1/Files
+  library:
+    storageClass: "" # Use empty string for static PVs
+    size: 500Gi
+    nfs:
+      server: 10.2.1.147
+      path: /volume1/Library
 
 # Retention policy
 retention:

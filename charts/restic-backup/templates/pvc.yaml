@@ -1,0 +1,34 @@
+---
+# PVC for Files shared folder
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "restic-backup.fullname" . }}-files-pvc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "restic-backup.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  resources:
+    requests:
+      storage: {{ .Values.storage.files.size }}
+  volumeName: {{ include "restic-backup.fullname" . }}-files-pv
+---
+# PVC for Library shared folder
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "restic-backup.fullname" . }}-library-pvc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "restic-backup.name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  resources:
+    requests:
+      storage: {{ .Values.storage.library.size }}
+  volumeName: {{ include "restic-backup.fullname" . }}-library-pv

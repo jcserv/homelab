@@ -1,0 +1,40 @@
+---
+# NFS PV for Files shared folder
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "restic-backup.fullname" . }}-files-pv
+  labels:
+    app: {{ include "restic-backup.name" . }}
+    type: nfs-storage
+spec:
+  capacity:
+    storage: {{ .Values.storage.files.size }}
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: {{ .Values.storage.files.nfs.server }}
+    path: {{ .Values.storage.files.nfs.path }}
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  # Note: No nodeAffinity needed for NFS - can run on any node
+---
+# NFS PV for Library shared folder
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "restic-backup.fullname" . }}-library-pv
+  labels:
+    app: {{ include "restic-backup.name" . }}
+    type: nfs-storage
+spec:
+  capacity:
+    storage: {{ .Values.storage.library.size }}
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: {{ .Values.storage.library.nfs.server }}
+    path: {{ .Values.storage.library.nfs.path }}
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  # Note: No nodeAffinity needed for NFS - can run on any node
