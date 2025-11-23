@@ -14,9 +14,9 @@ image:
 
 # Component-specific node affinity
 componentAffinity:
-  # Server MUST run on storage node
+  # Server can now run on any node (using NFS)
   server:
-    required: true
+    required: false  # Changed from true - NFS is network accessible
     nodeSelector:
       storage-type: "hdd"
 
@@ -55,11 +55,14 @@ resources:
       cpu: "2000m"
 
 storage:
-  # Media library (photos/videos) - HDD hostPath
+  # Media library (photos/videos) - NFS on UGREEN NAS
   library:
-    storageClass: "" # Use empty string for hostPath PVs
+    storageClass: "" # Use empty string for static PVs
     size: 500Gi
-    hostPath: /mnt/hd1/Library
+    # hostPath: /mnt/hd1/Library  # OLD: Local HDD storage
+    nfs:
+      server: 10.2.1.147
+      path: /volume1/Library
 
   # Database - local-path provisioner (dynamic)
   database:
