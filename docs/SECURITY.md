@@ -25,21 +25,18 @@ sudo apt install ufw
 ss -ltpn
 ip addr show
 
-sudo ufw allow from 10.0.0.0/24 to any port 22 proto tcp comment 'ssh from local network'
+sudo ufw allow from 10.2.1.0/24 to any port 22 proto tcp comment 'ssh from trusted vlan'
+sudo ufw allow from 10.2.1.0/24 to any port 22 proto tcp comment 'ssh from homelab vlan'
 sudo ufw allow from 100.64.0.0/10 to any port 22 proto tcp comment 'ssh from tailscale'
 sudo ufw allow 80
 sudo ufw allow 443
-sudo ufw allow from 10.0.0.0/24 comment 'local network traffic'
+sudo ufw allow from 10.2.1.0/24 comment 'local network traffic'
 sudo ufw allow from 100.64.0.0/10 comment 'tailscale network'
-
-# TODO: add tailscale exceptions when tailscale is added to pi4-02 and pi5-01
 
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 
 sudo ufw enable
-
-
 
 sudo apt install fail2ban
 sudo systemctl enable fail2ban --now
@@ -47,5 +44,4 @@ sudo systemctl status fail2ban
 ```
 
 EVENTUALLY: 
-- geoblocking
 - 2fa/sso

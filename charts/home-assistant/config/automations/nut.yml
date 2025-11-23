@@ -1,0 +1,36 @@
+# UPS Runtime: 8-12 minutes, Power draw: 95-100W
+alias: Safe NAS Shutdown
+description: Shutdown NAS safely when power is cut to prevent data loss
+triggers:
+  - device_id: 1092cdc240e85027979fa7dab6e72129
+    domain: zha
+    type: device_offline
+    subtype: device_offline
+    trigger: device
+conditions: []
+actions:
+  - action: notify.mobile_app_jarrod
+    metadata: {}
+    data:
+      message: Homelab plug detected offline
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - if:
+      - condition: device
+        type: is_off
+        device_id: 1092cdc240e85027979fa7dab6e72129
+        entity_id: 0f9498ffd262f9e839811f098f240cba
+        domain: switch
+    then:
+      - device_id: de280ac79f7c0ee93040caa34607bf59
+        domain: button
+        entity_id: 86e86f908e249f6e3e9b12e99315ee04
+        type: press
+      - action: notify.mobile_app_jarrod
+        metadata: {}
+        data:
+          message: Safely shut down NAS
+mode: single
