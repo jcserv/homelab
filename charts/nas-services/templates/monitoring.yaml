@@ -1,0 +1,72 @@
+{{- if .Values.monitoring.nodeExporter.enabled }}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: nas-node-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: nas-node-exporter
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: monitoring
+subsets:
+  - addresses:
+      - ip: {{ .Values.nasIP }}
+    ports:
+      - name: metrics
+        port: {{ .Values.monitoring.nodeExporter.port }}
+        protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nas-node-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: nas-node-exporter
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: monitoring
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: {{ .Values.monitoring.nodeExporter.port }}
+      targetPort: {{ .Values.monitoring.nodeExporter.port }}
+      protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nas-node-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: nas-node-exporter
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nas-node-exporter
+  endpoints:
+    - port: metrics
+      interval: 60s
+      scrapeTimeout: 10s
+      path: /metrics
+      relabelings:
+        # Add a label to identify this as the NAS node
+        - sourceLabels: [__address__]
+          targetLabel: instance
+          replacement: 'nas'
+        - sourceLabels: [__address__]
+          targetLabel: node
+          replacement: 'nas'
+        - sourceLabels: [__address__]
+          targetLabel: nodename
+          replacement: 'nas-01'
+        # Set job to match other node-exporters so it appears in dashboards
+        - targetLabel: job
+          replacement: 'node-exporter'
+{{- end }}
