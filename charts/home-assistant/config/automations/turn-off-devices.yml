@@ -1,0 +1,52 @@
+alias: Turn off devices when no one is home
+description: ""
+triggers:
+  - trigger: time_pattern
+    minutes: /10
+conditions:
+  - condition: device
+    device_id: 3999d9e33d915adfcf32962aff1233ce
+    domain: device_tracker
+    entity_id: 3c97264e558244dfb779353e1bb35da5
+    type: is_not_home
+  - condition: device
+    device_id: af271f5e5294793631c1a032404c7157
+    domain: device_tracker
+    entity_id: cc7877e9e8150e78be186037da60ea41
+    type: is_not_home
+  - condition: device
+    device_id: 5c0e94928ab1f5520ec6ed5594b070f8
+    domain: device_tracker
+    entity_id: 352fe38cf77eebaa235221487ffb55e1
+    type: is_not_home
+  - condition: device
+    type: is_on
+    device_id: 861beda6559b7cc8aaa0029d6f6138ac
+    entity_id: f798ded533ffb3e846cd2f47fe58843b
+    domain: switch
+actions:
+  - device_id: be39c178aee2459375eef96a04fbf1db
+    domain: climate
+    entity_id: dc8325e62b3cede331eb2d75f9402fec
+    type: set_hvac_mode
+    hvac_mode: "off"
+  - type: turn_off
+    device_id: 87562c8575362b4666fc65881cfe34b6
+    entity_id: 4ffa7c686e08e4b5a554124e32f5846d
+    domain: switch
+  - type: turn_off
+    device_id: ded8cd94fbbeb3b64fc35437ee6af6f9
+    entity_id: bfc5e4c70591dd1469bc1dd201001478
+    domain: switch
+  - type: turn_off
+    device_id: 916d8bb2189f7aa55c28a833b4c613bb
+    entity_id: 964c6c88fe7f2871715bbe710500e960
+    domain: switch
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+        - light.den_lights
+        - light.living_room_lamp
+mode: single
