@@ -95,8 +95,7 @@ kube-prometheus-stack:
       server:
         root_url: https://grafana.jarrodservilla.com
       log:
-        level: debug
-        filters: oauth.generic_oauth:debug
+        level: info
       auth:
         signout_redirect_url: "https://auth.jarrodservilla.com/application/o/grafana/end-session/"
         oauth_auto_login: true
