@@ -1,0 +1,16 @@
+alias: B4 - Close blinds
+description: ""
+triggers:
+  - device_id: 2924a2def320c6d4391ad023b29c3902
+    domain: zha
+    type: remote_button_short_press
+    subtype: button_4
+    trigger: device
+conditions: []
+actions:
+  - action: cover.close_cover
+    metadata: {}
+    data: {}
+    target:
+      entity_id: cover.curtains
+mode: single

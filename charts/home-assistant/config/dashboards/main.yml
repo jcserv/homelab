@@ -3,6 +3,24 @@ views:
     sections:
       - type: grid
         cards:
+          - entities:
+              - calendar.home
+            weather:
+              position: date
+              date:
+                show_conditions: true
+                show_high_temp: true
+                show_low_temp: false
+                icon_size: 14px
+                font_size: 12px
+                color: var(--primary-text-color)
+              event:
+                show_conditions: true
+                show_temp: true
+                icon_size: 14px
+                font_size: 12px
+                color: var(--primary-text-color)
+            type: custom:calendar-card-pro
           - show_current: true
             show_forecast: true
             type: weather-forecast
