@@ -95,5 +95,14 @@ config:
       - 10.2.1.0/24  # Local network (for direct access)
       - 127.0.0.1  # Localhost
       - ::1  # IPv6 localhost
+  homeassistant:
+    external_url: "https://homeassistant.jarrodservilla.com"
   logger:
     default: warning
+  openid:
+    enabled: true
+    configure_url: "https://auth.jarrodservilla.com/application/o/home-assistant/.well-known/openid-configuration"
+    scope: "openid profile email"
+    username_field: "preferred_username"
+    block_login: false
+    secretName: home-assistant-oauth
