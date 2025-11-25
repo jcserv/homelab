@@ -78,6 +78,20 @@ spec:
         env:
         - name: TZ
           value: {{ .Values.env.TZ }}
+        {{- if .Values.config.openid }}
+        {{- if .Values.config.openid.enabled }}
+        - name: OAUTH_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.config.openid.secretName }}
+              key: client_id
+        - name: OAUTH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.config.openid.secretName }}
+              key: client_secret
+        {{- end }}
+        {{- end }}
         volumeMounts:
         - name: config
           mountPath: /config

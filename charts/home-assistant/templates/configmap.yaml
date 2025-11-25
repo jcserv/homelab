@@ -30,10 +30,27 @@ data:
         {{- end }}
       {{- end }}
     {{- end }}
+    {{- if .homeassistant }}
+    homeassistant:
+      {{- if .homeassistant.external_url }}
+      external_url: {{ .homeassistant.external_url }}
+      {{- end }}
+    {{- end }}
     {{- if .logger }}
     logger:
       {{- if .logger.default }}
       default: {{ .logger.default }}
       {{- end }}
+    {{- end }}
+    {{- if .openid }}
+    {{- if .openid.enabled }}
+    openid:
+      client_id: !env_var OAUTH_CLIENT_ID
+      client_secret: !env_var OAUTH_CLIENT_SECRET
+      configure_url: {{ .openid.configure_url | quote }}
+      scope: {{ .openid.scope | quote }}
+      username_field: {{ .openid.username_field | quote }}
+      block_login: {{ .openid.block_login }}
+    {{- end }}
     {{- end }}
     {{- end }}
