@@ -1,0 +1,158 @@
+namespace: default
+
+# Authentik server configuration
+server:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/goauthentik/server
+    tag: "2025.10.2"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  service:
+    type: ClusterIP
+    port: 9000
+    metricsPort: 9300
+
+worker:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/goauthentik/server
+    tag: "2025.10.2"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 10Gi
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  nodeSelector: {}
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - pi5-01
+
+# Redis configuration
+redis:
+  enabled: true
+  image:
+    repository: valkey/valkey
+    tag: "9.0.0-alpine"
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 2Gi
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Storage for media files
+media:
+  storageClass: local-path
+  size: 5Gi
+
+# Storage for custom templates
+templates:
+  storageClass: local-path
+  size: 1Gi
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  host: auth.jarrodservilla.com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  tls:
+    enabled: true
+    secretName: wildcard-jarrodservilla-tls
+
+# LoadBalancer configuration (optional, using ingress instead)
+service:
+  type: ClusterIP
+  # If you want LoadBalancer:
+  # type: LoadBalancer
+  # loadBalancerIP: 10.2.1.206
+
+# Authentik environment configuration
+authentik:
+  secretKey:
+    secretName: authentik-secrets
+    key: AUTHENTIK_SECRET_KEY
+
+  errorReporting:
+    enabled: false
+    sendPii: false
+
+  postgresql:
+    host: authentik-postgres
+    port: 5432
+    name: authentik
+    user:
+      secretName: authentik-secrets
+      key: AUTHENTIK_POSTGRESQL__USER
+    password:
+      secretName: authentik-secrets
+      key: AUTHENTIK_POSTGRESQL__PASSWORD
+
+  redis:
+    host: authentik-redis
+    port: 6379
+
+  email:
+    enabled: false
+  logLevel: info
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 30s
+    scrapeTimeout: 10s
