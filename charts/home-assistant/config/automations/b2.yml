@@ -1,0 +1,45 @@
+alias: B2 - Warm lamp
+description: ""
+triggers:
+  - device_id: 2924a2def320c6d4391ad023b29c3902
+    domain: zha
+    type: remote_button_short_press
+    subtype: button_2
+    trigger: device
+conditions: []
+actions:
+  - if:
+      - condition: state
+        entity_id: light.living_room_lamp
+        state:
+          - "off"
+    then:
+      - action: light.turn_on
+        metadata: {}
+        data:
+          color_temp_kelvin: 2000
+          brightness_pct: 50
+        target:
+          entity_id: light.living_room_lamp
+    else:
+      - if:
+          - condition: numeric_state
+            entity_id: light.living_room_lamp
+            attribute: brightness
+            above: 126
+            below: 128
+        then:
+          - action: light.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: light.living_room_lamp
+        else:
+          - action: light.turn_on
+            metadata: {}
+            data:
+              brightness_pct: 50
+              color_temp_kelvin: 2000
+            target:
+              entity_id: light.living_room_lamp
+mode: single
