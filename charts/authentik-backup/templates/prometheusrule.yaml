@@ -1,0 +1,58 @@
+{{- if .Values.monitoring.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "authentik-backup.fullname" . }}
+  labels:
+    {{- include "authentik-backup.labels" . | nindent 4 }}
+    release: monitoring-stack
+spec:
+  groups:
+  - name: authentik-backup.rules
+    interval: 60s
+    rules:
+    # Alert if the backup job has failed
+    - alert: AuthentikBackupJobFailed
+      expr: |
+        kube_job_status_failed{job_name=~"{{ include "authentik-backup.fullname" . }}-.*"} > 0
+      for: 5m
+      labels:
+        severity: critical
+        component: backup
+        service: authentik
+      annotations:
+        summary: "Authentik database backup job failed"
+        description: "The Authentik database backup job {{ "{{" }} $labels.job_name {{ "}}" }} has failed. Check the job logs for details."
+
+    # Alert if no successful backup in the last 25 hours
+    - alert: AuthentikBackupJobMissing
+      expr: |
+        (time() - kube_job_status_completion_time{job_name=~"{{ include "authentik-backup.fullname" . }}-.*"} > {{ .Values.monitoring.prometheusRule.backupMissingHours }} * 3600)
+        or
+        (absent(kube_job_status_completion_time{job_name=~"{{ include "authentik-backup.fullname" . }}-.*"}))
+      for: 10m
+      labels:
+        severity: warning
+        component: backup
+        service: authentik
+      annotations:
+        summary: "Authentik database backup has not run recently"
+        description: "No successful Authentik database backup in the last {{ .Values.monitoring.prometheusRule.backupMissingHours }} hours."
+
+    # Alert if the backup job is taking too long
+    - alert: AuthentikBackupJobDurationHigh
+      expr: |
+        (time() - kube_job_status_start_time{job_name=~"{{ include "authentik-backup.fullname" . }}-.*"})
+        and
+        (kube_job_status_active{job_name=~"{{ include "authentik-backup.fullname" . }}-.*"} > 0)
+        > {{ .Values.monitoring.prometheusRule.backupDurationMinutes }} * 60
+      for: 5m
+      labels:
+        severity: warning
+        component: backup
+        service: authentik
+      annotations:
+        summary: "Authentik database backup job is taking too long"
+        description: "The Authentik database backup job has been running for more than {{ .Values.monitoring.prometheusRule.backupDurationMinutes }} minutes."
+{{- end }}
+

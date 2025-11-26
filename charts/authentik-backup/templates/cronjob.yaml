@@ -1,0 +1,140 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "authentik-backup.fullname" . }}
+  labels:
+    {{- include "authentik-backup.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.jobSettings.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.jobSettings.failedJobsHistoryLimit }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "authentik-backup.selectorLabels" . | nindent 8 }}
+    spec:
+      backoffLimit: {{ .Values.jobSettings.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.jobSettings.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            {{- include "authentik-backup.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: {{ .Values.jobSettings.restartPolicy }}
+          initContainers:
+          # Step 1: Export PostgreSQL database
+          - name: pg-dump
+            image: "{{ .Values.postgres_image.repository }}:{{ .Values.postgres_image.tag }}"
+            imagePullPolicy: {{ .Values.postgres_image.pullPolicy }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting Authentik PostgreSQL backup..."
+              BACKUP_FILE="/backup/authentik-$(date +%Y%m%d-%H%M%S).sql"
+
+              # Run pg_dump
+              PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump \
+                -h {{ .Values.postgres.host }} \
+                -p {{ .Values.postgres.port }} \
+                -U "${POSTGRES_USER}" \
+                -d {{ .Values.postgres.database }} \
+                --format=plain \
+                --no-owner \
+                --no-acl \
+                > "${BACKUP_FILE}"
+
+              # Compress the dump
+              echo "Compressing backup..."
+              gzip -{{ .Values.backup.compressionLevel }} "${BACKUP_FILE}"
+              echo "Backup created: ${BACKUP_FILE}.gz"
+              echo "Backup size: $(du -h ${BACKUP_FILE}.gz | cut -f1)"
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.user.secretName }}
+                  key: {{ .Values.postgres.user.key }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.password.secretName }}
+                  key: {{ .Values.postgres.password.key }}
+            volumeMounts:
+            - name: backup
+              mountPath: /backup
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+          containers:
+          # Step 2: Upload to B2 using rclone
+          - name: rclone-upload
+            image: "{{ .Values.rclone_image.repository }}:{{ .Values.rclone_image.tag }}"
+            imagePullPolicy: {{ .Values.rclone_image.pullPolicy }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+
+              # Configure rclone for B2
+              mkdir -p /root/.config/rclone
+              cat > /root/.config/rclone/rclone.conf <<EOF
+              [b2]
+              type = s3
+              provider = Other
+              access_key_id = ${AWS_ACCESS_KEY_ID}
+              secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+              endpoint = https://{{ .Values.backup.endpoint }}
+              acl = private
+              EOF
+
+              # Get the backup file
+              BACKUP_FILE=$(ls -t /backup/*.sql.gz | head -1)
+              BACKUP_FILENAME=$(basename "${BACKUP_FILE}")
+
+              echo "Uploading ${BACKUP_FILENAME} to B2..."
+              rclone copy "${BACKUP_FILE}" "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/" \
+                --progress \
+                --transfers 4 \
+                --checkers 8 \
+                --s3-no-check-bucket
+
+              echo "Upload completed successfully!"
+
+              # List current backups
+              echo "Current backups in B2:"
+              rclone ls "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/" | grep "\.sql\.gz$" || true
+
+              # Clean up old backups (keep last {{ .Values.backup.retention }})
+              echo "Cleaning up old backups (keeping last {{ .Values.backup.retention }})..."
+              rclone lsf "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/" \
+                | grep "\.sql\.gz$" \
+                | sort -r \
+                | tail -n +$(({{ .Values.backup.retention }} + 1)) \
+                | while read old_file; do
+                    echo "Deleting old backup: ${old_file}"
+                    rclone delete "b2:{{ .Values.backup.bucket }}/{{ .Values.backup.path }}/${old_file}"
+                  done || echo "No old backups to delete"
+
+              echo "Backup completed successfully!"
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2Secret.name }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.b2Secret.name }}
+                  key: AWS_SECRET_ACCESS_KEY
+            volumeMounts:
+            - name: backup
+              mountPath: /backup
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+          volumes:
+          - name: backup
+            emptyDir: {}
+
