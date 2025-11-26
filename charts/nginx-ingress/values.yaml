@@ -56,6 +56,24 @@ ingress-nginx:
     # Allow snippets for advanced configuration
     allowSnippetAnnotations: true
 
+    # Enable annotation validation bypass for external auth
+    config:
+      annotation-value-word-blocklist: ""
+
+    # Disable strict validation for external auth annotations
+    admissionWebhooks:
+      annotations: {}
+      enabled: true
+      patch:
+        enabled: true
+        # Disable annotation validation for auth snippets
+        image:
+          pullPolicy: IfNotPresent
+      certManager:
+        enabled: false
+      # Disable risky annotation checks
+      failurePolicy: Ignore
+
   # Default backend (optional - returns 404 for unmapped routes)
   # Disabled due to ARM architecture incompatibility
   defaultBackend:

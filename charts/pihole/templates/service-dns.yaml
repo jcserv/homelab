@@ -25,10 +25,12 @@ spec:
     targetPort: dns-udp
     protocol: UDP
     name: dns-udp
+  {{- if .Values.service.dns.ports.http }}
   - port: {{ .Values.service.dns.ports.http }}
     targetPort: http
     protocol: TCP
     name: http
+  {{- end }}
   selector:
     app: {{ include "pihole.name" . }}
   sessionAffinity: ClientIP

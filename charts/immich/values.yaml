@@ -114,11 +114,8 @@ redis:
 
 # Service configuration
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 2283
-  loadBalancerIP: 10.2.1.204
-  annotations:
-    metallb.universe.tf/allow-shared-ip: immich
 
 # Environment variables
 env:
