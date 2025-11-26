@@ -43,7 +43,6 @@ service:
     ports:
       tcp: 53
       udp: 53
-      http: 80
   # Admin service - pihole-0 only, for making configuration changes
   admin:
     type: ClusterIP
@@ -75,7 +74,6 @@ customDnsEntries:
   - 10.2.1.200 homeassistant.jarrodservilla.com
   - 10.2.1.200 pi.jarrodservilla.com
   - 10.2.1.200 grafana.jarrodservilla.com
-  - 10.2.1.200 home.jarrodservilla.com
   - 10.2.1.200 auth.jarrodservilla.com
   # NAS services
   - 10.2.1.200 qbittorrent.jarrodservilla.com
