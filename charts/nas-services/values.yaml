@@ -24,26 +24,42 @@ services:
     enabled: true
     port: 7878
     subdomain: radarr
+    # Use Authentik outpost in proxy mode
+    useAuthentikProxy: true
+    # Pass Authorization header from Authentik to backend
+    proxyAuthHeaders: true
 
   sonarr:
     enabled: true
     port: 8989
     subdomain: sonarr
+    # Use Authentik outpost in proxy mode
+    useAuthentikProxy: true
+    # Pass Authorization header from Authentik to backend
+    proxyAuthHeaders: true
 
   bazarr:
     enabled: true
     port: 6767
     subdomain: bazarr
+    # Use Authentik outpost in proxy mode
+    useAuthentikProxy: true
+    # Pass Authorization header from Authentik to backend
+    proxyAuthHeaders: true
 
   prowlarr:
     enabled: true
     port: 9696
     subdomain: prowlarr
+    # Use Authentik outpost in proxy mode
+    useAuthentikProxy: true
 
   jellyseerr:
     enabled: true
     port: 5055
     subdomain: jellyseerr
+    # Use Authentik outpost in proxy mode
+    useAuthentikProxy: true
 
   jellyfin:
     enabled: true

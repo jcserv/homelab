@@ -1,0 +1,41 @@
+{{- range $name, $config := .Values.services }}
+{{- if and $config.enabled $config.useAuthentikProxy $config.proxyAuthHeaders }}
+---
+# Service pointing to external NAS (for forward auth mode)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}-nas
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}-nas
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $config.port }}
+      targetPort: {{ $config.port }}
+      protocol: TCP
+      name: http
+---
+# Endpoints pointing to NAS IP
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ $name }}-nas
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}-nas
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+subsets:
+  - addresses:
+      - ip: {{ $.Values.nasIP }}
+    ports:
+      - port: {{ $config.port }}
+        name: http
+        protocol: TCP
+{{- end }}
+{{- end }}
+
