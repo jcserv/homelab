@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: authentik-outpost-token
+  namespace: default
+spec:
+  encryptedData:
+    token: AgCoYzRuTPdHNfMpH3BMYPQqMR52S/L+AnZa1TI5A6eLIriBaM4O0CIcD2HQ/sD+YrcGrsy/9kQV7R0dPg/FV7uze1XWtadgsqVY8wm7vFNO4EFzRkJDt343jwZYxBOf8GOkNtgq9o3swG0eRAlCjUkcvlX/R6GHz7HW2435snx2ndu7sqLtvo50dlBp2joMogdAongfmKGQzaRPzcinVbTVnOPabAncsnUPToZ01OtqSM+QDqQpLSUb1OKA+t51IA/PAGXIqlmJ2cCKAF/lGiM4HxY56cPzfRbrWPHAtwfl2YJJJvN4/usIP4OnW+Is7Znz7YT/kt7+X8Oj906RhR959GW2KYfk9OoA8831fKvoki/Alrw1haUn/Tgh7xb16X4HMuVfTrklm/1GIVTE/lM8v1xZ4bghFgv4v0KHlEpY4mrYvja5r0+a6fuV+WOKBXjcpA8SdawSifJxLEocnsX7x/lOW0zPUdXwgnHrU4fPpR1WoQ/rTb2y6tA0NjEnGQbvxl6juinPk7mxV456sTHw+C4Z/UDoQkEQA8dRuZUg8epXgCKkuENFb+apBkEOaSqXoQ4UtU3ZUXlH8Gl2ZfcwHQE1GifYD76p0OUxYCGCadFIHABpR026xXMHtpahYBodUkcIrbQ6thB4Epxjw9LitJsxPsn+gFmx+AWg71auGxfHl8cWIn8jwblwS8ga80I9UvIQXJZXu/Bc7KfPmqIkvlr2Mpspv21u2mFbz8clTmK69MkDPzM39JTNWgURBf2r/OR721VAKl4Ryhk=
+  template:
+    metadata:
+      name: authentik-outpost-token
+      namespace: default
+    type: Opaque
