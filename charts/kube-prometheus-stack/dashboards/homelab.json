@@ -1106,6 +1106,17 @@
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "HABackup"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max(label_replace(kube_job_status_succeeded{job_name=~\"authentik-backup.*\"}, \"schedule\", \"authentik-backup-daily\", \"\", \"\")) by (schedule)",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "AuthentikBackup"
         }
       ],
       "title": "Job Status Timeline",
@@ -1245,6 +1256,17 @@
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "HABackup"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max by (schedule) (label_replace((kube_job_status_completion_time{job_name=~\"authentik-backup.*\"} - kube_job_status_start_time{job_name=~\"authentik-backup.*\"}), \"schedule\", \"authentik-backup-daily\", \"\", \"\"))",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "AuthentikBackup"
         }
       ],
       "title": "Job Duration",
@@ -1379,6 +1401,17 @@
           "legendFormat": "{{schedule}}",
           "range": true,
           "refId": "HABackup"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "max by (schedule) (label_replace((sum(kube_job_status_succeeded{job_name=~\"authentik-backup.*\"}) / (sum(kube_job_status_succeeded{job_name=~\"authentik-backup.*\"}) + sum(kube_job_status_failed{job_name=~\"authentik-backup.*\"}))) * 100, \"schedule\", \"authentik-backup-daily\", \"\", \"\"))",
+          "legendFormat": "{{schedule}}",
+          "range": true,
+          "refId": "AuthentikBackup"
         }
       ],
       "title": "Job Success Rate",
