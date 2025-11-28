@@ -1,0 +1,44 @@
+alias: Yumi Meal Schedule
+description: ""
+triggers:
+  - trigger: time
+    at: "10:00:00"
+  - trigger: time
+    at: "14:00:00"
+  - trigger: time
+    at: "17:00:00"
+conditions:
+  - condition: numeric_state
+    entity_id: counter.daily_meal_count
+    below: 5
+actions:
+  - device_id: a0b8421352408d47c1f31efd5ce9b926
+    domain: select
+    entity_id: f77689bd664892acbac9ec622aa9e23b
+    type: select_next
+    cycle: true
+  - type: turn_on
+    device_id: a0b8421352408d47c1f31efd5ce9b926
+    entity_id: b449e2e22227becc2ef37538fd5a018b
+    domain: switch
+  - delay:
+      hours: 0
+      minutes: 30
+      seconds: 0
+      milliseconds: 0
+  - type: turn_off
+    device_id: a0b8421352408d47c1f31efd5ce9b926
+    entity_id: b449e2e22227becc2ef37538fd5a018b
+    domain: switch
+  - action: counter.increment
+    metadata: {}
+    data: {}
+    target:
+      entity_id: counter.daily_meal_count
+  - action: input_datetime.set_datetime
+    metadata: {}
+    data:
+      datetime: "{{ now().isoformat() }}"
+    target:
+      entity_id: input_datetime.yumi_last_fed
+mode: single
