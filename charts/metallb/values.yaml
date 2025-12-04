@@ -31,7 +31,7 @@ metallb:
     enabled: true
     image:
       repository: quay.io/metallb/speaker
-      tag: v0.15.2
+      tag: v0.15.3
     resources:
       limits:
         cpu: 100m
