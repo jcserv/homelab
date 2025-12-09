@@ -1,12 +1,11 @@
+---
 namespace: monitoring
-
 # Grafana Alloy configuration for log collection
 alloy:
   alloy:
     # Clustering - disabled for simplicity
     clustering:
       enabled: false
-
     configMap:
       create: true
       content: |-
@@ -14,72 +13,59 @@ alloy:
           level  = "info"
           format = "logfmt"
         }
-
         discovery.kubernetes "pods" {
           role = "pod"
-
           // Only discover pods on this node to reduce CPU usage
           selectors {
             role  = "pod"
             field = "spec.nodeName=" + env("HOSTNAME")
           }
         }
-
         discovery.kubernetes "nodes" {
           role = "node"
         }
-
         // Relabel pod logs
         discovery.relabel "pod_logs" {
           targets = discovery.kubernetes.pods.targets
-
           // Only scrape running pods
           rule {
             source_labels = ["__meta_kubernetes_pod_phase"]
             action        = "keep"
             regex         = "Running"
           }
-
           // Drop monitoring and kube-system namespace logs (low value, high noise)
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             action        = "drop"
             regex         = "monitoring|kube-system"
           }
-
           // Drop loki gateway access logs (noisy, creates unnecessary volume)
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             action        = "drop"
             regex         = "loki-gateway.*"
           }
-
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
           }
-
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
           }
-
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
           }
-
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
             separator     = "/"
             target_label  = "job"
           }
-
           rule {
             source_labels = ["__meta_kubernetes_pod_node_name"]
             target_label  = "node_name"
           }
-
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator     = "/"
@@ -87,13 +73,11 @@ alloy:
             replacement   = "/var/log/pods/*$1/*.log"
           }
         }
-
         // Scrape pod logs
         loki.source.kubernetes "pod_logs" {
           targets    = discovery.relabel.pod_logs.output
           forward_to = [loki.process.pod_logs.receiver]
         }
-
         // Process pod logs
         loki.process "pod_logs" {
           // Extract log level if present (case-insensitive)
@@ -101,14 +85,12 @@ alloy:
           stage.regex {
             expression = "(?i)(?P<detected_level>debug|info|log|warn|warning|error|fatal|panic)"
           }
-
           // Parse Redis/Valkey log levels (uses symbols instead of words)
           // Redis format: "1:M 15 Nov 2025 04:15:15.187 * Message"
-          // Symbols: . (debug), - (verbose), * (notice), # (warning)
+          // Symbols: . (debug), - (verbose), * (notice),  # (warning)
           stage.regex {
             expression = "\\d+:\\w+\\s+\\d+\\s+\\w+\\s+\\d+\\s+[\\d:\\.]+\\s+(?P<detected_level>[.#*-])"
           }
-
           // Create normalized lowercase level field for consistent filtering
           // Map NestJS "LOG" and "WARNING" to standard levels
           // Map Redis symbols to standard levels
@@ -116,33 +98,27 @@ alloy:
             source   = "level"
             template = "{{`{{ if eq .detected_level \"*\" }}info{{ else if eq .detected_level \".\" }}debug{{ else if eq .detected_level \"-\" }}debug{{ else if eq .detected_level \"#\" }}warn{{ else if eq (ToLower .detected_level) \"log\" }}info{{ else if eq (ToLower .detected_level) \"warning\" }}warn{{ else }}{{ ToLower .detected_level }}{{ end }}`}}"
           }
-
           stage.labels {
             values = {
               level = "",
             }
           }
-
           // Drop nginx-ingress successful requests (non-5XX) to reduce log volume
           // Only keep error logs (5XX status codes)
           stage.match {
             selector = "{namespace=\"ingress-nginx\"}"
-
             // Drop logs with status codes 1XX, 2XX, 3XX, 4XX
             // Nginx access log format: "METHOD /path HTTP/x.x" STATUS ...
             stage.drop {
               expression = "\"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\\s.*?HTTP/[0-9.]+\"\\s+[1-4][0-9]{2}\\s"
             }
           }
-
           forward_to = [loki.write.default.receiver]
         }
-
         // Collect systemd journal (system logs)
         loki.source.journal "system_logs" {
           path          = "/run/log/journal"
           forward_to    = [loki.process.system_logs.receiver]
-
           // Add labels to match pod log format
           labels = {
             job       = "systemd-journal",
@@ -150,95 +126,77 @@ alloy:
             node_name = env("HOSTNAME"),
           }
         }
-
         // Process system logs
         loki.process "system_logs" {
           // Drop noisy Kubernetes verbose operations
           stage.drop {
             expression = "RemoveContainer|UnmountVolume|MountVolume|operationExecutor|orphaned pod volumes|Volume detached|Volume attached"
           }
-
           // Drop Tailscale networking chatter
           stage.drop {
             expression = "magicsock|portmapper|router: portUpdate|LinkChange|monitor: (\\[unexpected\\]|RTM_)|dns: (Set|Resolvercfg|OScfg)|wgengine: set DNS|control: NetInfo|post-rebind ping|Rebind; defIf"
           }
-
           // Drop CRD finalizer retry errors (benign)
           stage.drop {
             expression = "crd_finalizer.go.*tailscale.com"
           }
-
           // Drop routine systemd kubepods and container runtime mount/unmount messages
           stage.drop {
             expression = "(kubepods|run-k3s-containerd|run-netns-cni|var-lib-kubelet).*\\.mount: (Deactivated|Succeeded)"
           }
-
           // Drop systemd slice management for containers
           stage.drop {
             expression = "(Removed|Stopping|Stopped) (slice|Slice) (kubepods|libcontainer)"
           }
-
           // Drop scope messages for Kubernetes containers
           stage.drop {
             expression = "scope.go.*RemoveContainer"
           }
-
           // Drop container runtime scope deactivation messages
           stage.drop {
             expression = "cri-containerd-.*\\.scope: Deactivated"
           }
-
           // Drop network interface lifecycle messages
           stage.drop {
             expression = "Withdrawing (workstation service|address record)|left (promiscuous|allmulticast) mode|entered disabled state|Leaving mDNS multicast|Interface.*no longer relevant for mDNS"
           }
-
           // Drop benign ARM NUMA sysinfo warnings (Pi has no NUMA nodes)
           stage.drop {
             expression = "sysinfo.go.*Found node without any CPU"
           }
-
           // Drop benign k3s garbage collector CronJob v1beta1 errors
           stage.drop {
             expression = "garbagecollector.go.*unable to get REST mapping for batch/v1beta1/CronJob"
           }
-
           // Drop container not found messages (benign cleanup logs)
           stage.drop {
             expression = "pod_container_deletor.go.*Container not found"
           }
-
           // Drop benign ICMPv6 Router Solicitation UFW blocks (Type 133)
           // These are just IPv6 neighbor discovery within CNI network
           stage.drop {
             expression = "\\[UFW BLOCK\\].*PROTO=ICMPv6 TYPE=133"
           }
-
           // Extract log level - Kubernetes-style prefix (E1115, I1115, W1115, etc.)
           stage.regex {
             expression = "(?P<detected_level>[EWIDF])\\d{4}\\s\\d{2}:\\d{2}:\\d{2}"
           }
-
           // Extract log level - bracketed format [ERROR], [INFO], etc.
           stage.regex {
             expression = "(?i)\\[(?P<detected_level>debug|info|warn|warning|error|fatal|panic|trace)\\]"
           }
-
           // Extract log level - colon format (ERROR:, error:, etc.)
           stage.regex {
             expression = "(?i)(?P<detected_level>debug|info|warn|warning|error|fatal|panic|trace):"
           }
-
           // Extract log level - quoted strings like "Unhandled Error"
           stage.regex {
             expression = "(?i)\"[^\"]*(?P<detected_level>error|fatal|panic)[^\"]*\""
           }
-
           // Extract log level - general word matching (original pattern)
           stage.regex {
             expression = "(?i)\\b(?P<detected_level>debug|info|log|warn|warning|error|fatal|panic|trace)\\b"
           }
-
           // Create normalized level field for consistent filtering
           // Map Kubernetes prefixes: E->error, W->warn, I->info, D->debug, F->fatal
           // Map standard levels to lowercase
@@ -246,41 +204,33 @@ alloy:
             source   = "level"
             template = "{{`{{ if eq .detected_level \"E\" }}error{{ else if eq .detected_level \"W\" }}warn{{ else if eq .detected_level \"I\" }}info{{ else if eq .detected_level \"D\" }}debug{{ else if eq .detected_level \"F\" }}fatal{{ else if eq (ToLower .detected_level) \"log\" }}info{{ else if eq (ToLower .detected_level) \"warning\" }}warn{{ else if eq (ToLower .detected_level) \"trace\" }}debug{{ else }}{{ ToLower .detected_level }}{{ end }}`}}"
           }
-
           stage.labels {
             values = {
               level = "",
             }
           }
-
           // Extract priority level and map to standard levels
           stage.labels {
             values = {
               priority = "",
             }
           }
-
           forward_to = [loki.write.default.receiver]
         }
-
         loki.write "default" {
           endpoint {
             url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
-
             // Batching configuration - optimized for memory usage
             batch_wait = "15s"  // Increased to send less frequently, reduce memory churn
             batch_size = "2MiB"  // Larger batches, fewer sends
-
             // Queue configuration to limit memory usage
             queue_config {
               capacity = "2MiB"  // Further reduced to limit buffering
             }
           }
-
           external_labels = {
             cluster = "homelab",
           }
-
           // Limit number of active log streams to prevent unbounded memory growth
           max_streams = 2000  // Reduced from 3000 to save ~30% stream overhead
         }
@@ -297,7 +247,6 @@ alloy:
         - name: journal
           mountPath: /run/log/journal
           readOnly: true
-
   controller:
     type: daemonset
 
@@ -318,25 +267,20 @@ alloy:
     tolerations:
       - effect: NoSchedule
         operator: Exists
-
   resources:
     requests:
       cpu: 100m
       memory: 512Mi
     limits:
-      cpu: 500m # Increased to 500m to accommodate Pi4 workload with log collection
-      memory: 2048Mi # Set to 2GB - alloy now only handles log collection (metrics handled by Prometheus directly)
-
+      cpu: 500m  # Increased to 500m to accommodate Pi4 workload with log collection
+      memory: 2048Mi  # Set to 2GB - alloy now only handles log collection (metrics handled by Prometheus directly)
   rbac:
     create: true
-
   serviceAccount:
     create: true
-
   service:
     enabled: true
     type: ClusterIP
-
   serviceMonitor:
     enabled: true
     additionalLabels:
