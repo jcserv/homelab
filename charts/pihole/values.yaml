@@ -1,13 +1,16 @@
 ---
 # Deployment namespace
 namespace: default
-replicaCount: 4 # Four instances for high availability (synced via nebula-sync)
+# Four instances for high availability (synced via nebula-sync)
+replicaCount: 4
 image:
   repository: pihole/pihole
-  tag: 2025.11.0 # Pi-hole v6 required for nebula-sync
+  # Pi-hole v6 required for nebula-sync
+  tag: 2025.11.1
   pullPolicy: IfNotPresent
 # Spread pods across different hosts for high availability
-# Using preferred (not required) to allow scheduling when fewer nodes are available
+# Using preferred (not required) to allow scheduling when
+# fewer nodes are available
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -27,7 +30,8 @@ resources:
     memory: 300Mi
     cpu: 500m
 storage:
-  type: local-path # Using local storage - nebula-sync handles replication
+  # Using local storage - nebula-sync handles replication
+  type: local-path
   storageClass: local-path
   config:
     size: 1Gi
@@ -61,11 +65,12 @@ env:
   TZ: America/New_York
 
   # WEBPASSWORD - Admin password for Pi-hole web interface
-  # Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-secrets-sealed.yaml)
+  # Managed by SealedSecret
+  # (charts/pihole/sealed-secrets/pihole-secrets-sealed.yaml)
   # WEBPASSWORD: ""
   FTLCONF_LOCAL_IPV4: 10.2.1.202
-  DNS1: 1.1.1.1 # Cloudflare DNS
-  DNS2: 2606:4700:4700::1111 # Cloudflare DNS IPv6
+  DNS1: 1.1.1.1  # Cloudflare DNS
+  DNS2: 2606:4700:4700::1111  # Cloudflare DNS IPv6
   DNSMASQ_LISTENING: all
 # Custom DNS entries
 customDnsEntries:
@@ -84,9 +89,10 @@ customDnsEntries:
   - 10.2.1.200 jellyseerr.jarrodservilla.com
   - 10.2.1.200 jellyfin.jarrodservilla.com
 # Custom blocklist entries
-# Managed by SealedSecret (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
+# Managed by SealedSecret
+# (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
 # customBlocklist: |
-#   # ------------------------------------[FILTERS]-------------------------------------
+#   # --------------------[FILTERS]-----------------------
 #   udcm.yahoo.com
 #   api-adservices.apple.com
 #   books-analytics-events.apple.com
@@ -111,11 +117,14 @@ adlists:
 nebulaSync:
   enabled: true
   image: ghcr.io/lovelaze/nebula-sync:latest
-  schedule: "*/5 * * * *" # Every 5 minutes (reduced frequency to avoid timing issues)
+  # Every 5 minutes (reduced frequency to avoid timing issues)
+  schedule: "*/5 * * * *"
   fullSync: true
-  runGravity: false # Disabled to prevent connection issues during sync
+  # Disabled to prevent connection issues during sync
+  runGravity: false
 
 
-  # IMPORTANT: These passwords MUST match env.WEBPASSWORD for authentication
+  # IMPORTANT: These passwords MUST match env.WEBPASSWORD
+  # for authentication
   # primaryPassword: "changeme"  # Should match env.WEBPASSWORD
   # replicaPassword: "changeme"  # Should match env.WEBPASSWORD
