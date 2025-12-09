@@ -12,6 +12,8 @@ ingress-nginx:
     service:
       type: LoadBalancer
       loadBalancerIP: 10.2.1.200
+      externalIPs:  # Allow pods inside cluster to reach LoadBalancer IP (fixes hairpin NAT)
+        - 10.2.1.200
       externalTrafficPolicy: Local  # Preserve source IP for firewall inspection
       loadBalancerSourceRanges:  # Restrict access at LoadBalancer level
         - 10.2.1.0/24  # Trusted VLAN

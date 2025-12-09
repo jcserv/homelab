@@ -26,8 +26,6 @@ services:
     subdomain: radarr
     # Use Authentik outpost in proxy mode
     useAuthentikProxy: true
-    # Pass Authorization header from Authentik to backend
-    proxyAuthHeaders: true
 
   sonarr:
     enabled: true
@@ -35,8 +33,6 @@ services:
     subdomain: sonarr
     # Use Authentik outpost in proxy mode
     useAuthentikProxy: true
-    # Pass Authorization header from Authentik to backend
-    proxyAuthHeaders: true
 
   bazarr:
     enabled: true
@@ -44,8 +40,6 @@ services:
     subdomain: bazarr
     # Use Authentik outpost in proxy mode
     useAuthentikProxy: true
-    # Pass Authorization header from Authentik to backend
-    proxyAuthHeaders: true
 
   prowlarr:
     enabled: true
