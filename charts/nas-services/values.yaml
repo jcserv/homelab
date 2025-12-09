@@ -1,6 +1,9 @@
 # NAS Services Configuration
 # Routes traffic from nginx-ingress to services running on NAS
 
+# Namespace to deploy services and ingresses to
+namespace: default
+
 # NAS IP address where all services are running
 nasIP: "10.2.1.147"
 
