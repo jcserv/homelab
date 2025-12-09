@@ -1,0 +1,20 @@
+{{- if .Values.policies.defaultDenyExternal }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-external
+  namespace: {{ .Values.namespace }}
+spec:
+  podSelector: {}  # Apply to all pods in namespace
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow traffic from within the cluster
+    - from:
+        # Allow from pods in same namespace
+        - podSelector: {}
+        # Allow from pods in other namespaces
+        - namespaceSelector: {}
+    # Deny all external traffic by default
+    # Specific services will have their own allow policies
+{{- end }}
