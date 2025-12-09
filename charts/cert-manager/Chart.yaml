@@ -2,12 +2,12 @@ apiVersion: v2
 name: cert-manager
 description: cert-manager for TLS certificate management in homelab Kubernetes cluster
 type: application
-version: 1.0.1
+version: 1.0.2
 appVersion: "v1.15.3"
 maintainers:
   - name: homelab
 
 dependencies:
   - name: cert-manager
-    version: v1.19.1
+    version: v1.19.2
     repository: https://charts.jetstack.io
