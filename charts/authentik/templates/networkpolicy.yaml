@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "authentik.fullname" . }}-network-policy
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "authentik.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow HTTP access from NGINX Ingress and cluster on port 9000
+    - ports:
+        - protocol: TCP
+          port: 9000
+      from:
+        # Allow from NGINX Ingress namespace (for forward auth)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+              app.kubernetes.io/component: controller
+        # Allow from same namespace (for health checks and internal communication)
+        - podSelector: {}
+        # Allow from all namespaces (for flexibility)
+        - namespaceSelector: {}
+
+    # Allow HTTPS access on port 9443
+    - ports:
+        - protocol: TCP
+          port: 9443
+      from:
+        # Allow from NGINX Ingress namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+              app.kubernetes.io/component: controller
+        # Allow from same namespace
+        - podSelector: {}
+        # Allow from all namespaces
+        - namespaceSelector: {}
+
+    # Allow metrics scraping from monitoring namespace on port 9300
+    - ports:
+        - protocol: TCP
+          port: 9300
+      from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus

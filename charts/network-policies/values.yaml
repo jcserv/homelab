@@ -1,4 +1,8 @@
 # Global NetworkPolicy Configuration
+# Namespace to deploy policies to
+namespace: default
+
+# Network CIDRs
 trustedVLAN: "10.2.1.0/24"
 tailscaleNetwork: "100.64.0.0/10"
 podNetwork: "10.42.0.0/16"
