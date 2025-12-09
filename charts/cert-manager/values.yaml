@@ -15,24 +15,24 @@ cert-manager:
       enabled: true
       minAvailable: 1
 
-  controller:
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+  # Controller resources
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
 
-    # Pod topology spread for balanced distribution across nodes
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/name: cert-manager
-            app.kubernetes.io/component: controller
+  # Pod topology spread for balanced distribution across nodes
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: cert-manager
+          app.kubernetes.io/component: controller
 
   # Webhook configuration
   webhook:
