@@ -1,4 +1,4 @@
-.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service
+.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix
 
 # Default target
 help:
@@ -27,11 +27,18 @@ help:
 	@echo "  make uncordon NODE=<name> Uncordon a node after maintenance"
 	@echo "  make kill-svclb         Remove svclb DaemonSets and pods"
 	@echo ""
+	@echo "Linting Commands:"
+	@echo "  make lint [FILE=<path>]     Lint YAML file(s) (all files if FILE not specified)"
+	@echo "  make fix [FILE=<path>]      Auto-fix YAML formatting issues (all files if FILE not specified)"
+	@echo ""
 	@echo "Examples:"
 	@echo "  make logs SERVICE=immich"
 	@echo "  make upgrade SERVICE=pihole"
 	@echo "  make upgrade SERVICE=alloy NAMESPACE=monitoring"
 	@echo "  make drain NODE=pi5-01"
+	@echo "  make lint                    # Lint all YAML files"
+	@echo "  make lint FILE=charts/nginx-ingress/Chart.yaml"
+	@echo "  make fix                     # Fix all YAML files"
 	@echo "  kubectl create secret generic test --from-literal=key=val --dry-run=client -o yaml | make seal-secret CHART=immich SECRET=test"
 
 # Setup Commands
@@ -208,3 +215,68 @@ kill-svclb:
 	@kubectl get daemonset -n kube-system -o name | grep svclb | xargs -r kubectl delete -n kube-system || echo "No svclb DaemonSets found"
 	@kubectl get pods -n kube-system -o name | grep svclb | xargs -r kubectl delete -n kube-system || echo "No svclb pods found"
 	@echo "✓ svclb resources removed"
+
+# Linting Commands
+lint:
+	@if command -v yamllint >/dev/null 2>&1; then \
+		if [ -z "$(FILE)" ]; then \
+			echo "Linting all YAML files..."; \
+			yamllint charts/ k8s/ docker/ *.yaml *.yml 2>/dev/null || true; \
+		else \
+			echo "Linting $(FILE)..."; \
+			yamllint $(FILE); \
+		fi \
+	else \
+		echo "Error: yamllint not found. Install with: pip install yamllint"; \
+		exit 1; \
+	fi
+
+fix:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Auto-fixing all YAML files..."; \
+		if command -v yamlfix >/dev/null 2>&1; then \
+			find charts k8s docker -name "*.yaml" -o -name "*.yml" | while read f; do \
+				echo "Fixing $$f..."; \
+				yamlfix "$$f" 2>/dev/null || true; \
+			done; \
+			find . -maxdepth 1 -name "*.yaml" -o -name "*.yml" | while read f; do \
+				echo "Fixing $$f..."; \
+				yamlfix "$$f" 2>/dev/null || true; \
+			done; \
+		elif command -v yamlfmt >/dev/null 2>&1; then \
+			find charts k8s docker -name "*.yaml" -o -name "*.yml" | while read f; do \
+				echo "Fixing $$f..."; \
+				yamlfmt "$$f" 2>/dev/null || true; \
+			done; \
+			find . -maxdepth 1 -name "*.yaml" -o -name "*.yml" | while read f; do \
+				echo "Fixing $$f..."; \
+				yamlfmt "$$f" 2>/dev/null || true; \
+			done; \
+		else \
+			echo "Installing yamlfix..."; \
+			pip install yamlfix; \
+			find charts k8s docker -name "*.yaml" -o -name "*.yml" | while read f; do \
+				echo "Fixing $$f..."; \
+				yamlfix "$$f" 2>/dev/null || true; \
+			done; \
+			find . -maxdepth 1 -name "*.yaml" -o -name "*.yml" | while read f; do \
+				echo "Fixing $$f..."; \
+				yamlfix "$$f" 2>/dev/null || true; \
+			done; \
+		fi; \
+		echo "✓ All YAML files fixed"; \
+	else \
+		echo "Auto-fixing YAML formatting in $(FILE)..."; \
+		if command -v yamlfix >/dev/null 2>&1; then \
+			yamlfix $(FILE); \
+			echo "✓ Fixed $(FILE)"; \
+		elif command -v yamlfmt >/dev/null 2>&1; then \
+			yamlfmt $(FILE); \
+			echo "✓ Fixed $(FILE)"; \
+		else \
+			echo "Installing yamlfix..."; \
+			pip install yamlfix; \
+			yamlfix $(FILE); \
+			echo "✓ Fixed $(FILE)"; \
+		fi; \
+	fi
