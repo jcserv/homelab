@@ -2,5 +2,33 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "packageRules": [
+    {
+      "description": "Auto-bump Helm chart versions when dependencies or images change",
+      "matchFileNames": ["charts/**"],
+      "bumpVersions": [
+        {
+          "filePatterns": ["{{packageFileDir}}/Chart.{yaml,yml}"],
+          "matchStrings": ["version:\\s+(?<version>[^\\s]+)"],
+          "bumpType": "{{#if isMajor}}minor{{else}}patch{{/if}}"
+        }
+      ]
+    },
+    {
+      "description": "Group Helm chart dependency updates with version bump",
+      "matchManagers": ["helmv3"],
+      "matchFileNames": ["charts/**/Chart.yaml"],
+      "groupName": "{{parentDir}} Helm dependencies"
+    },
+    {
+      "description": "Group Docker image updates with version bump",
+      "matchManagers": ["helm-values"],
+      "matchFileNames": ["charts/**/values.yaml"],
+      "groupName": "{{parentDir}} Docker images"
+    }
+  ],
+  "helm-values": {
+    "fileMatch": ["charts/.+/values\\.ya?ml$"]
+  }
 }
