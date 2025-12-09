@@ -42,6 +42,10 @@ service:
     type: LoadBalancer
     loadBalancerIP: 10.2.1.202
     externalTrafficPolicy: Local
+    loadBalancerSourceRanges:  # Restrict access at LoadBalancer level
+      - 10.2.1.0/24  # Trusted VLAN
+      - 100.64.0.0/10  # Tailscale network
+      - 10.42.0.0/16  # Pod network
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-dns
     ports:

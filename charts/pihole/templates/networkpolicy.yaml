@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pihole.fullname" . }}-network-policy
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: pihole
+spec:
+  podSelector:
+    matchLabels:
+      app: pihole
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow DNS from anywhere (port 53 only)
+    - ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+      from:
+        # Allow from Trusted VLAN
+        - ipBlock:
+            cidr: 10.2.1.0/24
+        # Allow from Tailscale network
+        - ipBlock:
+            cidr: 100.64.0.0/10
+        # Allow from pod network
+        - ipBlock:
+            cidr: 10.42.0.0/16
+        # Allow from cluster pods
+        - podSelector: {}
+        # Allow from all namespaces
+        - namespaceSelector: {}
+
+    # Allow admin access only from NGINX ingress
+    - ports:
+        - protocol: TCP
+          port: 80
+      from:
+        # Only allow from ingress-nginx namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+        # Also allow from same namespace for health checks
+        - podSelector: {}

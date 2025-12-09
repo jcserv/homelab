@@ -1,6 +1,9 @@
 # NAS Services Configuration
 # Routes traffic from nginx-ingress to services running on NAS
 
+# Namespace to deploy services and ingresses to
+namespace: default
+
 # NAS IP address where all services are running
 nasIP: "10.2.1.147"
 
@@ -26,8 +29,6 @@ services:
     subdomain: radarr
     # Use Authentik outpost in proxy mode
     useAuthentikProxy: true
-    # Pass Authorization header from Authentik to backend
-    proxyAuthHeaders: true
 
   sonarr:
     enabled: true
@@ -35,8 +36,6 @@ services:
     subdomain: sonarr
     # Use Authentik outpost in proxy mode
     useAuthentikProxy: true
-    # Pass Authorization header from Authentik to backend
-    proxyAuthHeaders: true
 
   bazarr:
     enabled: true
@@ -44,8 +43,6 @@ services:
     subdomain: bazarr
     # Use Authentik outpost in proxy mode
     useAuthentikProxy: true
-    # Pass Authorization header from Authentik to backend
-    proxyAuthHeaders: true
 
   prowlarr:
     enabled: true
