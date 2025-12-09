@@ -12,6 +12,10 @@ ingress-nginx:
     service:
       type: LoadBalancer
       loadBalancerIP: 10.2.1.200
+      externalTrafficPolicy: Local  # Preserve source IP for firewall inspection
+      loadBalancerSourceRanges:  # Restrict access at LoadBalancer level
+        - 10.2.1.0/24  # Trusted VLAN
+        - 100.64.0.0/10  # Tailscale network
       annotations:
         metallb.universe.tf/allow-shared-ip: nginx-ingress
       # Enable HTTPS
