@@ -21,9 +21,9 @@ componentAffinity:
       storage-type: "hdd"
 
   machinelearning:
-    required: true # Require storage node for ML workload
+    required: true  # Require storage node for ML workload
     nodeSelector:
-      storage: "true" # MUST run on pi5-01
+      storage: "true"  # MUST run on pi5-01
 
   postgres:
     required: false
@@ -57,7 +57,7 @@ resources:
 storage:
   # Media library (photos/videos) - NFS on UGREEN NAS
   library:
-    storageClass: "" # Use empty string for static PVs
+    storageClass: ""  # Use empty string for static PVs
     size: 500Gi
     # hostPath: /mnt/hd1/Library  # OLD: Local HDD storage
     nfs:
@@ -129,7 +129,8 @@ env:
   IMMICH_SERVER_URL: http://immich:2283
 
 # Secrets Configuration
-# NOTE: Secrets are managed via SealedSecrets in sealed-secrets/immich-secrets-sealed.yaml
+# NOTE: Secrets are managed via SealedSecrets in
+# sealed-secrets/immich-secrets-sealed.yaml
 # Do not define secrets here as they will override the sealed secrets
 secrets: {}
 
