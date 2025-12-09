@@ -1,47 +1,42 @@
+---
 # Namespace to deploy to
 namespace: default
 
 # Schedule for backup (cron format)
-schedule: "45 3 * * *" # Daily at 3:45 AM
-
+schedule: 45 3 * * *  # Daily at 3:45 AM
 # PostgreSQL connection details
 postgres:
-  host: "authentik-postgres.default.svc.cluster.local"
+  host: authentik-postgres.default.svc.cluster.local
   port: 5432
-  database: "authentik"
+  database: authentik
   user:
-    secretName: "authentik-secrets"
-    key: "AUTHENTIK_POSTGRESQL__USER"
+    secretName: authentik-secrets
+    key: AUTHENTIK_POSTGRESQL__USER
   password:
-    secretName: "authentik-secrets"
-    key: "AUTHENTIK_POSTGRESQL__PASSWORD"
-
+    secretName: authentik-secrets
+    key: AUTHENTIK_POSTGRESQL__PASSWORD
 # Backup configuration
 backup:
   # B2 bucket settings
-  bucket: "homelab-backups-431118"
-  path: "authentik"
-  endpoint: "s3.ca-east-006.backblazeb2.com"
+  bucket: homelab-backups-431118
+  path: authentik
+  endpoint: s3.ca-east-006.backblazeb2.com
   # Number of backups to keep
   retention: 7
   # Compression level (1-9, higher = better compression, slower)
   compressionLevel: 6
-
 # B2 credentials secret
 b2Secret:
-  name: "app-backups-b2-secrets"
-
+  name: app-backups-b2-secrets
 # Image settings
 postgres_image:
-  repository: "postgres"
-  tag: "15-alpine"
+  repository: postgres
+  tag: 18-alpine
   pullPolicy: IfNotPresent
-
 rclone_image:
-  repository: "rclone/rclone"
-  tag: "1.72"
+  repository: rclone/rclone
+  tag: '1.72'
   pullPolicy: IfNotPresent
-
 # Job settings
 jobSettings:
   backoffLimit: 2
@@ -50,16 +45,14 @@ jobSettings:
   failedJobsHistoryLimit: 3
   # Job timeout (seconds)
   activeDeadlineSeconds: 3600
-
 # Resource limits
 resources:
   requests:
-    memory: "256Mi"
-    cpu: "100m"
+    memory: 256Mi
+    cpu: 100m
   limits:
-    memory: "512Mi"
-    cpu: "500m"
-
+    memory: 512Mi
+    cpu: 500m
 # Monitoring
 monitoring:
   enabled: true
