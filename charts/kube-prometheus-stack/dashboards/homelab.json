@@ -2439,14 +2439,9 @@
             "selected": false,
             "text": "systemd-journal",
             "value": "systemd-journal"
-          },
-          {
-            "selected": false,
-            "text": "unbound-.*",
-            "value": "unbound-.*"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal,unbound-.*",
+        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
