@@ -40,7 +40,7 @@ postgresql:
   enabled: true
   image:
     repository: postgres
-    tag: "18"
+    tag: "15"
     pullPolicy: IfNotPresent
 
   persistence:

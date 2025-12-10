@@ -138,14 +138,6 @@ prometheus-blackbox-exporter:
           service: pihole
           type: dns
 
-      # Unbound DNS check
-      - name: unbound-dns
-        url: unbound-0.default.svc.cluster.local:53
-        module: dns_udp
-        labels:
-          service: unbound
-          type: dns
-
       # HTTP checks for critical services via internal Kubernetes services
       - name: pihole-http
         url: http://pihole-admin.default.svc.cluster.local
@@ -162,7 +154,7 @@ prometheus-blackbox-exporter:
           type: http
 
       - name: grafana-http
-        url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+        url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
         module: http_2xx
         labels:
           service: grafana
