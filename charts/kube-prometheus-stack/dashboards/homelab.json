@@ -2372,6 +2372,16 @@
           },
           {
             "selected": false,
+            "text": "authentik-.*",
+            "value": "authentik-.*"
+          },
+          {
+            "selected": false,
+            "text": "bazarr-.*",
+            "value": "bazarr-.*"
+          },
+          {
+            "selected": false,
             "text": "cert-manager-.*",
             "value": "cert-manager-.*"
           },
@@ -2402,6 +2412,16 @@
           },
           {
             "selected": false,
+            "text": "jellyfin-.*",
+            "value": "jellyfin-.*"
+          },
+          {
+            "selected": false,
+            "text": "jellyseerr-.*",
+            "value": "jellyseerr-.*"
+          },
+          {
+            "selected": false,
             "text": "loki-.*",
             "value": "loki-.*"
           },
@@ -2427,6 +2447,21 @@
           },
           {
             "selected": false,
+            "text": "prowlarr-.*",
+            "value": "prowlarr-.*"
+          },
+          {
+            "selected": false,
+            "text": "qbittorrent-.*",
+            "value": "qbittorrent-.*"
+          },
+          {
+            "selected": false,
+            "text": "radarr-.*",
+            "value": "radarr-.*"
+          },
+          {
+            "selected": false,
             "text": "restic-backup-.*",
             "value": "restic-backup-.*"
           },
@@ -2437,11 +2472,16 @@
           },
           {
             "selected": false,
+            "text": "sonarr-.*",
+            "value": "sonarr-.*"
+          },
+          {
+            "selected": false,
             "text": "systemd-journal",
             "value": "systemd-journal"
           }
         ],
-        "query": "alloy-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,restic-backup-.*,sealed-secrets-.*,systemd-journal",
+        "query": "alloy-.*,authentik-.*,bazarr-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,jellyfin-.*,jellyseerr-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,prowlarr-.*,qbittorrent-.*,radarr-.*,restic-backup-.*,sealed-secrets-.*,sonarr-.*,systemd-journal",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
