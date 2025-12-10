@@ -5,6 +5,12 @@
   ],
   "packageRules": [
     {
+      "description": "Ignore PostgreSQL updates in authentik chart - requires manual migration",
+      "matchFileNames": ["charts/authentik/values.yaml"],
+      "matchPackageNames": ["postgres"],
+      "enabled": false
+    },
+    {
       "description": "Auto-bump Helm chart versions when dependencies or images change",
       "matchFileNames": ["charts/**"],
       "bumpVersions": [
