@@ -2,7 +2,7 @@ apiVersion: v2
 name: home-assistant
 description: Open source home automation platform
 type: application
-version: 1.0.3
+version: 1.0.4
 appVersion: "2024.10"
 keywords:
   - home-automation
