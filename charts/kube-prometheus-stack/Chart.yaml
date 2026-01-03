@@ -2,12 +2,12 @@ apiVersion: v2
 name: monitoring-stack
 description: Prometheus, Grafana, and Alertmanager stack for homelab Kubernetes cluster
 type: application
-version: 1.0.6
+version: 1.0.7
 appVersion: "v0.68.0"
 maintainers:
   - name: homelab
 
 dependencies:
   - name: kube-prometheus-stack
-    version: 80.8.0
+    version: 80.10.0
     repository: https://prometheus-community.github.io/helm-charts
