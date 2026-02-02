@@ -35,7 +35,7 @@ postgres_image:
   pullPolicy: IfNotPresent
 rclone_image:
   repository: rclone/rclone
-  tag: '1.72'
+  tag: '1.73'
   pullPolicy: IfNotPresent
 # Job settings
 jobSettings:
