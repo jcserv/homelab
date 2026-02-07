@@ -1,0 +1,25 @@
+alias: Jammed
+description: ""
+triggers:
+  - device_id: efcc35bd423c261d1aeea1a661c7758c
+    domain: lock
+    entity_id: 676a6914bdf0caa0a65b2c431885f479
+    type: jammed
+    trigger: device
+conditions: []
+actions:
+  - action: notify.mobile_app_jarrod
+    metadata: {}
+    data:
+      message: Lock is jammed! Please check door
+  - action: notify.mobile_app_aisha
+    metadata: {}
+    data:
+      message: Lock is jammed! Please check door
+    enabled: true
+  - action: notify.mobile_app_fatz
+    metadata: {}
+    data:
+      message: Lock is jammed! Please check door
+    enabled: true
+mode: single

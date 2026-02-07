@@ -10,8 +10,8 @@ services:
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=iOjtsp2tHIHyUo5xl5fWnUpJe3a5FURE99EY6bFIElM=
-      - SERVER_COUNTRIES=Canada
+      - WIREGUARD_PRIVATE_KEY=xyz
+      - SERVER_COUNTRIES=abc
       - FIREWALL_OUTBOUND_SUBNETS=10.0.0.0/24
     ports:
       - 8888:8888 # qBittorrent WebUI
@@ -156,22 +156,19 @@ services:
       - jellyfin
     restart: unless-stopped
 
-  calibre-web-automated:
-    image: crocodilestick/calibre-web-automated:latest
-    container_name: calibre-web-automated
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
     environment:
-      - PUID=1000
-      - PGID=100
+      - PUID=0
+      - PGID=0
       - TZ=America/Toronto
-      - HARDCOVER_TOKEN=
-      - NETWORK_SHARE_MODE=false
-      - CWA_PORT_OVERRIDE=8083
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
     volumes:
-      - /volume1/Config/Calibre-web-automated:/config
-      - /volume1/Downloads/Books:/cwa-book-ingest
-      - /volume1/Media/Books:/calibre-library
-    depends_on:
-      - gluetun
+      - /volume1/Config/Calibre-web:/config
+      - /volume1/Media/Books:/books
     ports:
       - 8083:8083
+    depends_on:
+      - gluetun
     restart: unless-stopped

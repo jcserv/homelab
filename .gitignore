@@ -5,6 +5,8 @@ secrets/
 values/*-secrets.yaml
 values/production-secrets.yaml
 
+docker/media-stack.yml
+
 # Sealed secrets (private keys only, sealed manifests are safe to commit)
 sealed-secrets-key.yaml
 

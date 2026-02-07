@@ -63,6 +63,11 @@ services:
     port: 8899
     subdomain: jellyfin
 
+  calibre:
+    enabled: true
+    port: 8083
+    subdomain: calibre
+
 # Monitoring configuration
 monitoring:
   nodeExporter:
