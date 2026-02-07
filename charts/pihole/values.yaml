@@ -92,6 +92,7 @@ customDnsEntries:
   - 10.2.1.200 prowlarr.jarrodservilla.com
   - 10.2.1.200 jellyseerr.jarrodservilla.com
   - 10.2.1.200 jellyfin.jarrodservilla.com
+  - 10.2.1.200 calibre.jarrodservilla.com
 # Custom blocklist entries
 # Managed by SealedSecret
 # (charts/pihole/sealed-secrets/pihole-custom-blocklist-sealed.yaml)
