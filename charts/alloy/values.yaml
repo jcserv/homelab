@@ -223,10 +223,6 @@ alloy:
             // Batching configuration - optimized for memory usage
             batch_wait = "15s"  // Increased to send less frequently, reduce memory churn
             batch_size = "2MiB"  // Larger batches, fewer sends
-            // Queue configuration to limit memory usage
-            queue_config {
-              capacity = "2MiB"  // Further reduced to limit buffering
-            }
           }
           external_labels = {
             cluster = "homelab",
