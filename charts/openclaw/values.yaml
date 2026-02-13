@@ -1,0 +1,72 @@
+---
+namespace: default
+
+# OpenClaw instance configuration
+openclaw:
+  chromium:
+    enabled: true
+
+# Resource limits
+resources:
+  main:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  chromium:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Storage configuration
+storage:
+  storageClass: local-path
+  size: 5Gi
+
+# Prefer Pi5 nodes for memory headroom
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - pi5-01
+                - pi5-02
+
+# Environment variables (non-secret)
+env:
+  OPENCLAW_DISABLE_CLAWHUB: "true"
+
+# SealedSecrets: sealed-secrets/
+# Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN
+secretName: openclaw-secrets
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 18789
+
+# Ingress (custom template with Authentik auth)
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: openclaw.jarrodservilla.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - openclaw.jarrodservilla.com
+      secretName: wildcard-jarrodservilla-tls
+
+# Pass-through values to the openclaw-operator
+openclaw-operator: {}

@@ -1,0 +1,78 @@
+apiVersion: openclaw.rocks/v1alpha1
+kind: OpenClawInstance
+metadata:
+  name: {{ include "openclaw.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "openclaw.labels" . | nindent 4 }}
+spec:
+  # Environment variables (non-secret)
+  env:
+    {{- range $key, $value := .Values.env }}
+    - name: {{ $key }}
+      value: {{ $value | quote }}
+    {{- end }}
+
+  # Secret references (API keys, tokens)
+  envFrom:
+    - secretRef:
+        name: {{ .Values.secretName }}
+
+  # Main container resources
+  resources:
+    {{- toYaml .Values.resources.main | nindent 4 }}
+
+  # Chromium browser sidecar
+  chromium:
+    enabled: {{ .Values.openclaw.chromium.enabled }}
+    resources:
+      {{- toYaml .Values.resources.chromium | nindent 6 }}
+
+  # Persistent storage
+  storage:
+    persistence:
+      enabled: true
+      storageClass: {{ .Values.storage.storageClass }}
+      size: {{ .Values.storage.size }}
+
+  # Scheduling - prefer Pi5 nodes
+  availability:
+    {{- with .Values.affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+
+  # Security hardening
+  security:
+    podSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      fsGroup: 1000
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      capabilities:
+        drop:
+          - ALL
+    # Operator-managed network policy
+    networkPolicy:
+      enabled: true
+      allowedIngressNamespaces:
+        - ingress-nginx
+      additionalEgress:
+        # Authentik callbacks within cluster
+        - ports:
+            - protocol: TCP
+              port: 9000
+          to:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: authentik
+
+  # Disable operator-managed ingress (we create our own)
+  networking:
+    ingress:
+      enabled: false
+    service:
+      type: ClusterIP

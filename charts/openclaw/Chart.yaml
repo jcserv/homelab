@@ -1,0 +1,16 @@
+---
+apiVersion: v2
+name: openclaw
+description: >-
+  OpenClaw AI assistant deployment with operator
+  for homelab Kubernetes cluster
+type: application
+version: 1.0.0
+appVersion: "0.6.0"
+maintainers:
+  - name: homelab
+
+dependencies:
+  - name: openclaw-operator
+    version: 0.6.0
+    repository: oci://ghcr.io/openclaw-rocks/charts
