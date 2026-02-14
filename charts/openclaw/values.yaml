@@ -107,9 +107,5 @@ agents:
     keepLastAssistants: 3
   maxConcurrent: 3
 
-# Workspace files (SOUL.md / USER.md)
-workspace:
-  enabled: true
-
 # Pass-through values to the openclaw-operator
 openclaw-operator: {}
