@@ -40,4 +40,8 @@ spec:
     - ports:
         - protocol: TCP
           port: 443
+    # SMTP egress for Gmail
+    - ports:
+        - protocol: TCP
+          port: 587
 {{- end }}

@@ -13,7 +13,9 @@ data:
     # ACL definitions
     acl localnet src 10.0.0.0/8
     acl SSL_ports port 443
+    acl SSL_ports port 587
     acl Safe_ports port 443
+    acl Safe_ports port 587
     acl CONNECT method CONNECT
 
     # Domain allowlist

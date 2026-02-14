@@ -18,6 +18,14 @@ allowedDomains:
   - ".telegram.org"
   - "github.com"
   - ".githubusercontent.com"
+  - "smtp.gmail.com"
+  - ".googleapis.com"
+  - "accounts.google.com"
+  - "registry.npmjs.org"
+
+# SMTP port for email sending
+allowedSmtpPorts:
+  - 587
 
 resources:
   requests:
