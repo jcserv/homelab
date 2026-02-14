@@ -42,10 +42,10 @@ service:
     type: LoadBalancer
     loadBalancerIP: 10.2.1.202
     externalTrafficPolicy: Local
-    loadBalancerSourceRanges: # Restrict access at LoadBalancer level
-      - 10.2.1.0/24 # Trusted VLAN
-      - 100.64.0.0/10 # Tailscale network
-      - 10.42.0.0/16 # Pod network
+    loadBalancerSourceRanges:  # Restrict access at LoadBalancer level
+      - 10.2.1.0/24  # Trusted VLAN
+      - 100.64.0.0/10  # Tailscale network
+      - 10.42.0.0/16  # Pod network
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-dns
     ports:
@@ -73,8 +73,8 @@ env:
   # (charts/pihole/sealed-secrets/pihole-secrets-sealed.yaml)
   # WEBPASSWORD: ""
   FTLCONF_LOCAL_IPV4: 10.2.1.202
-  DNS1: 1.1.1.1 # Cloudflare DNS
-  DNS2: 2606:4700:4700::1111 # Cloudflare DNS IPv6
+  DNS1: 1.1.1.1  # Cloudflare DNS
+  DNS2: 2606:4700:4700::1111  # Cloudflare DNS IPv6
   DNSMASQ_LISTENING: all
 # Custom DNS entries
 customDnsEntries:
@@ -84,6 +84,7 @@ customDnsEntries:
   - 10.2.1.200 pi.jarrodservilla.com
   - 10.2.1.200 grafana.jarrodservilla.com
   - 10.2.1.200 auth.jarrodservilla.com
+  - 10.2.1.200 openclaw.jarrodservilla.com
   # NAS services
   - 10.2.1.200 qbittorrent.jarrodservilla.com
   - 10.2.1.200 radarr.jarrodservilla.com

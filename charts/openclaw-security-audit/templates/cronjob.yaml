@@ -1,0 +1,162 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "openclaw-security-audit.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "openclaw-security-audit.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.jobSettings.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.jobSettings.failedJobsHistoryLimit }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "openclaw-security-audit.selectorLabels" . | nindent 8 }}
+    spec:
+      backoffLimit: {{ .Values.jobSettings.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.jobSettings.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            {{- include "openclaw-security-audit.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: {{ .Values.jobSettings.restartPolicy }}
+          serviceAccountName: {{ include "openclaw-security-audit.fullname" . }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+          containers:
+          - name: audit
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              PASS=0
+              FAIL=0
+              WARN=0
+
+              echo "========================================="
+              echo "OpenClaw Security Audit - $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              echo "========================================="
+              echo ""
+
+              # Check 1: Pod security context
+              {{- if .Values.checks.podSecurity }}
+              echo "[CHECK] Pod security context..."
+              POD_SC=$(kubectl get openclawinstance {{ .Values.openclaw.instanceName }} -n {{ .Values.openclaw.namespace }} -o jsonpath='{.spec.security.podSecurityContext.runAsNonRoot}' 2>/dev/null || echo "")
+              if [ "$POD_SC" = "true" ]; then
+                echo "  PASS: runAsNonRoot=true"
+                PASS=$((PASS+1))
+              else
+                echo "  FAIL: runAsNonRoot is not set to true"
+                FAIL=$((FAIL+1))
+              fi
+
+              PRIV=$(kubectl get openclawinstance {{ .Values.openclaw.instanceName }} -n {{ .Values.openclaw.namespace }} -o jsonpath='{.spec.security.containerSecurityContext.allowPrivilegeEscalation}' 2>/dev/null || echo "")
+              if [ "$PRIV" = "false" ]; then
+                echo "  PASS: allowPrivilegeEscalation=false"
+                PASS=$((PASS+1))
+              else
+                echo "  FAIL: allowPrivilegeEscalation is not false"
+                FAIL=$((FAIL+1))
+              fi
+              {{- end }}
+
+              # Check 2: NetworkPolicy exists
+              {{- if .Values.checks.networkPolicy }}
+              echo "[CHECK] NetworkPolicy..."
+              NP_COUNT=$(kubectl get networkpolicy -n {{ .Values.openclaw.namespace }} -l app.kubernetes.io/name=openclaw --no-headers 2>/dev/null | wc -l)
+              if [ "$NP_COUNT" -gt 0 ]; then
+                echo "  PASS: NetworkPolicy found ($NP_COUNT policies)"
+                PASS=$((PASS+1))
+              else
+                echo "  FAIL: No NetworkPolicy found for OpenClaw"
+                FAIL=$((FAIL+1))
+              fi
+              {{- end }}
+
+              # Check 3: Ingress has auth annotations
+              {{- if .Values.checks.ingressAuth }}
+              echo "[CHECK] Ingress authentication..."
+              AUTH_URL=$(kubectl get ingress -n {{ .Values.openclaw.namespace }} -l app.kubernetes.io/name=openclaw-gateway -o jsonpath='{.items[0].metadata.annotations.nginx\.ingress\.kubernetes\.io/auth-url}' 2>/dev/null || echo "")
+              if [ -n "$AUTH_URL" ]; then
+                echo "  PASS: Ingress has auth-url annotation"
+                PASS=$((PASS+1))
+              else
+                echo "  WARN: Ingress auth-url annotation not found (may use different label)"
+                WARN=$((WARN+1))
+              fi
+              {{- end }}
+
+              # Check 4: Pods are running as non-root
+              echo "[CHECK] Running pod security..."
+              PODS=$(kubectl get pods -n {{ .Values.openclaw.namespace }} -l app.kubernetes.io/name=openclaw --no-headers -o name 2>/dev/null)
+              if [ -n "$PODS" ]; then
+                for pod in $PODS; do
+                  UID=$(kubectl exec -n {{ .Values.openclaw.namespace }} $pod -- id -u 2>/dev/null || echo "unknown")
+                  if [ "$UID" = "0" ]; then
+                    echo "  FAIL: $pod running as root (UID 0)"
+                    FAIL=$((FAIL+1))
+                  elif [ "$UID" = "unknown" ]; then
+                    echo "  WARN: Cannot check UID for $pod"
+                    WARN=$((WARN+1))
+                  else
+                    echo "  PASS: $pod running as UID $UID"
+                    PASS=$((PASS+1))
+                  fi
+                done
+              else
+                echo "  WARN: No OpenClaw pods found"
+                WARN=$((WARN+1))
+              fi
+
+              # Check 5: LiteLLM proxy is running
+              echo "[CHECK] LiteLLM proxy..."
+              LITELLM_PODS=$(kubectl get pods -n {{ .Values.openclaw.namespace }} -l app.kubernetes.io/name=litellm --no-headers 2>/dev/null | wc -l)
+              if [ "$LITELLM_PODS" -gt 0 ]; then
+                echo "  PASS: LiteLLM proxy running ($LITELLM_PODS pods)"
+                PASS=$((PASS+1))
+              else
+                echo "  WARN: LiteLLM proxy not found"
+                WARN=$((WARN+1))
+              fi
+
+              # Check 6: Squid proxy is running
+              echo "[CHECK] Squid egress proxy..."
+              SQUID_PODS=$(kubectl get pods -n {{ .Values.openclaw.namespace }} -l app.kubernetes.io/name=squid-proxy --no-headers 2>/dev/null | wc -l)
+              if [ "$SQUID_PODS" -gt 0 ]; then
+                echo "  PASS: Squid proxy running ($SQUID_PODS pods)"
+                PASS=$((PASS+1))
+              else
+                echo "  WARN: Squid proxy not found"
+                WARN=$((WARN+1))
+              fi
+
+              echo ""
+              echo "========================================="
+              echo "AUDIT SUMMARY"
+              echo "========================================="
+              echo "  PASS: $PASS"
+              echo "  FAIL: $FAIL"
+              echo "  WARN: $WARN"
+              echo "========================================="
+
+              if [ "$FAIL" -gt 0 ]; then
+                echo "RESULT: FAILED - $FAIL checks failed"
+                exit 1
+              fi
+
+              echo "RESULT: PASSED (with $WARN warnings)"
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL

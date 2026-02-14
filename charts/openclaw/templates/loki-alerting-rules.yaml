@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "openclaw.fullname" . }}-loki-rules
+  namespace: monitoring
+  labels:
+    {{- include "openclaw.labels" . | nindent 4 }}
+    loki_rule: "true"
+data:
+  openclaw-security-rules.yaml: |
+    groups:
+      - name: openclaw-security
+        rules:
+          # Detect potential prompt injection attempts in OpenClaw logs
+          - alert: OpenClawInjectionAttempt
+            expr: |
+              sum(count_over_time({app_kubernetes_io_name="openclaw"} |~ `(?i)(ignore previous|system prompt|you are now|act as|pretend you|disregard|override instructions)` [5m])) > 0
+            for: 0m
+            labels:
+              severity: warning
+              component: security
+              service: openclaw
+            annotations:
+              summary: "Potential prompt injection attempt detected"
+              description: "OpenClaw logs contain patterns matching known injection techniques in the last 5 minutes."
+
+          # Detect suspicious command execution
+          - alert: OpenClawSuspiciousExec
+            expr: |
+              sum(count_over_time({app_kubernetes_io_name="openclaw"} |~ `(rm\s+-rf|sudo\s+|curl.*\|\s*sh|wget.*\|\s*sh|chmod\s+777|mkfifo|nc\s+-l|reverse.shell)` [5m])) > 0
+            for: 0m
+            labels:
+              severity: critical
+              component: security
+              service: openclaw
+            annotations:
+              summary: "Suspicious command execution detected in OpenClaw"
+              description: "OpenClaw executed or attempted to execute a potentially dangerous command."
+
+          # Detect blocked filesystem access attempts
+          - alert: OpenClawBlockedFsAccess
+            expr: |
+              sum(count_over_time({app_kubernetes_io_name="openclaw"} |~ `(denied|blocked|forbidden).*(\.ssh|\.gnupg|\.aws|\.kube|\.pem|\.key|credentials|id_rsa|shadow|sudoers)` [15m])) > 3
+            for: 0m
+            labels:
+              severity: warning
+              component: security
+              service: openclaw
+            annotations:
+              summary: "Multiple blocked filesystem access attempts"
+              description: "OpenClaw has had more than 3 blocked filesystem access attempts in the last 15 minutes."
+
+          # Detect Squid proxy denied requests
+          - alert: SquidEgressDenied
+            expr: |
+              sum(count_over_time({app_kubernetes_io_name="squid-proxy"} |= "TCP_DENIED" [15m])) > 5
+            for: 0m
+            labels:
+              severity: warning
+              component: security
+              service: openclaw
+            annotations:
+              summary: "Multiple egress requests denied by Squid proxy"
+              description: "Squid proxy has denied more than 5 outbound requests in the last 15 minutes. Possible exfiltration attempt or misconfigured allowlist."
+
+          # Detect MCP server access attempts
+          - alert: OpenClawBlockedMcpAccess
+            expr: |
+              sum(count_over_time({app_kubernetes_io_name="openclaw"} |~ `(mcp|MCP).*(disabled|blocked|denied|not allowed)` [15m])) > 0
+            for: 0m
+            labels:
+              severity: info
+              component: security
+              service: openclaw
+            annotations:
+              summary: "Blocked MCP server access attempt"
+              description: "OpenClaw attempted to use a disabled MCP server."
