@@ -6,6 +6,16 @@ metadata:
   labels:
     {{- include "openclaw.labels" . | nindent 4 }}
 spec:
+  # OpenClaw configuration (openclaw.json)
+  config:
+    raw:
+      gateway:
+        bind: lan
+      plugins:
+        entries:
+          telegram:
+            enabled: true
+
   # Environment variables (non-secret)
   env:
     {{- range $key, $value := .Values.env }}

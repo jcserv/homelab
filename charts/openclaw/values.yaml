@@ -44,9 +44,11 @@ affinity:
 # Environment variables (non-secret)
 env:
   OPENCLAW_DISABLE_CLAWHUB: "true"
+  OPENCLAW_TELEGRAM_ENABLED: "true"
+  OPENCLAW_GATEWAY_BIND: "lan"
 
 # SealedSecrets: sealed-secrets/
-# Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN
+# Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, OPENCLAW_GATEWAY_TOKEN
 secretName: openclaw-secrets
 
 # Service configuration
