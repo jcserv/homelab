@@ -1,0 +1,34 @@
+---
+namespace: default
+
+ollama:
+  ollama:
+    models:
+      pull:
+        - llama3.2:3b
+      run:
+        - llama3.2:3b
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      memory: 4Gi
+
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - pi5-01
+                  - pi5-02
