@@ -51,7 +51,6 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
           helm repo add otwld https://helm.otwld.com/
-          helm repo add open-webui https://helm.openwebui.com/
           helm repo update
 
       - name: Run chart-testing (lint)
@@ -91,7 +90,6 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
           helm repo add otwld https://helm.otwld.com/
-          helm repo add open-webui https://helm.openwebui.com/
           helm repo update
 
       - name: Connect to Tailscale
