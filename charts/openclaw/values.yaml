@@ -5,6 +5,12 @@ namespace: default
 openclaw:
   chromium:
     enabled: true
+  gateway:
+    trustedProxies:
+      - "10.42.0.35"   # nginx-ingress on pi4-01
+      - "10.42.1.249"  # nginx-ingress on pi4-02
+      - "10.42.2.180"  # nginx-ingress on pi5-01
+      - "10.42.3.212"  # nginx-ingress on pi5-02
 
 # Resource limits
 resources:

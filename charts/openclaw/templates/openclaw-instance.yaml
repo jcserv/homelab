@@ -11,6 +11,12 @@ spec:
     raw:
       gateway:
         bind: lan
+        trustedProxies:
+          {{- range $.Values.openclaw.gateway.trustedProxies }}
+          - {{ . | quote }}
+          {{- end }}
+        controlUi:
+          allowInsecureAuth: true # the instance is secured behind nginx
       plugins:
         entries:
           telegram:
