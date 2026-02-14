@@ -1,0 +1,32 @@
+---
+namespace: default
+
+image:
+  repository: ubuntu/squid
+  tag: "6.10-24.10_edge"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 3128
+
+# Domain allowlist for HTTPS CONNECT method
+allowedDomains:
+  - ".anthropic.com"
+  - ".telegram.org"
+  - "github.com"
+  - ".githubusercontent.com"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# NetworkPolicy: accept from OpenClaw/LiteLLM, egress to DNS + HTTPS
+networkPolicy:
+  enabled: true

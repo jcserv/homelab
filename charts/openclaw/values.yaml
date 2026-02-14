@@ -7,10 +7,10 @@ openclaw:
     enabled: true
   gateway:
     trustedProxies:
-      - "10.42.0.35"   # nginx-ingress on pi4-01
-      - "10.42.1.249"  # nginx-ingress on pi4-02
-      - "10.42.2.180"  # nginx-ingress on pi5-01
-      - "10.42.3.212"  # nginx-ingress on pi5-02
+      - "10.42.0.0/24"  # pod CIDR on pi4-01
+      - "10.42.1.0/24"  # pod CIDR on pi4-02
+      - "10.42.2.0/24"  # pod CIDR on pi5-01
+      - "10.42.3.0/24"  # pod CIDR on pi5-02
 
 # Resource limits
 resources:
@@ -51,7 +51,14 @@ affinity:
 env:
   OPENCLAW_DISABLE_CLAWHUB: "true"
   OPENCLAW_TELEGRAM_ENABLED: "true"
-  OPENCLAW_GATEWAY_BIND: "lan"
+  OPENCLAW_DISABLE_BONJOUR: "1"
+  # LiteLLM API proxy - OpenClaw talks to LiteLLM instead of Anthropic directly
+  ANTHROPIC_BASE_URL: "http://litellm.default.svc.cluster.local:4000"
+  # Squid egress proxy - all external HTTPS routed through domain-filtered proxy
+  HTTPS_PROXY: "http://squid-proxy.default.svc.cluster.local:3128"
+  HTTP_PROXY: "http://squid-proxy.default.svc.cluster.local:3128"
+  # Bypass proxy for cluster-internal traffic
+  NO_PROXY: "10.0.0.0/8,127.0.0.1,localhost,.svc.cluster.local,.cluster.local"
 
 # SealedSecrets: sealed-secrets/
 # Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, OPENCLAW_GATEWAY_TOKEN

@@ -1,0 +1,48 @@
+---
+namespace: default
+
+image:
+  repository: ghcr.io/berriai/litellm
+  tag: "main-v1.55.4"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 4000
+
+# LiteLLM model configuration
+config:
+  model_list:
+    - model_name: "claude-sonnet-4-20250514"
+      litellm_params:
+        model: "anthropic/claude-sonnet-4-20250514"
+        api_key: "os.environ/ANTHROPIC_API_KEY"
+    - model_name: "claude-sonnet-4-5-20250929"
+      litellm_params:
+        model: "anthropic/claude-sonnet-4-5-20250929"
+        api_key: "os.environ/ANTHROPIC_API_KEY"
+    - model_name: "claude-haiku-3-5-20241022"
+      litellm_params:
+        model: "anthropic/claude-haiku-3-5-20241022"
+        api_key: "os.environ/ANTHROPIC_API_KEY"
+  general_settings:
+    master_key: "os.environ/LITELLM_MASTER_KEY"
+
+# SealedSecret containing ANTHROPIC_API_KEY and LITELLM_MASTER_KEY
+secretName: litellm-secrets
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# NetworkPolicy: only accept from OpenClaw, egress to DNS + HTTPS
+networkPolicy:
+  enabled: true
+  allowedIngressLabels:
+    app.kubernetes.io/name: openclaw

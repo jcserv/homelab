@@ -17,6 +17,14 @@ spec:
           {{- end }}
         controlUi:
           allowInsecureAuth: true # the instance is secured behind nginx
+          dangerouslyDisableDeviceAuth: false # explicit for audit clarity
+      # Tool execution security (sandbox/filesystem/mcp keys not supported in v0.6.0;
+      # network-level restrictions via Squid + NetworkPolicy enforce egress controls instead)
+      tools:
+        exec:
+          security: full
+          ask: "always"
+
       plugins:
         entries:
           telegram:
@@ -77,6 +85,32 @@ spec:
       allowedIngressNamespaces:
         - ingress-nginx
       additionalEgress:
+        # DNS resolution via kube-dns
+        - ports:
+            - protocol: UDP
+              port: 53
+            - protocol: TCP
+              port: 53
+          to:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: kube-system
+        # LiteLLM API proxy (replaces direct Anthropic API access)
+        - ports:
+            - protocol: TCP
+              port: 4000
+          to:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: litellm
+        # Squid egress proxy (replaces direct HTTPS access)
+        - ports:
+            - protocol: TCP
+              port: 3128
+          to:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: squid-proxy
         # Authentik callbacks within cluster
         - ports:
             - protocol: TCP

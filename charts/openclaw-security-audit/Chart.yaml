@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: openclaw-security-audit
+description: >-
+  Weekly security audit CronJob for OpenClaw deployment.
+  Validates configuration, checks for drift, and reports findings.
+type: application
+version: 1.0.0
+appVersion: "0.6.0"
+maintainers:
+  - name: homelab

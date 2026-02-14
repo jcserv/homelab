@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: litellm
+description: >-
+  LiteLLM proxy for API key brokering and cost tracking.
+  Isolates real Anthropic API key from application workloads.
+type: application
+version: 1.0.0
+appVersion: "1.55.4"
+maintainers:
+  - name: homelab
