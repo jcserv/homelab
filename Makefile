@@ -1,4 +1,4 @@
-.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix
+.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix approve-pairing
 
 # Default target
 help:
@@ -21,6 +21,9 @@ help:
 	@echo "  make backup-immich-db   Trigger manual Immich database backup"
 	@echo "  make backup-homeassistant Trigger manual Home Assistant backup"
 	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
+	@echo ""
+	@echo "OpenClaw Commands:"
+	@echo "  make approve-pairing    Approve pending OpenClaw gateway pairing requests"
 	@echo ""
 	@echo "Maintenance Commands:"
 	@echo "  make drain NODE=<name>  Drain a node for maintenance"
@@ -209,6 +212,36 @@ endif
 	@echo "Uncordoning node $(NODE)..."
 	kubectl uncordon $(NODE)
 	@echo "✓ Node $(NODE) is now schedulable"
+
+approve-pairing:
+	@echo "Checking for pending OpenClaw gateway pairing requests..."
+	@kubectl exec deployment/openclaw -c openclaw -- node -e ' \
+		const fs = require("fs"); \
+		const pendingPath = "/home/openclaw/.openclaw/devices/pending.json"; \
+		const pairedPath = "/home/openclaw/.openclaw/devices/paired.json"; \
+		const pending = JSON.parse(fs.readFileSync(pendingPath, "utf8")); \
+		const entries = Object.entries(pending); \
+		if (entries.length === 0) { \
+			console.log("No pending pairing requests."); \
+			process.exit(0); \
+		} \
+		const paired = JSON.parse(fs.readFileSync(pairedPath, "utf8")); \
+		for (const [id, req] of entries) { \
+			paired[req.deviceId] = { \
+				deviceId: req.deviceId, \
+				publicKey: req.publicKey, \
+				platform: req.platform, \
+				clientId: req.clientId, \
+				roles: req.roles, \
+				scopes: req.scopes, \
+				pairedAt: Date.now() \
+			}; \
+			console.log("Approved: " + req.clientId + " (" + req.platform + ") from " + req.remoteIp); \
+		} \
+		fs.writeFileSync(pairedPath, JSON.stringify(paired, null, 2)); \
+		fs.writeFileSync(pendingPath, "{}"); \
+		console.log("Approved " + entries.length + " request(s)."); \
+	'
 
 kill-svclb:
 	@echo "Removing svclb DaemonSets and pods..."

@@ -36,6 +36,19 @@ loki:
       reject_old_samples: true
       reject_old_samples_max_age: 72h
 
+    # Ruler configuration - evaluate alerting rules from ConfigMaps
+    rulerConfig:
+      storage:
+        type: local
+        local:
+          directory: /rules
+      rule_path: /tmp/rules
+      alertmanager_url: http://monitoring-stack-kube-alertmanager.monitoring.svc.cluster.local:9093
+      ring:
+        kvstore:
+          store: inmemory
+      enable_api: true
+
     # Server config
     server:
       http_listen_port: 3100
@@ -44,6 +57,17 @@ loki:
   # Single binary deployment
   singleBinary:
     replicas: 1
+
+    # Mount Loki alerting rules from ConfigMaps with label loki_rule=true
+    extraVolumes:
+      - name: openclaw-rules
+        configMap:
+          name: openclaw-loki-rules
+          optional: true
+    extraVolumeMounts:
+      - name: openclaw-rules
+        mountPath: /rules/fake
+        readOnly: true
 
     # Resources - optimized for memory usage
     resources:
