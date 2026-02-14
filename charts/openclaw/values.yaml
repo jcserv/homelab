@@ -66,7 +66,7 @@ env:
   PATH: "/home/openclaw/.openclaw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # SealedSecrets: sealed-secrets/
-# Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, OPENCLAW_GATEWAY_TOKEN, TELEGRAM_ALLOWED_CHAT_ID
+# Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, OPENCLAW_GATEWAY_TOKEN, TELEGRAM_ALLOWED_CHAT_ID, TELEGRAM_ALLOWED_CHAT_ID_2
 secretName: openclaw-secrets
 
 # Service configuration

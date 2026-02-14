@@ -28,6 +28,7 @@ spec:
           dmPolicy: {{ .Values.telegram.dmPolicy | quote }}
           allowFrom:
             - "${TELEGRAM_ALLOWED_CHAT_ID}"
+            - "${TELEGRAM_ALLOWED_CHAT_ID_2}"
 
       plugins:
         entries:

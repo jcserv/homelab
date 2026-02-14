@@ -42,3 +42,6 @@ kubeconfig
 .vscode/
 .idea/
 *.iml
+
+charts/openclaw/SOUL.md
+charts/openclaw/USER.md
