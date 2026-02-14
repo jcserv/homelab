@@ -1,0 +1,14 @@
+---
+apiVersion: v2
+name: ollama
+description: Ollama LLM inference server for homelab Kubernetes cluster
+type: application
+version: 1.0.0
+appVersion: "0.15.6"
+maintainers:
+  - name: homelab
+
+dependencies:
+  - name: ollama
+    version: 1.42.0
+    repository: https://helm.otwld.com/
