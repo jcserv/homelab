@@ -50,7 +50,6 @@ affinity:
 # Environment variables (non-secret)
 env:
   OPENCLAW_DISABLE_CLAWHUB: "true"
-  OPENCLAW_TELEGRAM_ENABLED: "true"
   OPENCLAW_DISABLE_BONJOUR: "1"
   # LiteLLM API proxy - handles Anthropic SDK requests at /v1/messages
   ANTHROPIC_BASE_URL: "http://litellm.default.svc.cluster.local:4000"
@@ -66,7 +65,8 @@ env:
   PATH: "/home/openclaw/.openclaw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # SealedSecrets: sealed-secrets/
-# Contains: ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, OPENCLAW_GATEWAY_TOKEN, TELEGRAM_ALLOWED_CHAT_ID, TELEGRAM_ALLOWED_CHAT_ID_2
+# Contains: ANTHROPIC_API_KEY, OPENCLAW_GATEWAY_TOKEN, DISCORD_BOT_TOKEN,
+#           DISCORD_GUILD_ID, DISCORD_CHANNEL_ID, DISCORD_USER_ID
 secretName: openclaw-secrets
 
 # Service configuration
@@ -88,10 +88,6 @@ ingress:
         - openclaw.jarrodservilla.com
       secretName: wildcard-jarrodservilla-tls
 
-# Telegram channel access control
-telegram:
-  dmPolicy: "allowlist"
-
 # Token optimization - agent defaults
 agents:
   defaultModel: "litellm/claude-haiku-4-5-20251001"
@@ -99,13 +95,22 @@ agents:
   heartbeat:
     every: "1h"
     model: "litellm/llama3.2:3b"
-    target: "telegram"
+    target: "discord"
     prompt: "Check: Any blockers, progress updates, or opportunities?"
   contextPruning:
     mode: "cache-ttl"
     ttl: "6h"
     keepLastAssistants: 3
   maxConcurrent: 3
+
+# Discord bot channel configuration
+# IDs sealed in: sealed-secrets/openclaw-secrets-sealed.yaml
+# (DISCORD_GUILD_ID, DISCORD_CHANNEL_ID, DISCORD_USER_ID)
+discord:
+  enabled: true
+  groupPolicy: "allowlist"
+  guildRequireMention: true
+  channelRequireMention: false
 
 # Pass-through values to the openclaw-operator
 openclaw-operator: {}
