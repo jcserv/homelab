@@ -18,22 +18,33 @@ spec:
         controlUi:
           allowInsecureAuth: true # the instance is secured behind nginx
           dangerouslyDisableDeviceAuth: false # explicit for audit clarity
+      {{- if .Values.discord.enabled }}
+      {{- $secret := (lookup "v1" "Secret" .Values.namespace .Values.secretName) }}
+      {{- $guildId := index $secret.data "DISCORD_GUILD_ID" | b64dec }}
+      {{- $channelId := index $secret.data "DISCORD_CHANNEL_ID" | b64dec }}
+      {{- $userId := index $secret.data "DISCORD_USER_ID" | b64dec }}
+      plugins:
+        entries:
+          discord:
+            enabled: true
+      channels:
+        discord:
+          token: "${DISCORD_BOT_TOKEN}"
+          groupPolicy: {{ .Values.discord.groupPolicy | quote }}
+          guilds:
+            {{ $guildId | quote }}:
+              requireMention: {{ .Values.discord.guildRequireMention }}
+              users:
+                - {{ $userId | quote }}
+              channels:
+                {{ $channelId | quote }}:
+                  allow: true
+                  requireMention: {{ .Values.discord.channelRequireMention }}
+      {{- end }}
       tools:
         exec:
           security: full
           ask: "always"
-
-      channels:
-        telegram:
-          dmPolicy: {{ .Values.telegram.dmPolicy | quote }}
-          allowFrom:
-            - "${TELEGRAM_ALLOWED_CHAT_ID}"
-            - "${TELEGRAM_ALLOWED_CHAT_ID_2}"
-
-      plugins:
-        entries:
-          telegram:
-            enabled: true
 
       # Route all AI providers through LiteLLM proxy (custom openai provider)
       models:

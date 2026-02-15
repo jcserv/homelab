@@ -15,13 +15,16 @@ service:
 # Domain allowlist for HTTPS CONNECT method
 allowedDomains:
   - ".anthropic.com"
-  - ".telegram.org"
   - "github.com"
   - ".githubusercontent.com"
   - "smtp.gmail.com"
   - ".googleapis.com"
   - "accounts.google.com"
   - "registry.npmjs.org"
+  # Discord bot API and WebSocket gateway
+  - "discord.com"
+  - "discord.gg"
+  - "cdn.discordapp.com"
 
 # SMTP port for email sending
 allowedSmtpPorts:
