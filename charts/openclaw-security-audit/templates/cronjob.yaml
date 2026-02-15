@@ -98,15 +98,15 @@ spec:
               PODS=$(kubectl get pods -n {{ .Values.openclaw.namespace }} -l app.kubernetes.io/name=openclaw --no-headers -o name 2>/dev/null)
               if [ -n "$PODS" ]; then
                 for pod in $PODS; do
-                  UID=$(kubectl exec -n {{ .Values.openclaw.namespace }} $pod -- id -u 2>/dev/null || echo "unknown")
-                  if [ "$UID" = "0" ]; then
+                  POD_UID=$(kubectl exec -n {{ .Values.openclaw.namespace }} $pod -- id -u 2>/dev/null || echo "unknown")
+                  if [ "$POD_UID" = "0" ]; then
                     echo "  FAIL: $pod running as root (UID 0)"
                     FAIL=$((FAIL+1))
-                  elif [ "$UID" = "unknown" ]; then
+                  elif [ "$POD_UID" = "unknown" ]; then
                     echo "  WARN: Cannot check UID for $pod"
                     WARN=$((WARN+1))
                   else
-                    echo "  PASS: $pod running as UID $UID"
+                    echo "  PASS: $pod running as UID $POD_UID"
                     PASS=$((PASS+1))
                   fi
                 done
