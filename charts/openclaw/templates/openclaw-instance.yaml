@@ -90,7 +90,13 @@ spec:
               alias: "haiku"
             litellm/claude-sonnet-4-20250514:
               alias: "sonnet4"
-          # Heartbeat disabled - using cron job with Ollama instead
+          {{- if .Values.agents.heartbeat }}
+          heartbeat:
+            every: {{ .Values.agents.heartbeat.every | quote }}
+            model: {{ .Values.agents.heartbeat.model | quote }}
+            target: {{ .Values.agents.heartbeat.target | quote }}
+            prompt: {{ .Values.agents.heartbeat.prompt | quote }}
+          {{- end }}
           contextPruning:
             mode: {{ .Values.agents.contextPruning.mode | quote }}
             ttl: {{ .Values.agents.contextPruning.ttl | quote }}
