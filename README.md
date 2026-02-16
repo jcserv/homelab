@@ -4,9 +4,14 @@ A 4-node HA Kubernetes cluster on Raspberry Pi hardware running self-hosted serv
 
 ## features 🚀
 1. highly-available pods (for the most part 😅)
-2. dns server w/ ad-blocking via pihole
+2. dns server w/ ad-blocking via pihole (4 replicas, synced via nebula-sync)
 3. graceful shutdown in the event of a power outage
 > my setup is a bit scuffed because my UPS does not have a direct connection to monitor its status, so instead I have an automation in Home Assistant to safe shutdown
+4. SSO via Authentik across services
+5. AI agent platform (OpenClaw) with budget-capped LLM routing
+6. automated backups to Backblaze B2 (photos, databases, configs)
+7. GitOps-style CI/CD — push to `main` auto-deploys changed charts
+8. network-policy-based security with egress proxy for AI workloads
 
 ## hardware ⚙️
 
@@ -34,22 +39,37 @@ Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://son
 <br/>
 
 **services:**
-- **immich** - Photo management (10.2.1.204 / https://img.home)
-- **homeassistant** - Home automation with Zigbee (10.2.1.203 / https://assistant.home)
-- **pihole** - DNS + ad blocking (10.2.1.202 / https://pi.home)
+- **immich** — Photo management with ML (https://img.jarrodservilla.com)
+- **home-assistant** — Home automation with Zigbee (https://homeassistant.jarrodservilla.com)
+- **pihole** — DNS + ad blocking, 4 HA replicas (10.2.1.202 / https://pi.jarrodservilla.com)
+- **authentik** — SSO/identity provider (https://auth.jarrodservilla.com)
+- **nas-services** — Ingress routing to NAS apps (Jellyfin, Radarr, Sonarr, qBittorrent, etc.)
+
+**AI stack:**
+- **openclaw** — AI agent platform with Discord bot (https://openclaw.jarrodservilla.com)
+- **litellm** — LLM API proxy routing to Anthropic + local Ollama (budget-capped)
+- **ollama** — Local LLM inference (Llama 3.2 3B) on Pi5 nodes
+- **squid-proxy** — Domain-allowlist HTTPS egress proxy for OpenClaw
 
 **infra:**
-- **nginx** - Reverse proxy with TLS (10.2.1.200)
-- **metallb** - LoadBalancer implementation
-- **cert-manager** - Automatic TLS certificates
-- **sealed-secrets** - Encrypted secrets in Git
-- **restic** - Monthly backups to Backblaze B2
+- **nginx-ingress** — Reverse proxy with TLS (10.2.1.200)
+- **metallb** — LoadBalancer implementation
+- **cert-manager** — Automatic TLS certificates
+- **sealed-secrets** — Encrypted secrets in Git
+- **network-policies** — Default-deny egress/ingress rules
 
 **monitoring:**
-- **prometheus** - Metrics collection and time-series database
-- **grafana** - Dashboards and visualization (https://grafana.home)
-- **loki** - Log aggregation and querying
-- **alloy** - Log and metrics collection agent
+- **kube-prometheus-stack** — Prometheus + Grafana (https://grafana.jarrodservilla.com)
+- **loki** — Log aggregation (SingleBinary mode, 72h retention)
+- **alloy** — DaemonSet log and metrics collection agent
+- **prometheus-blackbox-exporter** — HTTP/DNS/ICMP health probes
+
+**backups** (CronJobs to Backblaze B2):
+- **restic-backup** — Monthly NAS files/library
+- **immich-db-backup** — Daily PostgreSQL dump
+- **home-assistant-backup** — Daily config snapshot
+- **authentik-backup** — Authentik data backup
+- **openclaw-security-audit** — Periodic security checks for AI stack
 
 <img src="docs/grafana-dashboard.png" width="100%" style="max-width: 800px;" />
 
