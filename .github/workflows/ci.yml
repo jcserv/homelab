@@ -133,18 +133,6 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
-      - name: Write local values overrides from secrets
-        if: steps.list-changed.outputs.changed == 'true'
-        run: |
-          # Write values.local.yaml files from GitHub secrets
-          # Add new charts here as needed: SECRET_VAR -> chart directory
-          if [ -n "$SQUID_PROXY_VALUES_LOCAL" ]; then
-            echo "$SQUID_PROXY_VALUES_LOCAL" > charts/squid-proxy/values.local.yaml
-            echo "Wrote charts/squid-proxy/values.local.yaml from secret"
-          fi
-        env:
-          SQUID_PROXY_VALUES_LOCAL: ${{ secrets.SQUID_PROXY_VALUES_LOCAL }}
-
       - name: Deploy changed charts
         if: steps.list-changed.outputs.changed == 'true'
         run: |
