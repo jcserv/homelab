@@ -58,17 +58,6 @@ loki:
   singleBinary:
     replicas: 1
 
-    # Mount Loki alerting rules from ConfigMaps with label loki_rule=true
-    extraVolumes:
-      - name: openclaw-rules
-        configMap:
-          name: openclaw-loki-rules
-          optional: true
-    extraVolumeMounts:
-      - name: openclaw-rules
-        mountPath: /rules/fake
-        readOnly: true
-
     # Resources - optimized for memory usage
     resources:
       requests:

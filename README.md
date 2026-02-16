@@ -8,10 +8,8 @@ A 4-node HA Kubernetes cluster on Raspberry Pi hardware running self-hosted serv
 3. graceful shutdown in the event of a power outage
 > my setup is a bit scuffed because my UPS does not have a direct connection to monitor its status, so instead I have an automation in Home Assistant to safe shutdown
 4. SSO via Authentik across services
-5. AI agent platform (OpenClaw) with budget-capped LLM routing
-6. automated backups to Backblaze B2 (photos, databases, configs)
-7. GitOps-style CI/CD — push to `main` auto-deploys changed charts
-8. network-policy-based security with egress proxy for AI workloads
+5. automated backups to Backblaze B2 (photos, databases, configs)
+6. GitOps-style CI/CD — push to `main` auto-deploys changed charts
 
 ## hardware ⚙️
 
@@ -45,12 +43,6 @@ Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://son
 - **authentik** — SSO/identity provider (https://auth.jarrodservilla.com)
 - **nas-services** — Ingress routing to NAS apps (Jellyfin, Radarr, Sonarr, qBittorrent, etc.)
 
-**AI stack:**
-- **openclaw** — AI agent platform with Discord bot (https://openclaw.jarrodservilla.com)
-- **litellm** — LLM API proxy routing to Anthropic + local Ollama (budget-capped)
-- **ollama** — Local LLM inference (Llama 3.2 3B) on Pi5 nodes
-- **squid-proxy** — Domain-allowlist HTTPS egress proxy for OpenClaw
-
 **infra:**
 - **nginx-ingress** — Reverse proxy with TLS (10.2.1.200)
 - **metallb** — LoadBalancer implementation
@@ -69,7 +61,6 @@ Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://son
 - **immich-db-backup** — Daily PostgreSQL dump
 - **home-assistant-backup** — Daily config snapshot
 - **authentik-backup** — Authentik data backup
-- **openclaw-security-audit** — Periodic security checks for AI stack
 
 <img src="docs/grafana-dashboard.png" width="100%" style="max-width: 800px;" />
 

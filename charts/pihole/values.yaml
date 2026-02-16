@@ -84,7 +84,6 @@ customDnsEntries:
   - 10.2.1.200 pi.jarrodservilla.com
   - 10.2.1.200 grafana.jarrodservilla.com
   - 10.2.1.200 auth.jarrodservilla.com
-  - 10.2.1.200 openclaw.jarrodservilla.com
   # NAS services
   - 10.2.1.200 qbittorrent.jarrodservilla.com
   - 10.2.1.200 radarr.jarrodservilla.com

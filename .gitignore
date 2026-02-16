@@ -46,4 +46,3 @@ kubeconfig
 .idea/
 *.iml
 
-charts/openclaw/.config/*.md
