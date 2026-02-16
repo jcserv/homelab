@@ -133,6 +133,18 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
+      - name: Write local values overrides from secrets
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          # Write values.local.yaml files from GitHub secrets
+          # Add new charts here as needed: SECRET_VAR -> chart directory
+          if [ -n "$SQUID_PROXY_VALUES_LOCAL" ]; then
+            echo "$SQUID_PROXY_VALUES_LOCAL" > charts/squid-proxy/values.local.yaml
+            echo "Wrote charts/squid-proxy/values.local.yaml from secret"
+          fi
+        env:
+          SQUID_PROXY_VALUES_LOCAL: ${{ secrets.SQUID_PROXY_VALUES_LOCAL }}
+
       - name: Deploy changed charts
         if: steps.list-changed.outputs.changed == 'true'
         run: |
@@ -192,10 +204,15 @@ jobs:
 
             # Deploy the chart
             echo "  🚢 Deploying to namespace: $namespace"
+            LOCAL_VALUES=""
+            if [ -f "$chart/values.local.yaml" ]; then
+              LOCAL_VALUES="-f $chart/values.local.yaml"
+            fi
             if helm upgrade --install "$chart_name" "$chart" \
               --namespace "$namespace" \
               --create-namespace \
               --reset-values \
+              $LOCAL_VALUES \
               $WAIT_FLAGS; then
               echo "  ✅ Successfully deployed $chart_name"
             else

@@ -26,6 +26,9 @@ allowedDomains:
   - "discord.gg"
   - "cdn.discordapp.com"
 
+# Extra allowed domains (loaded from values.local.yaml, gitignored)
+extraAllowedDomains: []
+
 # SMTP port for email sending
 allowedSmtpPorts:
   - 587
