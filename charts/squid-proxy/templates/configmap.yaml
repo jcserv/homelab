@@ -19,7 +19,7 @@ data:
     acl CONNECT method CONNECT
 
     # Domain allowlist
-    acl allowed_domains dstdomain {{ range .Values.allowedDomains }}{{ . }} {{ end }}
+    acl allowed_domains dstdomain {{ range .Values.allowedDomains }}{{ . }} {{ end }}{{ range .Values.extraAllowedDomains }}{{ . }} {{ end }}
 
     # Access rules
     http_access deny !Safe_ports

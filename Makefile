@@ -21,6 +21,7 @@ help:
 	@echo "  make backup-immich-db   Trigger manual Immich database backup"
 	@echo "  make backup-homeassistant Trigger manual Home Assistant backup"
 	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
+	@echo "  make sync-local-values    Sync all values.local.yaml files to GitHub secrets"
 	@echo ""
 	@echo "OpenClaw Commands:"
 	@echo "  make approve-pairing    Approve pending OpenClaw gateway pairing requests"
@@ -155,7 +156,8 @@ ifndef NAMESPACE
 	$(eval NAMESPACE=default)
 endif
 	@echo "Upgrading $(SERVICE) in namespace $(NAMESPACE)..."
-	helm upgrade $(SERVICE) ./charts/$(SERVICE) -n $(NAMESPACE)
+	helm upgrade $(SERVICE) ./charts/$(SERVICE) -n $(NAMESPACE) \
+		$(if $(wildcard ./charts/$(SERVICE)/values.local.yaml),-f ./charts/$(SERVICE)/values.local.yaml)
 	@echo "✓ $(SERVICE) upgraded in namespace $(NAMESPACE)"
 
 backup:
@@ -242,6 +244,18 @@ approve-pairing:
 		fs.writeFileSync(pendingPath, "{}"); \
 		console.log("Approved " + entries.length + " request(s)."); \
 	'
+
+sync-local-values:
+	@echo "Syncing values.local.yaml files to GitHub secrets..."
+	@for f in charts/*/values.local.yaml; do \
+		if [ -f "$$f" ]; then \
+			chart=$$(echo "$$f" | cut -d/ -f2); \
+			secret_name=$$(echo "$${chart}" | tr '-' '_' | tr '[:lower:]' '[:upper:]')_VALUES_LOCAL; \
+			echo "  Syncing $$f → secret $$secret_name"; \
+			gh secret set "$$secret_name" < "$$f"; \
+		fi; \
+	done
+	@echo "✓ Local values synced to GitHub secrets"
 
 kill-svclb:
 	@echo "Removing svclb DaemonSets and pods..."

@@ -112,5 +112,9 @@ discord:
   guildRequireMention: true
   channelRequireMention: false
 
+# Chart-managed NetworkPolicy (replaces operator-managed policy)
+networkPolicy:
+  enabled: true
+
 # Pass-through values to the openclaw-operator
 openclaw-operator: {}

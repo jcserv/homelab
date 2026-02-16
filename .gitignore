@@ -10,6 +10,9 @@ docker/media-stack.yml
 # Sealed secrets (private keys only, sealed manifests are safe to commit)
 sealed-secrets-key.yaml
 
+# Local values overrides (per-chart, not published to GitHub)
+charts/*/values.local.yaml
+
 # Local development
 .DS_Store
 *.swp
