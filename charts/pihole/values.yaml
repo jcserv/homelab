@@ -6,7 +6,7 @@ replicaCount: 4
 image:
   repository: pihole/pihole
   # Pi-hole v6 required for nebula-sync
-  tag: 2025.11.1
+  tag: 2026.02.0
   pullPolicy: IfNotPresent
 # Spread pods across different hosts for high availability
 # Using preferred (not required) to allow scheduling when
