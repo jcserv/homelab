@@ -1,4 +1,4 @@
-.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix approve-pairing
+.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix
 
 # Default target
 help:
@@ -22,9 +22,6 @@ help:
 	@echo "  make backup-homeassistant Trigger manual Home Assistant backup"
 	@echo "  make seal-secret CHART=<name> SECRET=<name> Seal a secret (pipe kubectl output)"
 	@echo "  make sync-local-values    Sync all values.local.yaml files to GitHub secrets"
-	@echo ""
-	@echo "OpenClaw Commands:"
-	@echo "  make approve-pairing    Approve pending OpenClaw gateway pairing requests"
 	@echo ""
 	@echo "Maintenance Commands:"
 	@echo "  make drain NODE=<name>  Drain a node for maintenance"
