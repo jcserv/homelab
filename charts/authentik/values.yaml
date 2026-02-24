@@ -73,7 +73,7 @@ redis:
   enabled: true
   image:
     repository: valkey/valkey
-    tag: "9.0.2-alpine"
+    tag: "9.0.3-alpine"
     pullPolicy: IfNotPresent
 
   persistence:
