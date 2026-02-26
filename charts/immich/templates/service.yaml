@@ -44,25 +44,6 @@ spec:
     app: {{ include "immich.name" . }}
     component: database
 ---
-# Redis Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "immich.fullname" . }}-redis
-  labels:
-    app: {{ include "immich.name" . }}
-    component: redis
-spec:
-  type: ClusterIP
-  ports:
-  - port: 6379
-    targetPort: redis
-    protocol: TCP
-    name: redis
-  selector:
-    app: {{ include "immich.name" . }}
-    component: redis
----
 # Machine Learning Service
 apiVersion: v1
 kind: Service

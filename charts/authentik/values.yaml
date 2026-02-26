@@ -68,27 +68,6 @@ postgresql:
                 values:
                   - pi5-01
 
-# Redis configuration
-redis:
-  enabled: true
-  image:
-    repository: valkey/valkey
-    tag: "9.0.3-alpine"
-    pullPolicy: IfNotPresent
-
-  persistence:
-    enabled: true
-    storageClass: local-path
-    size: 2Gi
-
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
 # Storage for media files
 media:
   storageClass: local-path
@@ -142,8 +121,9 @@ authentik:
       key: AUTHENTIK_POSTGRESQL__PASSWORD
 
   redis:
-    host: authentik-redis
+    host: valkey
     port: 6379
+    db: 1
 
   email:
     enabled: false

@@ -58,6 +58,8 @@ spec:
           value: {{ .Values.env.REDIS_HOSTNAME }}
         - name: REDIS_PORT
           value: {{ .Values.env.REDIS_PORT | quote }}
+        - name: REDIS_DBINDEX
+          value: {{ .Values.env.REDIS_DBINDEX | quote }}
         - name: IMMICH_PORT
           value: "2283"
         - name: IMMICH_MACHINE_LEARNING_URL
@@ -209,51 +211,3 @@ spec:
       - name: postgres-data
         persistentVolumeClaim:
           claimName: {{ include "immich.fullname" . }}-postgres-pvc
----
-# Redis Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "immich.fullname" . }}-redis
-  labels:
-    app: {{ include "immich.name" . }}
-    component: redis
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: {{ include "immich.name" . }}
-      component: redis
-  template:
-    metadata:
-      labels:
-        app: {{ include "immich.name" . }}
-        component: redis
-    spec:
-      # SOFT PREFERENCE: Prefers control plane, but can run anywhere
-      {{- if not .Values.componentAffinity.redis.required }}
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          {{- range .Values.componentAffinity.redis.preferredNodes }}
-          - weight: {{ .weight }}
-            preference:
-              matchExpressions:
-              - key: {{ .key }}
-                operator: In
-                values:
-                {{- if .value }}
-                - {{ .value | quote }}
-                {{- else }}
-                - "true"
-                {{- end }}
-          {{- end }}
-      {{- end }}
-      containers:
-      - name: redis
-        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
-        ports:
-        - containerPort: 6379
-          name: redis
-        resources:
-          {{- toYaml .Values.redis.resources | nindent 10 }}
