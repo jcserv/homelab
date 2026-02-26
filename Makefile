@@ -100,11 +100,15 @@ install-monitoring:
 
 deploy-all:
 	@echo "Installing application services..."
+	helm install valkey ./charts/valkey
+	@echo "Waiting for Valkey to be ready..."
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=valkey --timeout=120s
 	helm install unbound ./charts/unbound
 	@echo "Waiting for Unbound to be ready..."
 	@kubectl wait --for=condition=ready pod -l app=unbound --timeout=120s
 	helm install pihole ./charts/pihole
 	helm install immich ./charts/immich
+	helm install authentik ./charts/authentik
 	helm install home-assistant ./charts/home-assistant
 	helm install restic-backup ./charts/restic-backup
 	helm install immich-db-backup ./charts/immich-db-backup

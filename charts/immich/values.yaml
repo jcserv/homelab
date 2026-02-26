@@ -31,13 +31,6 @@ componentAffinity:
       - key: storage
         weight: 100
 
-  redis:
-    required: false
-    preferredNodes:
-      - key: kubernetes.io/hostname
-        value: pi5-01
-        weight: 100
-
 resources:
   server:
     requests:
@@ -96,22 +89,6 @@ postgresql:
   persistence:
     existingClaim: immich-postgres-pvc
 
-# Redis configuration
-redis:
-  enabled: true
-  image:
-    repository: valkey/valkey
-    tag: "9.0.3-alpine"
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "200Mi"
-      cpu: "200m"
-  persistence:
-    enabled: false
-
 # Service configuration
 service:
   type: ClusterIP
@@ -123,8 +100,9 @@ env:
   DB_PORT: "5432"
   DB_DATABASE_NAME: immich
   DB_USERNAME: postgres
-  REDIS_HOSTNAME: immich-redis
+  REDIS_HOSTNAME: valkey
   REDIS_PORT: "6379"
+  REDIS_DBINDEX: "0"
   IMMICH_WEB_URL: https://img.jarrodservilla.com
   IMMICH_SERVER_URL: http://immich:2283
 

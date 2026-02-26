@@ -50,6 +50,8 @@ spec:
               value: {{ .Values.authentik.redis.host }}
             - name: AUTHENTIK_REDIS__PORT
               value: {{ .Values.authentik.redis.port | quote }}
+            - name: AUTHENTIK_REDIS__DB
+              value: {{ .Values.authentik.redis.db | quote }}
             {{- if .Values.authentik.email.enabled }}
             - name: AUTHENTIK_EMAIL__HOST
               value: {{ .Values.authentik.email.host }}
