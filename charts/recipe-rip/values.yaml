@@ -4,8 +4,8 @@ namespace: default
 recipe-rip:
   image:
     repository: ghcr.io/jcserv/recipe.rip
-    tag: latest
-    pullPolicy: Always
+    tag: sha-cb7bcef
+    pullPolicy: IfNotPresent
 
   replicaCount: 1
 
