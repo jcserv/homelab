@@ -1,0 +1,46 @@
+---
+namespace: default
+
+recipe-rip:
+  image:
+    repository: ghcr.io/jcserv/recipe.rip
+    tag: latest
+    pullPolicy: Always
+
+  replicaCount: 1
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: recipe.jarrodservilla.com
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    tls:
+      enabled: true
+      secretName: wildcard-jarrodservilla-tls
+
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 1Gi
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  existingSecret:
+    name: recipe-rip-secrets
+    keys:
+      BETTER_AUTH_SECRET: better-auth-secret
+      ANTHROPIC_API_KEY: anthropic-api-key
+      TRANSCRIPT_API_KEY: transcript-api-key
+
+  env: {}
