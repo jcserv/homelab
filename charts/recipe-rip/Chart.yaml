@@ -5,6 +5,8 @@ description: Recipe management app (wrapper chart)
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+maintainers:
+  - name: homelab
 dependencies:
   - name: recipe-rip
     version: "0.1.0"
