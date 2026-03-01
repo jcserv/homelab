@@ -145,6 +145,11 @@ jobs:
             "sealed-secrets"
           )
 
+          # Application charts requiring --wait --atomic to auto-rollback on failure
+          ATOMIC_CHARTS=(
+            "recipe-rip"
+          )
+
           # Charts to exclude from auto-deployment:
           EXCLUDED_CHARTS=(
           )
@@ -170,6 +175,9 @@ jobs:
             if [[ " ${CRITICAL_CHARTS[@]} " =~ " ${chart_name} " ]]; then
               echo "🔧 Processing CRITICAL chart: $chart_name"
               WAIT_FLAGS="--wait --timeout 5m --atomic"
+            elif [[ " ${ATOMIC_CHARTS[@]} " =~ " ${chart_name} " ]]; then
+              echo "📦 Processing APPLICATION chart (atomic): $chart_name"
+              WAIT_FLAGS="--wait --timeout 2m --atomic"
             else
               echo "📦 Processing APPLICATION chart: $chart_name"
               WAIT_FLAGS="--timeout 2m"
