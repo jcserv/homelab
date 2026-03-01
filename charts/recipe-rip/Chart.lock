@@ -1,6 +1,6 @@
 dependencies:
 - name: recipe-rip
   repository: oci://ghcr.io/jcserv/charts
-  version: 1.0.26
-digest: sha256:f763a266eea1300ff8498deb7d5201174e1f8769b08761a82b1fd6c67e292aae
-generated: "2026-03-01T14:37:45.452583409Z"
+  version: 1.0.27
+digest: sha256:736fef3e3d78db8af100b705b01f829010735c2fbf02a9f8ea608a869b417d97
+generated: "2026-03-01T15:02:42.000000000Z"
