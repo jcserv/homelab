@@ -223,6 +223,13 @@ prometheus-blackbox-exporter:
           service: radarr
           type: http
 
+      - name: recipe-rip-http
+        url: http://recipe-rip.default.svc.cluster.local:3000
+        module: http_2xx
+        labels:
+          service: recipe-rip
+          type: http
+
       - name: sonarr-http
         url: http://sonarr.default.svc.cluster.local:8989
         module: http_2xx
