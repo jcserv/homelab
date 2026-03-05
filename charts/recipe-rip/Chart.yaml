@@ -9,5 +9,5 @@ maintainers:
   - name: homelab
 dependencies:
   - name: recipe-rip
-    version: "1.0.51"
+    version: "1.0.52"
     repository: "oci://ghcr.io/jcserv/charts"
