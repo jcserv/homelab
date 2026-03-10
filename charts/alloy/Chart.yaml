@@ -2,12 +2,12 @@ apiVersion: v2
 name: alloy
 description: Grafana Alloy - OpenTelemetry collector for logs and metrics
 type: application
-version: 1.0.7
+version: 1.0.8
 appVersion: "v1.5.0"
 maintainers:
   - name: homelab
 
 dependencies:
   - name: alloy
-    version: 1.6.1
+    version: 1.6.2
     repository: https://grafana.github.io/helm-charts
