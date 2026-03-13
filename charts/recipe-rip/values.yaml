@@ -42,4 +42,6 @@ recipe-rip:
       ANTHROPIC_API_KEY: anthropic-api-key
       TRANSCRIPT_API_KEY: transcript-api-key
 
+  trustedProviders: "authentik"
+
   env: {}
