@@ -3,11 +3,11 @@ apiVersion: v2
 name: recipe-rip
 description: Recipe management app (wrapper chart)
 type: application
-version: 0.2.20
+version: 0.2.21
 appVersion: "0.1.0"
 maintainers:
   - name: homelab
 dependencies:
   - name: recipe-rip
-    version: "1.0.66"
+    version: "1.0.67"
     repository: "oci://ghcr.io/jcserv/charts"
