@@ -1,3 +1,4 @@
+---
 prometheus-blackbox-exporter:
   fullnameOverride: blackbox-exporter
 
@@ -9,50 +10,59 @@ prometheus-blackbox-exporter:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: []  # Defaults to 2xx
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
 
       # HTTP probe that accepts 2xx and 403 (for services requiring auth)
       http_2xx_403:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: [200, 201, 202, 203, 204, 205, 206, 403]
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
 
       # HTTP probe that accepts 2xx and 404 (for services with no default page)
       http_2xx_404:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: [200, 201, 202, 203, 204, 205, 206, 404]
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
 
       # HTTP probe that accepts 2xx and common auth errors (401, 403)
       http_2xx_auth:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
-          valid_status_codes: [200, 201, 202, 203, 204, 205, 206, 401, 403]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
+          valid_status_codes:
+            - 200
+            - 201
+            - 202
+            - 203
+            - 204
+            - 205
+            - 206
+            - 401
+            - 403
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
 
       # HTTPS probe
       https_2xx:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: []
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
           tls_config:
             insecure_skip_verify: false
 
@@ -61,32 +71,30 @@ prometheus-blackbox-exporter:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: []
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
           headers:
             Host: pi.jarrodservilla.com
-
       http_homeassistant:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: []
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
           headers:
             Host: homeassistant.jarrodservilla.com
-
       http_grafana:
         prober: http
         timeout: 5s
         http:
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_http_versions: [HTTP/1.1, HTTP/2.0]
           valid_status_codes: []
           method: GET
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
           headers:
             Host: grafana.jarrodservilla.com
 
@@ -95,31 +103,36 @@ prometheus-blackbox-exporter:
         prober: dns
         timeout: 5s
         dns:
-          query_name: "google.com"
-          query_type: "A"
-          valid_rcodes:
-            - NOERROR
-          transport_protocol: "udp"
-          preferred_ip_protocol: "ip4"
+          query_name: google.com
+          query_type: A
+          valid_rcodes: [NOERROR]
+          transport_protocol: udp
+          preferred_ip_protocol: ip4
 
       # TCP DNS probe
       dns_tcp:
         prober: dns
         timeout: 5s
         dns:
-          query_name: "google.com"
-          query_type: "A"
-          valid_rcodes:
-            - NOERROR
-          transport_protocol: "tcp"
-          preferred_ip_protocol: "ip4"
+          query_name: google.com
+          query_type: A
+          valid_rcodes: [NOERROR]
+          transport_protocol: tcp
+          preferred_ip_protocol: ip4
+
+      # TCP probe for non-HTTP services
+      tcp_connect:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          preferred_ip_protocol: ip4
 
       # ICMP probe for ping checks
       icmp:
         prober: icmp
         timeout: 5s
         icmp:
-          preferred_ip_protocol: "ip4"
+          preferred_ip_protocol: ip4
 
   # ServiceMonitor for Prometheus Operator to scrape
   serviceMonitor:
@@ -145,97 +158,96 @@ prometheus-blackbox-exporter:
         labels:
           service: pihole
           type: http
-
       - name: home-assistant-http
         url: http://home-assistant.default.svc.cluster.local:8123
         module: http_2xx
         labels:
           service: home-assistant
           type: http
-
       - name: grafana-http
         url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
         module: http_2xx
         labels:
           service: grafana
           type: http
-
       - name: nginx-ingress-http
         url: http://nginx-ingress-ingress-nginx-controller.ingress-nginx.svc.cluster.local
         module: http_2xx_404
         labels:
           service: nginx-ingress
           type: http
-
       - name: immich-http
         url: http://immich.default.svc.cluster.local:2283
         module: http_2xx_auth
         labels:
           service: immich
           type: http
-
       - name: authentik-http
         url: http://authentik-server.default.svc.cluster.local:9000/-/health/ready/
         module: http_2xx
         labels:
           service: authentik
           type: http
-
       - name: bazarr-http
         url: http://bazarr.default.svc.cluster.local:6767
         module: http_2xx_auth
         labels:
           service: bazarr
           type: http
-
       - name: jellyfin-http
         url: http://jellyfin.default.svc.cluster.local:8899
         module: http_2xx
         labels:
           service: jellyfin
           type: http
-
       - name: jellyseerr-http
         url: http://jellyseerr.default.svc.cluster.local:5055
         module: http_2xx
         labels:
           service: jellyseerr
           type: http
-
       - name: prowlarr-http
         url: http://prowlarr.default.svc.cluster.local:9696
         module: http_2xx
         labels:
           service: prowlarr
           type: http
-
       - name: qbittorrent-http
         url: http://qbittorrent.default.svc.cluster.local:8888
         module: http_2xx
         labels:
           service: qbittorrent
           type: http
-
       - name: radarr-http
         url: http://radarr.default.svc.cluster.local:7878
         module: http_2xx
         labels:
           service: radarr
           type: http
-
       - name: recipe-rip-http
         url: http://recipe-rip.default.svc.cluster.local:3000
         module: http_2xx
         labels:
           service: recipe-rip
           type: http
-
+      - name: calibre-http
+        url: http://calibre.default.svc.cluster.local:8083
+        module: http_2xx
+        labels:
+          service: calibre
+          type: http
       - name: sonarr-http
         url: http://sonarr.default.svc.cluster.local:8989
         module: http_2xx
         labels:
           service: sonarr
           type: http
+      - name: valkey-tcp
+        url: valkey.default.svc.cluster.local:6379
+        module: tcp_connect
+        labels:
+          service: valkey
+          type: tcp
 
   # Resource limits for homelab
   resources:
@@ -256,11 +268,9 @@ prometheus-blackbox-exporter:
   podSecurityContext:
     runAsNonRoot: false
     runAsUser: 0
-
   securityContext:
     capabilities:
-      add:
-        - NET_RAW
+      add: [NET_RAW]
     readOnlyRootFilesystem: true
     runAsNonRoot: false
     runAsUser: 0

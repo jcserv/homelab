@@ -2387,6 +2387,11 @@
           },
           {
             "selected": false,
+            "text": "calibre-.*",
+            "value": "calibre-.*"
+          },
+          {
+            "selected": false,
             "text": "cert-manager-.*",
             "value": "cert-manager-.*"
           },
@@ -2496,7 +2501,7 @@
             "value": "valkey-.*"
           }
         ],
-        "query": "alloy-.*,authentik-.*,authentik-backup-.*,bazarr-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,jellyfin-.*,jellyseerr-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,prowlarr-.*,qbittorrent-.*,radarr-.*,recipe-rip-.*,restic-backup-.*,sealed-secrets-.*,sonarr-.*,systemd-journal,valkey-.*",
+        "query": "alloy-.*,authentik-.*,authentik-backup-.*,bazarr-.*,calibre-.*,cert-manager-.*,grafana-.*,home-assistant-.*,home-assistant-backup-.*,immich-.*,immich-db-backup-.*,jellyfin-.*,jellyseerr-.*,loki-.*,metallb-.*,nginx-ingress-.*,pihole-.*,prometheus-.*,prowlarr-.*,qbittorrent-.*,radarr-.*,recipe-rip-.*,restic-backup-.*,sealed-secrets-.*,sonarr-.*,systemd-journal,valkey-.*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
