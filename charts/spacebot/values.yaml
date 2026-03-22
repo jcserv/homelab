@@ -71,6 +71,7 @@ config:
     routing:
       # OpenRouter routes to Anthropic via BYOK at direct pricing
       channel: openrouter/anthropic/claude-sonnet-4
+      branch: openrouter/anthropic/claude-sonnet-4
       worker: openrouter/anthropic/claude-haiku-4.5
       promptRouting:
         enabled: true
@@ -86,14 +87,30 @@ config:
       enabled: true
       token: env:DISCORD_TOKEN
 
+  # Agent permissions — network and exec controls
+  permissions:
+    networkOutbound: true
+    # Allow private IPs for cluster-internal services (Immich, Home Assistant)
+    # NetworkPolicy provides the actual security boundary
+    networkAllowPrivate:
+      - "10.42.0.0/16"   # Pod network (cluster-internal services)
+      - "10.43.0.0/16"   # Service network (ClusterIP VIPs)
+    execAllowlist:
+      - git
+      - curl
+      - jq
+      - python3
+
   # Browser tool — enabled with egress network restrictions
   browser:
     enabled: true
 
-  # Shell tool — sandboxed via bubblewrap
+  # Shell tool — bubblewrap sandboxing disabled (requires unprivileged user
+  # namespaces which K3s kernel doesn't allow). NetworkPolicy + exec allowlist
+  # provide the security boundary instead.
   shell:
     enabled: true
-    sandboxed: true
+    sandboxMode: disabled
 # Network policy — egress + ingress
 networkPolicy:
   enabled: true
@@ -107,9 +124,13 @@ networkPolicy:
       - name: home-assistant
         namespace: default
         port: 8123
+        # HA uses hostNetwork, so traffic goes to the node IP (pi4-02)
+        hostIP: "10.2.1.160"
       - name: immich
         namespace: default
         port: 2283
+        labelKey: app
+        labelValue: immich
   ingress:
     # Web UI from nginx-ingress only
     allowNginxIngress: true

@@ -17,6 +17,7 @@ data:
 
     [defaults.routing]
     channel = {{ .Values.config.defaults.routing.channel | quote }}
+    branch = {{ .Values.config.defaults.routing.branch | quote }}
     worker = {{ .Values.config.defaults.routing.worker | quote }}
 
     [defaults.routing.prompt_routing]
@@ -44,4 +45,20 @@ data:
 
     [tools.shell]
     enabled = {{ .Values.config.shell.enabled }}
-    sandboxed = {{ .Values.config.shell.sandboxed }}
+
+    [[agents]]
+    id = "main"
+
+    [agents.sandbox]
+    mode = {{ .Values.config.shell.sandboxMode | quote }}
+
+    [agents.permissions]
+    shell = "workspace"
+    network_outbound = {{ .Values.config.permissions.networkOutbound }}
+    {{- if .Values.config.permissions.networkAllowPrivate }}
+    network_allow_private = [{{ range $i, $v := .Values.config.permissions.networkAllowPrivate }}{{ if $i }}, {{ end }}{{ $v | quote }}{{ end }}]
+    {{- end }}
+    {{- if .Values.config.permissions.execAllowlist }}
+    exec = "allowlist"
+    exec_allowlist = [{{ range $i, $v := .Values.config.permissions.execAllowlist }}{{ if $i }}, {{ end }}{{ $v | quote }}{{ end }}]
+    {{- end }}
