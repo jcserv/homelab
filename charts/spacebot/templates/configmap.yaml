@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spacebot.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "spacebot.labels" . | nindent 4 }}
+data:
+  config.toml: |
+    [llm]
+    openrouter_key = {{ .Values.config.llm.openrouterKey | quote }}
+
+    [defaults]
+    rate_limit_cooldown_secs = {{ .Values.config.defaults.rateLimitCooldownSecs }}
+    worker_timeout_secs = {{ .Values.config.defaults.workerTimeoutSecs }}
+    branch_timeout_secs = {{ .Values.config.defaults.branchTimeoutSecs }}
+
+    [defaults.routing]
+    channel = {{ .Values.config.defaults.routing.channel | quote }}
+    worker = {{ .Values.config.defaults.routing.worker | quote }}
+
+    [defaults.routing.prompt_routing]
+    enabled = {{ .Values.config.defaults.routing.promptRouting.enabled }}
+    process_types = [{{ range $i, $v := .Values.config.defaults.routing.promptRouting.processTypes }}{{ if $i }}, {{ end }}{{ $v | quote }}{{ end }}]
+
+    [defaults.routing.task_overrides]
+    {{- range $task, $model := .Values.config.defaults.routing.taskOverrides }}
+    {{ $task }} = {{ $model | quote }}
+    {{- end }}
+
+    [defaults.routing.fallbacks]
+    {{- range $model, $fallbacks := .Values.config.defaults.routing.fallbacks }}
+    {{ $model | quote }} = [{{ range $i, $fb := $fallbacks }}{{ if $i }}, {{ end }}{{ $fb | quote }}{{ end }}]
+    {{- end }}
+
+    {{- if .Values.config.messaging.discord.enabled }}
+    [messaging.discord]
+    enabled = true
+    token = {{ .Values.config.messaging.discord.token | quote }}
+    {{- end }}
+
+    [tools.browser]
+    enabled = {{ .Values.config.browser.enabled }}
+
+    [tools.shell]
+    enabled = {{ .Values.config.shell.enabled }}
+    sandboxed = {{ .Values.config.shell.sandboxed }}

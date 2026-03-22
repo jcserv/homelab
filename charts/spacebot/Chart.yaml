@@ -1,0 +1,12 @@
+---
+apiVersion: v2
+name: spacebot
+description: Autonomous AI agent framework with LLM integrations
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords: [ai, agent, llm, chatbot]
+home: https://github.com/spacedriveapp/spacebot
+sources: [https://github.com/spacedriveapp/spacebot]
+maintainers:
+  - name: homelab
