@@ -28,8 +28,6 @@ spec:
             matchLabels:
               app.kubernetes.io/name: ingress-nginx
               app.kubernetes.io/component: controller
-        # Allow from same namespace for health checks
-        - podSelector: {}
     {{- end }}
 
     {{- if .Values.networkPolicy.ingress.allowMonitoring }}
