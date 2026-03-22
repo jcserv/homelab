@@ -102,6 +102,14 @@ networkPolicy:
     allowPublicHTTPS: true
     # Allow DNS resolution
     allowDNS: true
+    # Allow access to in-cluster services
+    allowClusterServices:
+      - name: home-assistant
+        namespace: default
+        port: 8123
+      - name: immich
+        namespace: default
+        port: 2283
   ingress:
     # Web UI from nginx-ingress only
     allowNginxIngress: true

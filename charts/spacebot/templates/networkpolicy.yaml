@@ -77,4 +77,18 @@ spec:
               # Block link-local / cloud metadata
               - 169.254.0.0/16
     {{- end }}
+
+    {{- range .Values.networkPolicy.egress.allowClusterServices }}
+    # Allow access to {{ .name }} in {{ .namespace }} namespace
+    - ports:
+        - protocol: TCP
+          port: {{ .port }}
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ .name }}
+    {{- end }}
 {{- end }}
