@@ -113,6 +113,7 @@ deploy-all:
 	helm install restic-backup ./charts/restic-backup
 	helm install immich-db-backup ./charts/immich-db-backup
 	helm install home-assistant-backup ./charts/home-assistant-backup
+	helm install spacebot ./charts/spacebot
 	@echo "✓ Services installed"
 
 install-all: setup-repos build-deps install-infra install-monitoring deploy-all
