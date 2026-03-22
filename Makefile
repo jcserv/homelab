@@ -1,10 +1,11 @@
-.PHONY: help setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix
+.PHONY: help setup-hooks setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix
 
 # Default target
 help:
 	@echo "Homelab K8s Makefile"
 	@echo ""
 	@echo "Setup Commands:"
+	@echo "  make setup-hooks        Install git pre-commit hook (auto-bumps chart versions)"
 	@echo "  make setup-repos        Add all required Helm repositories"
 	@echo "  make build-deps         Build chart dependencies from Chart.lock"
 	@echo "  make update-deps        Update dependencies and regenerate Chart.lock files"
@@ -43,6 +44,12 @@ help:
 	@echo "  kubectl create secret generic test --from-literal=key=val --dry-run=client -o yaml | make seal-secret CHART=immich SECRET=test"
 
 # Setup Commands
+setup-hooks:
+	@echo "Installing git pre-commit hook..."
+	@cp scripts/pre-commit-chart-version.sh .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "✓ Pre-commit hook installed (auto-bumps chart patch versions)"
+
 setup-repos:
 	@echo "Adding Helm repositories..."
 	helm repo add metallb https://metallb.github.io/metallb
