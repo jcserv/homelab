@@ -8,7 +8,6 @@ metadata:
 data:
   config.toml: |
     [llm]
-    anthropic_key = {{ .Values.config.llm.anthropicKey | quote }}
     openrouter_key = {{ .Values.config.llm.openrouterKey | quote }}
 
     [defaults]

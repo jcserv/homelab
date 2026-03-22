@@ -46,12 +46,6 @@ spec:
               containerPort: {{ .Values.service.metricsPort }}
               protocol: TCP
           env:
-            - name: ANTHROPIC_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secrets.secretName }}
-                  key: ANTHROPIC_API_KEY
-                  optional: true
             - name: OPENROUTER_API_KEY
               valueFrom:
                 secretKeyRef:
