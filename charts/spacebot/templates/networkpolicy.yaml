@@ -77,22 +77,16 @@ spec:
     {{- end }}
 
     {{- range .Values.networkPolicy.egress.allowClusterServices }}
-    # Allow access to {{ .name }}
+    # Allow access to {{ .name }} in {{ .namespace }} namespace
     - ports:
         - protocol: TCP
           port: {{ .port }}
       to:
-        {{- if .hostIP }}
-        # hostNetwork service — route to node IP directly
-        - ipBlock:
-            cidr: {{ .hostIP }}/32
-        {{- else }}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .namespace }}
           podSelector:
             matchLabels:
-              {{ .labelKey | default "app.kubernetes.io/name" }}: {{ .labelValue | default .name }}
-        {{- end }}
+              app.kubernetes.io/name: {{ .name }}
     {{- end }}
 {{- end }}
