@@ -2,7 +2,7 @@ apiVersion: v2
 name: nginx-ingress
 description: NGINX Ingress Controller for homelab Kubernetes cluster
 type: application
-version: 1.0.7
+version: 1.0.6
 appVersion: "1.11.3"
 maintainers:
   - name: homelab

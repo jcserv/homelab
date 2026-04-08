@@ -44,7 +44,6 @@ service:
     externalTrafficPolicy: Local
     loadBalancerSourceRanges:  # Restrict access at LoadBalancer level
       - 10.2.1.0/24  # Trusted VLAN
-      - 10.2.11.0/24  # IoT VLAN (needs DNS resolution)
       - 100.64.0.0/10  # Tailscale network
       - 10.42.0.0/16  # Pod network
     annotations:
@@ -65,8 +64,6 @@ ingress:
   tlsSecretName: wildcard-jarrodservilla-tls
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # Restrict admin UI to trusted VLAN + Tailscale (excludes IoT)
-    nginx.ingress.kubernetes.io/whitelist-source-range: "10.2.1.0/24,100.64.0.0/10"
 # Environment variables
 env:
   TZ: America/New_York

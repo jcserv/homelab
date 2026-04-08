@@ -79,8 +79,6 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    # Allow IoT VLAN in addition to trusted networks (tablets, etc.)
-    nginx.ingress.kubernetes.io/whitelist-source-range: "10.2.1.0/24,10.2.11.0/24,100.64.0.0/10"
 # Environment variables
 env:
   TZ: America/New_York

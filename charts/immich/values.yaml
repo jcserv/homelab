@@ -119,8 +119,6 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
-    # Restrict to trusted VLAN + Tailscale (excludes IoT)
-    nginx.ingress.kubernetes.io/whitelist-source-range: "10.2.1.0/24,100.64.0.0/10"
   hosts:
     - host: img.jarrodservilla.com
       paths:

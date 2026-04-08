@@ -3,7 +3,7 @@ apiVersion: v2
 name: recipe-rip
 description: Recipe management app (wrapper chart)
 type: application
-version: 0.2.25
+version: 0.2.24
 appVersion: "0.1.0"
 maintainers:
   - name: homelab

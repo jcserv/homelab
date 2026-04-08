@@ -139,8 +139,6 @@ kube-prometheus-stack:
       annotations:
         cert-manager.io/cluster-issuer: cloudflare-issuer
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
-        # Restrict to trusted VLAN + Tailscale (excludes IoT)
-        nginx.ingress.kubernetes.io/whitelist-source-range: "10.2.1.0/24,100.64.0.0/10"
       hosts:
         - grafana.jarrodservilla.com
       tls:
