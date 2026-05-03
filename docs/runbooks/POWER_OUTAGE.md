@@ -73,9 +73,9 @@ ssh pi5-01 'sudo shutdown -h now'
 5. Scale stateful workloads back up:
 
 ```bash
-kubectl scale sts immich-postgresql --replicas=1 -n default
-kubectl scale sts authentik-postgresql --replicas=1 -n default
-kubectl scale deploy immich-server immich-machine-learning --replicas=1 -n default
+kubectl scale deploy immich-server immich-ml --replicas=1 -n default
+kubectl scale deploy immich-postgres --replicas=1 -n default
+kubectl scale deploy authentik-postgres --replicas=1 -n default
 kubectl scale deploy home-assistant --replicas=1 -n default
 ```
 

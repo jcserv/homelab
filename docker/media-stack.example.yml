@@ -12,7 +12,7 @@ services:
       - VPN_TYPE=wireguard
       - WIREGUARD_PRIVATE_KEY=xyz
       - SERVER_COUNTRIES=abc
-      - FIREWALL_OUTBOUND_SUBNETS=10.0.0.0/24
+      - FIREWALL_OUTBOUND_SUBNETS=10.2.1.0/24,10.42.0.0/16
     ports:
       - 8888:8888 # qBittorrent WebUI
       - 6888:6888 # qBittorrent torrent port
@@ -32,7 +32,7 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    network_mode: "container:gluetun"
+    network_mode: "service:gluetun"
     environment:
       - PUID=0
       - PGID=0
@@ -150,7 +150,6 @@ services:
     ports:
       - 5055:5055
     depends_on:
-      - gluetun
       - radarr
       - sonarr
       - jellyfin
@@ -169,6 +168,4 @@ services:
       - /volume1/Media/Books:/books
     ports:
       - 8083:8083
-    depends_on:
-      - gluetun
     restart: unless-stopped

@@ -80,6 +80,8 @@ spec:
               value: {{ .Values.authentik.email.from }}
             {{- end }}
           volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
             - name: media
               mountPath: /media
             - name: templates
@@ -111,6 +113,10 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 60
       volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
         - name: media
           persistentVolumeClaim:
             claimName: authentik-media
