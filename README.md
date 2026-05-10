@@ -31,6 +31,24 @@ Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.e
 
 Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://sonoff.tech/products/sonoff-zigbee-3-0-usb-dongle-plus-zbdongle-p)
 
+Router: [Nokia Beacon 19](https://www.nokia.com/broadband-access/in-home-connectivity/home-wi-fi/wi-fi-beacon-19/)
+
+Settings:
+- LAN
+  - DHCP IPv4
+    - Address: 10.2.1.1
+    - Subnet mask: 255.255.255.0
+    - Start: 10.2.1.2
+    - End: 10.2.1.254
+    - Primary DNS: 10.2.1.202
+    - Secondary DNS: 1.1.1.1
+  - Static MAC IP bindings
+    - pi4-01 / 10.2.1.54
+    - pi4-02 / 10.2.1.160
+    - pi5-01 / 10.2.1.28
+    - pi5-02 / 10.2.1.156
+    - nas / 10.2.1.147
+
 ## architecture 🗺️
 
 <img src="docs/homelab.svg" width="100%" style="max-width: 800px;" />
