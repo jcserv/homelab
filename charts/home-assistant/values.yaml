@@ -3,7 +3,7 @@ namespace: default
 replicaCount: 1
 image:
   repository: ghcr.io/home-assistant/home-assistant
-  tag: 2026.4.4
+  tag: 2026.5.1
   pullPolicy: IfNotPresent
 # Node affinity - force to run on pi4-02 with Zigbee adapter
 nodeSelector:
