@@ -1,5 +1,10 @@
 .PHONY: help setup-hooks setup-repos build-deps update-deps install-infra install-monitoring deploy-all install-all status logs backup backup-immich-db backup-homeassistant drain uncordon seal-secret upgrade-service lint fix
 
+# Global helm flags applied to every install/upgrade.
+# values/network.yaml is the single source of truth for IP/network config —
+# see docs/runbooks/ISP_MIGRATION.md.
+HELM_GLOBAL_FLAGS := $(if $(wildcard values/network.yaml),-f values/network.yaml)
+
 # Default target
 help:
 	@echo "Homelab K8s Makefile"
@@ -84,21 +89,21 @@ update-deps:
 
 install-infra:
 	@echo "Installing infrastructure components..."
-	helm install metallb ./charts/metallb -n metallb-system --create-namespace
-	helm install cert-manager ./charts/cert-manager -n cert-manager --create-namespace
-	helm install sealed-secrets ./charts/sealed-secrets -n kube-system
-	helm install nginx-ingress ./charts/nginx-ingress -n default
+	helm install metallb ./charts/metallb -n metallb-system --create-namespace $(HELM_GLOBAL_FLAGS)
+	helm install cert-manager ./charts/cert-manager -n cert-manager --create-namespace $(HELM_GLOBAL_FLAGS)
+	helm install sealed-secrets ./charts/sealed-secrets -n kube-system $(HELM_GLOBAL_FLAGS)
+	helm install nginx-ingress ./charts/nginx-ingress -n default $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Infrastructure installed"
 
 install-monitoring:
 	@echo "Installing monitoring stack..."
-	helm install kube-prometheus-stack ./charts/kube-prometheus-stack -n monitoring --create-namespace
+	helm install kube-prometheus-stack ./charts/kube-prometheus-stack -n monitoring --create-namespace $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Prometheus Operator to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus-operator -n monitoring --timeout=120s
-	helm install loki ./charts/loki -n monitoring
+	helm install loki ./charts/loki -n monitoring $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Loki to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=loki -n monitoring --timeout=120s
-	helm install alloy ./charts/alloy -n monitoring
+	helm install alloy ./charts/alloy -n monitoring $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Monitoring stack installed"
 	@echo ""
 	@echo "Access Grafana at: https://grafana.home"
@@ -107,25 +112,25 @@ install-monitoring:
 
 deploy-all:
 	@echo "Installing application services..."
-	helm install valkey ./charts/valkey
+	helm install valkey ./charts/valkey $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Valkey to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=valkey --timeout=120s
-	helm install unbound ./charts/unbound
+	helm install unbound ./charts/unbound $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Unbound to be ready..."
 	@kubectl wait --for=condition=ready pod -l app=unbound --timeout=120s
-	helm install pihole ./charts/pihole
-	helm install immich ./charts/immich
-	helm install authentik ./charts/authentik
-	helm install home-assistant ./charts/home-assistant
-	helm install restic-backup ./charts/restic-backup
-	helm install immich-db-backup ./charts/immich-db-backup
-	helm install home-assistant-backup ./charts/home-assistant-backup
+	helm install pihole ./charts/pihole $(HELM_GLOBAL_FLAGS)
+	helm install immich ./charts/immich $(HELM_GLOBAL_FLAGS)
+	helm install authentik ./charts/authentik $(HELM_GLOBAL_FLAGS)
+	helm install home-assistant ./charts/home-assistant $(HELM_GLOBAL_FLAGS)
+	helm install restic-backup ./charts/restic-backup $(HELM_GLOBAL_FLAGS)
+	helm install immich-db-backup ./charts/immich-db-backup $(HELM_GLOBAL_FLAGS)
+	helm install home-assistant-backup ./charts/home-assistant-backup $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Services installed"
 
 install-all: setup-repos build-deps install-infra install-monitoring deploy-all
 	@echo ""
 	@echo "✓ Complete installation finished!"
-	@echo "  Configure your router DNS to 10.2.1.202 for .home domain resolution"
+	@echo "  Configure your router DNS to the pihole loadBalancerIP (see values/network.yaml)"
 	@echo "  Access Grafana at: https://grafana.home (admin/admin)"
 
 # Management Commands
@@ -165,6 +170,7 @@ ifndef NAMESPACE
 endif
 	@echo "Upgrading $(SERVICE) in namespace $(NAMESPACE)..."
 	helm upgrade $(SERVICE) ./charts/$(SERVICE) -n $(NAMESPACE) \
+		$(HELM_GLOBAL_FLAGS) \
 		$(if $(wildcard ./charts/$(SERVICE)/values.local.yaml),-f ./charts/$(SERVICE)/values.local.yaml)
 	@echo "✓ $(SERVICE) upgraded in namespace $(NAMESPACE)"
 

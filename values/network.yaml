@@ -1,0 +1,111 @@
+---
+# values/network.yaml — Single source of truth for IP/network configuration.
+#
+# Loaded via `helm -f values/network.yaml` for every chart deployment in CI
+# (.github/workflows/ci.yml) and Makefile (HELM_GLOBAL_FLAGS).
+#
+# To renumber the LAN subnet (e.g. ISP migration):
+#   1. Edit this file in a feature branch.
+#   2. Push — CI redeploys every changed chart with the new values.
+# See docs/runbooks/ISP_MIGRATION.md.
+#
+# Override stack:
+#   chart/values.yaml  → values/network.yaml  → chart/values.local.yaml
+#   (defaults)            (canonical IPs)        (machine-local secrets)
+#
+# Helm tolerates extra unused top-level keys, so this file can carry every
+# chart's IP-bearing values without per-chart filtering. Wrapped charts get
+# their values nested under their wrapper key.
+#
+# NOT centralized here (manual edit required on renumber):
+#   - charts/prometheus-blackbox-exporter/values.yaml: targets[].url with
+#     10.2.1.202:53 (overriding requires replicating the full 17-entry list)
+#   - docs/runbooks/POWER_OUTAGE.md: hardcoded node IPs and DNS examples
+
+# === Shared CIDRs ===
+# Consumed by network-policies and refactored networkpolicy templates in
+# pihole + nginx-ingress.
+trustedVLAN: "10.2.1.0/24"
+tailscaleNetwork: "100.64.0.0/10"
+podNetwork: "10.42.0.0/16"
+serviceNetwork: "10.43.0.0/16"
+nodeNetwork: "10.2.1.160/29"
+
+# === pihole ===
+service:
+  dns:
+    loadBalancerIP: "10.2.1.202"
+    loadBalancerSourceRanges:
+      - "10.2.1.0/24"      # Trusted VLAN
+      - "100.64.0.0/10"    # Tailscale network
+      - "10.42.0.0/16"     # Pod network
+env:
+  FTLCONF_LOCAL_IPV4: "10.2.1.202"
+# Full mirror of charts/pihole/values.yaml customDnsEntries.
+# When adding a new service subdomain, add the entry HERE (canonical),
+# not in the chart's values.yaml.
+customDnsEntries:
+  - "10.2.1.200 nginx.jarrodservilla.com"
+  - "10.2.1.200 img.jarrodservilla.com"
+  - "10.2.1.200 homeassistant.jarrodservilla.com"
+  - "10.2.1.200 pi.jarrodservilla.com"
+  - "10.2.1.200 grafana.jarrodservilla.com"
+  - "10.2.1.200 auth.jarrodservilla.com"
+  - "10.2.1.200 recipe.jarrodservilla.com"
+  - "10.2.1.200 ai.jarrodservilla.com"
+  # NAS services
+  - "10.2.1.200 qbittorrent.jarrodservilla.com"
+  - "10.2.1.200 radarr.jarrodservilla.com"
+  - "10.2.1.200 sonarr.jarrodservilla.com"
+  - "10.2.1.200 bazarr.jarrodservilla.com"
+  - "10.2.1.200 prowlarr.jarrodservilla.com"
+  - "10.2.1.200 jellyseerr.jarrodservilla.com"
+  - "10.2.1.200 jellyfin.jarrodservilla.com"
+  - "10.2.1.200 calibre.jarrodservilla.com"
+
+# === nginx-ingress (wrapped) ===
+ingress-nginx:
+  controller:
+    service:
+      loadBalancerIP: "10.2.1.200"
+      externalIPs:
+        - "10.2.1.200"
+      loadBalancerSourceRanges:
+        - "10.2.1.0/24"    # Trusted VLAN
+        - "100.64.0.0/10"  # Tailscale network
+
+# === metallb ===
+ipAddressPool:
+  addresses:
+    - "10.2.1.200-10.2.1.210"
+
+# === network-policies ===
+# These keys are also consumed at the top level by the network-policies chart,
+# pihole NetworkPolicy template, and nginx-ingress NetworkPolicy template.
+# Defined once at the top of this file under "Shared CIDRs".
+
+# === nas-services / restic-backup / immich (NAS NFS endpoint) ===
+# Consumed by:
+#   - charts/nas-services/values.yaml:   nasIP
+#   - charts/restic-backup/values.yaml:  storage.{files,library}.nfs.server
+#   - charts/immich/values.yaml:         storage.library.nfs.server
+nasIP: "10.2.1.147"
+storage:
+  files:
+    nfs:
+      server: "10.2.1.147"
+  library:
+    nfs:
+      server: "10.2.1.147"
+
+# === home-assistant trusted proxies ===
+# Full list mirror — Helm replaces lists, doesn't merge.
+config:
+  http:
+    use_x_forwarded_for: true
+    trusted_proxies:
+      - "10.42.0.0/16"     # Pod network (nginx ingress pods run here)
+      - "10.43.0.0/16"     # Service network
+      - "10.2.1.0/24"      # Local network (for direct access)
+      - "127.0.0.1"        # Localhost
+      - "::1"              # IPv6 localhost

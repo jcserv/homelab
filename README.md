@@ -109,6 +109,11 @@ make deploy-all          # Deploy all application services
 make install-all  # Runs all setup commands sequentially
 ```
 
+## runbooks 📓
+
+- [POWER_OUTAGE](docs/runbooks/POWER_OUTAGE.md) — graceful shutdown + power-up sequence
+- [ISP_MIGRATION](docs/runbooks/ISP_MIGRATION.md) — pre-flight, decision tree, cutover, and external IP audit for switching ISPs / routers
+
 ## troubleshooting 🕵️
 
 - **Pods pending:** Check PVC status (`kubectl get pvc`), node labels, and resources

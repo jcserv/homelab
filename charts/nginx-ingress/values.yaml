@@ -2,6 +2,12 @@
 
 namespace: ingress-nginx
 
+# Network CIDRs (consumed by templates/networkpolicy.yaml).
+# Defaults match production; override via values/network.yaml at deploy time.
+trustedVLAN: "10.2.1.0/24"
+tailscaleNetwork: "100.64.0.0/10"
+podNetwork: "10.42.0.0/16"
+
 # Pass-through values to the official ingress-nginx chart
 ingress-nginx:
   controller:

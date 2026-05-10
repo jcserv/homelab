@@ -200,6 +200,10 @@ jobs:
 
             # Deploy the chart
             echo "  🚢 Deploying to namespace: $namespace"
+            GLOBAL_VALUES=""
+            if [ -f "values/network.yaml" ]; then
+              GLOBAL_VALUES="-f values/network.yaml"
+            fi
             LOCAL_VALUES=""
             if [ -f "$chart/values.local.yaml" ]; then
               LOCAL_VALUES="-f $chart/values.local.yaml"
@@ -208,6 +212,7 @@ jobs:
               --namespace "$namespace" \
               --create-namespace \
               --reset-values \
+              $GLOBAL_VALUES \
               $LOCAL_VALUES \
               $WAIT_FLAGS; then
               echo "  ✅ Successfully deployed $chart_name"
