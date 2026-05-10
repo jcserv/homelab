@@ -2,6 +2,8 @@
 
 In the event of a power outage, perform the following steps.
 
+For an ISP / router swap, see [ISP_MIGRATION.md](ISP_MIGRATION.md), which reuses the power-down/power-up procedure here.
+
 ## Cluster topology
 
 All 4 nodes are HA control-plane + etcd members (no dedicated agents). Etcd quorum = 3, so once the 2nd node stops, the API server becomes unavailable. **Do all `kubectl` work before stopping any node.**
@@ -16,6 +18,8 @@ All 4 nodes are HA control-plane + etcd members (no dedicated agents). Etcd quor
 ## Power-down
 
 1. In the Unifi console, change the DNS server of relevant networks from 10.2.1.202 to Auto-DNS
+
+If this is not done, wi-fi will be unavailable. Go to 10.2.1.1 to fix it.
 
 2. Run backup jobs
 
