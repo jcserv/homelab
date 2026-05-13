@@ -35,6 +35,8 @@ spec:
           protocol: TCP
         env:
         - name: AUTHENTIK_HOST
+          value: "http://authentik-server.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.server.service.port }}"
+        - name: AUTHENTIK_HOST_BROWSER
           value: "https://{{ .Values.ingress.host }}"
         - name: AUTHENTIK_TOKEN
           valueFrom:
@@ -42,7 +44,7 @@ spec:
               name: authentik-outpost-token
               key: token
         - name: AUTHENTIK_INSECURE
-          value: "false"
+          value: "true"
         resources:
           requests:
             cpu: 100m
