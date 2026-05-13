@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  firefox:
+    image: lscr.io/linuxserver/firefox:latest
+    container_name: firefox
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=America/Toronto
+    volumes:
+      - /volume1/Config/Firefox:/config
+    ports:
+      - 5000:3000
+      - 5001:3001 # go to https://<nas>:5001
+    shm_size: "2gb"
+    restart: unless-stopped
