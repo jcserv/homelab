@@ -7,7 +7,7 @@ metallb:
     enabled: true
     image:
       repository: quay.io/metallb/controller
-      tag: v0.15.3
+      tag: v0.16.0
     resources:
       limits:
         cpu: 100m
@@ -31,7 +31,7 @@ metallb:
     enabled: true
     image:
       repository: quay.io/metallb/speaker
-      tag: v0.15.3
+      tag: v0.16.0
     resources:
       limits:
         cpu: 100m
