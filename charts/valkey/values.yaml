@@ -2,7 +2,7 @@ namespace: default
 
 image:
   repository: valkey/valkey
-  tag: "9.0.4-alpine"
+  tag: "9.1.0-alpine"
   pullPolicy: IfNotPresent
 
 resources:

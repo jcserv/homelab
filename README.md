@@ -31,6 +31,11 @@ Uninterruptible Power Supply (UPS): [Tripp Lite Standby UPS](https://tripplite.e
 
 Zigbee Coordinator: [SONOFF Zigbee 3.0 USB Dongle Plus | ZBDongle-P](https://sonoff.tech/products/sonoff-zigbee-3-0-usb-dongle-plus-zbdongle-p)
 
+Network Attached Storage: [UGREEN NASync DXP4800 Plus](https://nas.ugreen.com/products/ugreen-nasync-dxp4800-plus-nas-storage)
+
+- Western Digital 8TB WD Red Plus NAS (5640 RPM, SATA 6 Gb/s, CMR, 256 MB Cache)
+- Seagate IronWolf 8TB NAS Internal Hard Drive HDD (SATA 6Gb/s, 7200 RPM, 256MB Cache)
+
 Router: [Nokia Beacon 19](https://www.nokia.com/broadband-access/in-home-connectivity/home-wi-fi/wi-fi-beacon-19/)
 
 Settings:
