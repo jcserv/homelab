@@ -3,6 +3,11 @@
 namespace: metallb-system
 
 metallb:
+  # L2 mode only — no BGP. Disable the frr-k8s backend subchart bundled in
+  # metallb 0.16.0 (also avoids its service-monitor nil-pointer lint error).
+  frrk8s:
+    enabled: false
+
   controller:
     enabled: true
     image:
