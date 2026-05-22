@@ -10,7 +10,7 @@ help:
 	@echo "Homelab K8s Makefile"
 	@echo ""
 	@echo "Setup Commands:"
-	@echo "  make setup-hooks        Install git pre-commit hook (auto-bumps chart versions)"
+	@echo "  make setup-hooks        Install git pre-commit hook (secret scan, lint, version bump)"
 	@echo "  make setup-repos        Add all required Helm repositories"
 	@echo "  make build-deps         Build chart dependencies from Chart.lock"
 	@echo "  make update-deps        Update dependencies and regenerate Chart.lock files"
@@ -51,9 +51,9 @@ help:
 # Setup Commands
 setup-hooks:
 	@echo "Installing git pre-commit hook..."
-	@cp scripts/pre-commit-chart-version.sh .git/hooks/pre-commit
+	@cp scripts/pre-commit.sh .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
-	@echo "✓ Pre-commit hook installed (auto-bumps chart patch versions)"
+	@echo "✓ Pre-commit hook installed (secret scan, yamllint, helm lint, hygiene, version bump)"
 
 setup-repos:
 	@echo "Adding Helm repositories..."
