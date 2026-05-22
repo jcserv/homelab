@@ -7,7 +7,13 @@ title = "homelab-k8s secret scan"
 useDefault = true
 
 [allowlist]
-description = "Paths safe to ignore"
+description = "Paths and content safe to ignore"
+regexes = [
+  # kubeseal SealedSecret ciphertext — encrypted, not a plaintext leak. Needed
+  # in addition to the path rule below because the pre-commit hook scans a
+  # piped diff (no file path), so path allowlists don't apply there.
+  '''Ag[A-Za-z0-9+/=]{60,}''',
+]
 paths = [
   # SealedSecret resources contain kubeseal ciphertext, not plaintext creds.
   '''charts/.*/sealed-secrets/.*-sealed\.yaml''',
