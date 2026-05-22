@@ -81,6 +81,23 @@ env:
   DNS1: 1.1.1.1  # Cloudflare DNS
   DNS2: 2606:4700:4700::1111  # Cloudflare DNS IPv6
   DNSMASQ_LISTENING: all
+
+# Infisical Secrets Operator integration (POC — disabled by default).
+# When enabled, the operator syncs WEBPASSWORD from the self-hosted Infisical
+# platform into the `pihole-secrets` Secret, replacing the SealedSecret.
+# Requires charts/infisical-secrets-operator + a configured machine identity.
+# See docs/runbooks/INFISICAL_OPERATOR.md before flipping this on.
+infisical:
+  enabled: false
+  hostAPI: https://infisical.jarrodservilla.com/api
+  resyncInterval: 60s
+  instantUpdates: false
+  projectSlug: ""  # from Infisical project settings (Project > Settings)
+  envSlug: prod
+  secretsPath: /pihole  # store WEBPASSWORD here in Infisical
+  credentialsRef:
+    secretName: infisical-machine-identity
+    secretNamespace: infisical-secrets-operator
 # Custom DNS entries
 customDnsEntries:
   - 10.2.1.200 nginx.jarrodservilla.com

@@ -76,6 +76,7 @@ build-deps:
 	helm dependency build ./charts/loki
 	helm dependency build ./charts/alloy
 	helm dependency build ./charts/infisical
+	helm dependency build ./charts/infisical-secrets-operator
 	@echo "✓ Dependencies built"
 
 update-deps:
@@ -88,6 +89,7 @@ update-deps:
 	helm dependency update ./charts/loki
 	helm dependency update ./charts/alloy
 	helm dependency update ./charts/infisical
+	helm dependency update ./charts/infisical-secrets-operator
 	@echo "✓ Dependencies updated and Chart.lock files regenerated"
 
 install-infra:
@@ -96,6 +98,7 @@ install-infra:
 	helm install cert-manager ./charts/cert-manager -n cert-manager --create-namespace $(HELM_GLOBAL_FLAGS)
 	helm install sealed-secrets ./charts/sealed-secrets -n kube-system $(HELM_GLOBAL_FLAGS)
 	helm install nginx-ingress ./charts/nginx-ingress -n default $(HELM_GLOBAL_FLAGS)
+	helm install infisical-secrets-operator ./charts/infisical-secrets-operator -n infisical-secrets-operator --create-namespace $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Infrastructure installed"
 
 install-monitoring:

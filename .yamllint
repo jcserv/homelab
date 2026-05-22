@@ -1,0 +1,20 @@
+---
+# Shared yamllint config for `make lint` and the pre-commit hook.
+extends: default
+
+rules:
+  # Homelab values files have long descriptions/URLs; warn, don't fail.
+  line-length:
+    max: 160
+    level: warning
+  # `---` document-start is optional in this repo.
+  document-start: disable
+  # Helm/k8s use bare on/off/yes; don't treat as booleans.
+  truthy:
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+
+ignore: |
+  charts/*/templates/
+  charts/*/charts/

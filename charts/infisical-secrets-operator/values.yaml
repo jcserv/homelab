@@ -1,0 +1,40 @@
+---
+# Deployed to its own namespace (created via `helm install --create-namespace`).
+namespace: infisical-secrets-operator
+
+# Values passed through to the wrapped upstream chart (key = subchart name).
+secrets-operator:
+  # Default Infisical host for every InfisicalSecret CR that omits its own
+  # hostAPI. Points at our self-hosted platform (charts/infisical).
+  hostAPI: https://infisical.jarrodservilla.com/api
+
+  # Watch all namespaces (cluster-scoped). Apps' InfisicalSecret CRs live in
+  # their own namespaces (e.g. pihole in `default`), so a scoped operator
+  # would miss them.
+  scopedNamespaces: []
+
+  controllerManager:
+    replicas: 1
+    manager:
+      image:
+        repository: infisical/kubernetes-operator
+        tag: v0.10.33
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          cpu: 500m
+          memory: 128Mi
+    # Prefer the Pi5 nodes (more memory) over the Pi4s.
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - pi5-01
+                    - pi5-02

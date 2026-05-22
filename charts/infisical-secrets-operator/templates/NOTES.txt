@@ -1,0 +1,12 @@
+Infisical Secrets Operator installed (namespace: {{ .Release.Namespace }}).
+
+Next steps:
+  1. Create a machine identity in Infisical and seal its credentials:
+       charts/infisical-secrets-operator/sealed-secrets/infisical-machine-identity.template
+  2. Add an InfisicalSecret CR to a consuming chart (see charts/pihole).
+
+Full runbook: docs/runbooks/INFISICAL_OPERATOR.md
+
+Check the controller:
+  kubectl -n {{ .Release.Namespace }} get pods
+  kubectl get crd | grep infisical
