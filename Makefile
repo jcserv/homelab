@@ -62,6 +62,7 @@ setup-repos:
 	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add grafana https://grafana.github.io/helm-charts
+	helm repo add infisical-helm-charts https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
 	helm repo update
 	@echo "✓ Repositories added and updated"
 
@@ -74,6 +75,7 @@ build-deps:
 	helm dependency build ./charts/kube-prometheus-stack
 	helm dependency build ./charts/loki
 	helm dependency build ./charts/alloy
+	helm dependency build ./charts/infisical
 	@echo "✓ Dependencies built"
 
 update-deps:
@@ -85,6 +87,7 @@ update-deps:
 	helm dependency update ./charts/kube-prometheus-stack
 	helm dependency update ./charts/loki
 	helm dependency update ./charts/alloy
+	helm dependency update ./charts/infisical
 	@echo "✓ Dependencies updated and Chart.lock files regenerated"
 
 install-infra:
@@ -121,6 +124,7 @@ deploy-all:
 	helm install pihole ./charts/pihole $(HELM_GLOBAL_FLAGS)
 	helm install immich ./charts/immich $(HELM_GLOBAL_FLAGS)
 	helm install authentik ./charts/authentik $(HELM_GLOBAL_FLAGS)
+	helm install infisical ./charts/infisical $(HELM_GLOBAL_FLAGS)
 	helm install home-assistant ./charts/home-assistant $(HELM_GLOBAL_FLAGS)
 	helm install restic-backup ./charts/restic-backup $(HELM_GLOBAL_FLAGS)
 	helm install immich-db-backup ./charts/immich-db-backup $(HELM_GLOBAL_FLAGS)

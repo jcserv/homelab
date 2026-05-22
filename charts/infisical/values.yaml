@@ -1,0 +1,62 @@
+namespace: default
+
+# Our dedicated Postgres (authentik-style) — keeps the DB password sealed in git
+# instead of relying on the upstream chart's plaintext postgresql.auth.password.
+postgres:
+  image:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+  storageClass: local-path
+  size: 8Gi
+  secretName: infisical-secrets
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # Prefer the storage node
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - pi5-01
+
+# Values passed through to the wrapped upstream chart (key = subchart name)
+infisical-standalone:
+  infisical:
+    replicaCount: 1
+    image:
+      repository: infisical/infisical
+      tag: "v0.158.0"
+    kubeSecretRef: infisical-secrets
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        memory: 1000Mi
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  ingress:
+    enabled: true
+    hostName: infisical.jarrodservilla.com
+    ingressClassName: nginx
+    nginx:
+      enabled: false
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    tls:
+      - secretName: wildcard-jarrodservilla-tls
+        hosts:
+          - infisical.jarrodservilla.com

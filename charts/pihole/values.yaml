@@ -91,6 +91,7 @@ customDnsEntries:
   - 10.2.1.200 auth.jarrodservilla.com
   - 10.2.1.200 recipe.jarrodservilla.com
   - 10.2.1.200 ai.jarrodservilla.com
+  - 10.2.1.200 infisical.jarrodservilla.com
   # NAS services
   - 10.2.1.200 qbittorrent.jarrodservilla.com
   - 10.2.1.200 radarr.jarrodservilla.com
