@@ -1,0 +1,12 @@
+apiVersion: v2
+name: infisical
+description: Self-hosted secret management platform (wraps official infisical-standalone chart)
+type: application
+version: 1.0.0
+appVersion: "v0.158.0"
+maintainers:
+  - name: homelab
+dependencies:
+  - name: infisical-standalone
+    version: 1.8.0
+    repository: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
