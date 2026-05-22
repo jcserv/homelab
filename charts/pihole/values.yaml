@@ -88,13 +88,15 @@ env:
 # Requires charts/infisical-secrets-operator + a configured machine identity.
 # See docs/runbooks/INFISICAL_OPERATOR.md before flipping this on.
 infisical:
-  enabled: false
-  hostAPI: https://infisical.jarrodservilla.com/api
+  enabled: true
+  # In-cluster Service URL — the public hostname only resolves via pihole's
+  # local DNS, which CoreDNS can't reach. Keeps traffic in-cluster.
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
   resyncInterval: 60s
   instantUpdates: false
-  projectSlug: ""  # from Infisical project settings (Project > Settings)
+  projectSlug: homelab-nkcl  # from Infisical project settings (Project > Settings)
   envSlug: prod
-  secretsPath: /pihole  # store WEBPASSWORD here in Infisical
+  secretsPath: /  # WEBPASSWORD lives at the root of the prod env
   credentialsRef:
     secretName: infisical-machine-identity
     secretNamespace: infisical-secrets-operator

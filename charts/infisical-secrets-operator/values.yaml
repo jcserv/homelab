@@ -5,8 +5,10 @@ namespace: infisical-secrets-operator
 # Values passed through to the wrapped upstream chart (key = subchart name).
 secrets-operator:
   # Default Infisical host for every InfisicalSecret CR that omits its own
-  # hostAPI. Points at our self-hosted platform (charts/infisical).
-  hostAPI: https://infisical.jarrodservilla.com/api
+  # hostAPI. Uses the in-cluster Service (charts/infisical) rather than the
+  # public ingress — that hostname only resolves via pihole's local DNS, which
+  # CoreDNS can't reach.
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
 
   # Watch all namespaces (cluster-scoped). Apps' InfisicalSecret CRs live in
   # their own namespaces (e.g. pihole in `default`), so a scoped operator
