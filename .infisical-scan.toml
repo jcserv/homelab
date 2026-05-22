@@ -1,0 +1,25 @@
+# Infisical secret-scanning config (gitleaks-compatible).
+# Extends the default ruleset, then allowlists paths that hold
+# intentionally-committed, non-sensitive data.
+title = "homelab-k8s secret scan"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Paths and content safe to ignore"
+regexes = [
+  # kubeseal SealedSecret ciphertext — encrypted, not a plaintext leak. Needed
+  # in addition to the path rule below because the pre-commit hook scans a
+  # piped diff (no file path), so path allowlists don't apply there.
+  '''Ag[A-Za-z0-9+/=]{60,}''',
+]
+paths = [
+  # SealedSecret resources contain kubeseal ciphertext, not plaintext creds.
+  '''charts/.*/sealed-secrets/.*-sealed\.yaml''',
+  # Secret templates hold REPLACE_WITH_* placeholders, not real values.
+  '''.*\.template$''',
+  # Lockfiles / vendored deps.
+  '''.*Chart\.lock$''',
+  '''scripts/uv\.lock$''',
+]

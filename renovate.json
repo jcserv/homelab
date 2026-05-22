@@ -5,8 +5,8 @@
   ],
   "packageRules": [
     {
-      "description": "Ignore PostgreSQL updates in authentik chart - requires manual migration",
-      "matchFileNames": ["charts/authentik/values.yaml"],
+      "description": "Ignore PostgreSQL updates in authentik/infisical charts - requires manual migration (pg_upgrade)",
+      "matchFileNames": ["charts/authentik/values.yaml", "charts/infisical/values.yaml"],
       "matchPackageNames": ["postgres"],
       "enabled": false
     },

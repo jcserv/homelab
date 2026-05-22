@@ -5,7 +5,9 @@ namespace: default
 postgres:
   image:
     repository: postgres
-    tag: "18"
+    # Pinned to 15 — matches existing on-disk data format. Major bumps need
+    # pg_upgrade (see authentik), so disabled in renovate.json.
+    tag: "15"
     pullPolicy: IfNotPresent
   storageClass: local-path
   size: 8Gi
