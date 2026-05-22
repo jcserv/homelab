@@ -35,6 +35,8 @@ kubeconfig
 *.bak
 *.backup
 
+scripts/.venv
+
 # Terraform (if used later)
 .terraform/
 *.tfstate

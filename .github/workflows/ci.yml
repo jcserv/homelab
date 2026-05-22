@@ -11,6 +11,23 @@ permissions:
   pull-requests: read
 
 jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+          sudo apt-get update && sudo apt-get install -y infisical
+
+      - name: Scan for committed secrets
+        run: infisical scan --config .infisical-scan.toml --verbose --redact
+
   lint:
     runs-on: ubuntu-latest
     permissions:
@@ -63,7 +80,7 @@ jobs:
         uses: helm/kind-action@v1.14.0
 
   deploy:
-    needs: [lint]
+    needs: [scan, lint]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
