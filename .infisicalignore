@@ -1,0 +1,12 @@
+# Acknowledged scan findings — all triaged as non-sensitive or dead.
+# Format: <commit>:<path>:<rule>:<line>
+#
+# beszel/power-monitor charts are deleted from the tree; findings are
+# false positives (an SSH *public* key and a commented-out placeholder
+# in a .example file). media-stack.yml was only ever on the local,
+# unpushed `openclaw` branch and is now gitignored.
+c6ff6e9afa20fdbe6caf93bc2a272017620c4ca2:docker/media-stack.yml:generic-api-key:13
+8851fa7d3baa068141a6ead924bc687dcb5f50dd:charts/power-monitor/values.example.yaml:private-key:69
+74ec70b5d7fb107ab39bcba326b6bce846af13a2:charts/power-monitor/values.example.yaml:private-key:69
+eb4dc55b7e8d1fcc0cad79b837d1384a650631dd:charts/beszel/values.yaml:generic-api-key:86
+4f04b2e7587edba63eefb01c5b4e55a752ccaedc:charts/beszel/values.yaml:generic-api-key:86

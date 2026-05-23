@@ -1,0 +1,29 @@
+# Template for the Infisical machine-identity (Universal Auth) credentials.
+#
+# This is the single bootstrap secret the operator uses to authenticate to the
+# self-hosted Infisical platform. Every InfisicalSecret CR references it via
+# credentialsRef. Keep THIS file (placeholders) in git; commit the sealed
+# output as infisical-machine-identity-sealed.yaml. Never commit real values.
+#
+# Steps:
+#   1. Infisical UI -> Access Control -> Machine Identities -> create one with
+#      Universal Auth. Grant it read access to the project/env/path your
+#      InfisicalSecret CRs reference. Copy the Client ID + Client Secret.
+#   2. Seal it into the operator namespace:
+#        kubectl create secret generic infisical-machine-identity \
+#          --namespace infisical-secrets-operator \
+#          --from-literal=clientId=<CLIENT_ID> \
+#          --from-literal=clientSecret=<CLIENT_SECRET> \
+#          --dry-run=client -o yaml | \
+#          make seal-secret CHART=infisical-secrets-operator SECRET=infisical-machine-identity
+#   3. Commit charts/infisical-secrets-operator/sealed-secrets/infisical-machine-identity-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: infisical-machine-identity
+  namespace: infisical-secrets-operator
+type: Opaque
+stringData:
+  clientId: REPLACE_WITH_CLIENT_ID
+  clientSecret: REPLACE_WITH_CLIENT_SECRET

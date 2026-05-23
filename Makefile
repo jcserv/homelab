@@ -10,7 +10,7 @@ help:
 	@echo "Homelab K8s Makefile"
 	@echo ""
 	@echo "Setup Commands:"
-	@echo "  make setup-hooks        Install git pre-commit hook (auto-bumps chart versions)"
+	@echo "  make setup-hooks        Install git pre-commit hook (secret scan, lint, version bump)"
 	@echo "  make setup-repos        Add all required Helm repositories"
 	@echo "  make build-deps         Build chart dependencies from Chart.lock"
 	@echo "  make update-deps        Update dependencies and regenerate Chart.lock files"
@@ -51,9 +51,9 @@ help:
 # Setup Commands
 setup-hooks:
 	@echo "Installing git pre-commit hook..."
-	@cp scripts/pre-commit-chart-version.sh .git/hooks/pre-commit
+	@cp scripts/pre-commit.sh .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
-	@echo "✓ Pre-commit hook installed (auto-bumps chart patch versions)"
+	@echo "✓ Pre-commit hook installed (secret scan, yamllint, helm lint, hygiene, version bump)"
 
 setup-repos:
 	@echo "Adding Helm repositories..."
@@ -76,6 +76,7 @@ build-deps:
 	helm dependency build ./charts/loki
 	helm dependency build ./charts/alloy
 	helm dependency build ./charts/infisical
+	helm dependency build ./charts/infisical-secrets-operator
 	@echo "✓ Dependencies built"
 
 update-deps:
@@ -88,25 +89,27 @@ update-deps:
 	helm dependency update ./charts/loki
 	helm dependency update ./charts/alloy
 	helm dependency update ./charts/infisical
+	helm dependency update ./charts/infisical-secrets-operator
 	@echo "✓ Dependencies updated and Chart.lock files regenerated"
 
 install-infra:
 	@echo "Installing infrastructure components..."
-	helm install metallb ./charts/metallb -n metallb-system --create-namespace $(HELM_GLOBAL_FLAGS)
-	helm install cert-manager ./charts/cert-manager -n cert-manager --create-namespace $(HELM_GLOBAL_FLAGS)
-	helm install sealed-secrets ./charts/sealed-secrets -n kube-system $(HELM_GLOBAL_FLAGS)
-	helm install nginx-ingress ./charts/nginx-ingress -n default $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install metallb ./charts/metallb -n metallb-system --create-namespace $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install cert-manager ./charts/cert-manager -n cert-manager --create-namespace $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install sealed-secrets ./charts/sealed-secrets -n kube-system $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install nginx-ingress ./charts/nginx-ingress -n default $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install infisical-secrets-operator ./charts/infisical-secrets-operator -n infisical-secrets-operator --create-namespace $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Infrastructure installed"
 
 install-monitoring:
 	@echo "Installing monitoring stack..."
-	helm install kube-prometheus-stack ./charts/kube-prometheus-stack -n monitoring --create-namespace $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install kube-prometheus-stack ./charts/kube-prometheus-stack -n monitoring --create-namespace $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Prometheus Operator to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus-operator -n monitoring --timeout=120s
-	helm install loki ./charts/loki -n monitoring $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install loki ./charts/loki -n monitoring $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Loki to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=loki -n monitoring --timeout=120s
-	helm install alloy ./charts/alloy -n monitoring $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install alloy ./charts/alloy -n monitoring $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Monitoring stack installed"
 	@echo ""
 	@echo "Access Grafana at: https://grafana.home"
@@ -115,20 +118,20 @@ install-monitoring:
 
 deploy-all:
 	@echo "Installing application services..."
-	helm install valkey ./charts/valkey $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install valkey ./charts/valkey $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Valkey to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=valkey --timeout=120s
-	helm install unbound ./charts/unbound $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install unbound ./charts/unbound $(HELM_GLOBAL_FLAGS)
 	@echo "Waiting for Unbound to be ready..."
 	@kubectl wait --for=condition=ready pod -l app=unbound --timeout=120s
-	helm install pihole ./charts/pihole $(HELM_GLOBAL_FLAGS)
-	helm install immich ./charts/immich $(HELM_GLOBAL_FLAGS)
-	helm install authentik ./charts/authentik $(HELM_GLOBAL_FLAGS)
-	helm install infisical ./charts/infisical $(HELM_GLOBAL_FLAGS)
-	helm install home-assistant ./charts/home-assistant $(HELM_GLOBAL_FLAGS)
-	helm install restic-backup ./charts/restic-backup $(HELM_GLOBAL_FLAGS)
-	helm install immich-db-backup ./charts/immich-db-backup $(HELM_GLOBAL_FLAGS)
-	helm install home-assistant-backup ./charts/home-assistant-backup $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install pihole ./charts/pihole $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install immich ./charts/immich $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install authentik ./charts/authentik $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install infisical ./charts/infisical $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install home-assistant ./charts/home-assistant $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install restic-backup ./charts/restic-backup $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install immich-db-backup ./charts/immich-db-backup $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install home-assistant-backup ./charts/home-assistant-backup $(HELM_GLOBAL_FLAGS)
 	@echo "✓ Services installed"
 
 install-all: setup-repos build-deps install-infra install-monitoring deploy-all
