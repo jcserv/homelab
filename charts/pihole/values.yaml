@@ -96,7 +96,7 @@ infisical:
   instantUpdates: false
   projectSlug: homelab-nkcl  # from Infisical project settings (Project > Settings)
   envSlug: prod
-  secretsPath: /  # WEBPASSWORD lives at the root of the prod env
+  secretsPath: /pihole  # WEBPASSWORD lives in the per-app pihole folder
   credentialsRef:
     secretName: infisical-machine-identity
     secretNamespace: infisical-secrets-operator
