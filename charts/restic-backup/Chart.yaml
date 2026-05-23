@@ -2,7 +2,7 @@ apiVersion: v2
 name: restic-backup
 description: Automated backups to Backblaze B2 using Restic
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "latest"
 keywords:
   - backup
