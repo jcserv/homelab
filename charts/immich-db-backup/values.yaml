@@ -70,3 +70,23 @@ monitoring:
     backupMissingHours: 25
     # Alert if backup takes longer than 30 minutes
     backupDurationMinutes: 30
+
+# Infisical Secrets Operator integration.
+# When enabled, the operator syncs secrets from the self-hosted Infisical
+# platform into the managed K8s Secret(s), replacing the SealedSecret(s) in
+# sealed-secrets/. Requires charts/infisical-secrets-operator + machine identity.
+# Kept disabled until per-chart cutover (Phase 3). See
+# docs/runbooks/INFISICAL_MIGRATION.md.
+infisical:
+  enabled: true
+  # In-cluster Service URL — public hostname only resolves via pihole DNS,
+  # which CoreDNS can't reach. Keeps operator traffic in-cluster.
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
+  resyncInterval: 60s
+  instantUpdates: false
+  projectSlug: homelab-nkcl
+  envSlug: prod
+  secretsPath: /backup/immich
+  credentialsRef:
+    secretName: infisical-machine-identity
+    secretNamespace: infisical-secrets-operator
