@@ -20,7 +20,7 @@ secrets-operator:
     manager:
       image:
         repository: infisical/kubernetes-operator
-        tag: v0.10.33
+        tag: v0.11.0
       resources:
         requests:
           cpu: 10m
