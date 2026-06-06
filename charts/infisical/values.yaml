@@ -37,7 +37,7 @@ infisical-standalone:
     replicaCount: 1
     image:
       repository: infisical/infisical
-      tag: "v0.160.10"
+      tag: "v0.160.11"
     kubeSecretRef: infisical-secrets
     resources:
       requests:
