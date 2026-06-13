@@ -73,7 +73,7 @@ resources:
     memory: 256Mi
   limits:
     cpu: 1000m
-    memory: 1Gi
+    memory: 2Gi
 
 # Prefer Pi5 nodes (8GB) for the app and Meilisearch (indexing-heavy).
 affinity:
