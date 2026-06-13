@@ -129,6 +129,7 @@ deploy-all:
 	helm upgrade --install authentik ./charts/authentik $(HELM_GLOBAL_FLAGS)
 	helm upgrade --install infisical ./charts/infisical $(HELM_GLOBAL_FLAGS)
 	helm upgrade --install home-assistant ./charts/home-assistant $(HELM_GLOBAL_FLAGS)
+	helm upgrade --install open-archiver ./charts/open-archiver $(HELM_GLOBAL_FLAGS)
 	helm upgrade --install restic-backup ./charts/restic-backup $(HELM_GLOBAL_FLAGS)
 	helm upgrade --install immich-db-backup ./charts/immich-db-backup $(HELM_GLOBAL_FLAGS)
 	helm upgrade --install home-assistant-backup ./charts/home-assistant-backup $(HELM_GLOBAL_FLAGS)

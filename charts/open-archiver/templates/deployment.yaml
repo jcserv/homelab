@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "open-archiver.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "open-archiver.labels" . | nindent 4 }}
+    component: app
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "open-archiver.selectorLabels" . | nindent 6 }}
+      component: app
+  template:
+    metadata:
+      labels:
+        {{- include "open-archiver.selectorLabels" . | nindent 8 }}
+        component: app
+    spec:
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: open-archiver
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+            - name: backend
+              containerPort: 4000
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $envName, $secretKey := .Values.existingSecret.keys }}
+            - name: {{ $envName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.existingSecret.name }}
+                  key: {{ $secretKey }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          # Gate liveness on the BACKEND (4000), not the frontend. The image
+          # runs frontend + backend under one supervisor that stays alive even
+          # if the backend exits — so probing the frontend (3000) reports a
+          # healthy pod while the API is dead. Watching 4000 makes a backend
+          # crash restart the container (and surfaces config errors as
+          # CrashLoopBackOff instead of a falsely-Ready pod).
+          livenessProbe:
+            tcpSocket:
+              port: backend
+            # Backend validates env, runs Drizzle migrations, and configures the
+            # Meilisearch index before listening; give that headroom.
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: backend
+            initialDelaySeconds: 20
+            periodSeconds: 10

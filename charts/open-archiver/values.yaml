@@ -1,0 +1,138 @@
+---
+namespace: default
+
+image:
+  repository: logiclabshq/open-archiver
+  tag: "v0.5.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: archive.jarrodservilla.com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # PST/EML uploads can be large; must match BODY_SIZE_LIMIT below.
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+  tls:
+    enabled: true
+    secretName: wildcard-jarrodservilla-tls
+
+# Plain (non-secret) app environment. Secret-sourced env comes from
+# existingSecret.keys below.
+env:
+  NODE_ENV: production
+  PORT_BACKEND: "4000"
+  PORT_FRONTEND: "3000"
+  APP_URL: https://archive.jarrodservilla.com
+  ORIGIN: https://archive.jarrodservilla.com
+  # Required by the backend bootstrap — validated alongside JWT_SECRET, and a
+  # missing value is fatal (not defaulted), so it must be set explicitly.
+  # Matches upstream .env.example.
+  JWT_EXPIRES_IN: 7d
+  MEILI_HOST: http://open-archiver-meilisearch:7700
+  # Shared cluster Valkey (charts/valkey) — unauthenticated, in-cluster only.
+  REDIS_HOST: valkey.default.svc.cluster.local
+  REDIS_PORT: "6379"
+  REDIS_TLS_ENABLED: "false"
+  # Archives stored off-cluster in Backblaze B2 (same region as restic backups).
+  STORAGE_TYPE: s3
+  STORAGE_S3_ENDPOINT: https://s3.ca-east-006.backblazeb2.com
+  STORAGE_S3_BUCKET: open-archiver-homelab
+  STORAGE_S3_REGION: ca-east-006
+  STORAGE_S3_FORCE_PATH_STYLE: "true"
+  SYNC_FREQUENCY: "*/15 * * * *"
+  # Pi-tuned: default 5 workers is too heavy for 8GB nodes.
+  INGESTION_WORKER_CONCURRENCY: "2"
+  BODY_SIZE_LIMIT: 100M
+
+# Env vars sourced from the Infisical-managed Secret via secretKeyRef.
+existingSecret:
+  name: open-archiver-secrets
+  keys:
+    DATABASE_URL: database-url
+    MEILI_MASTER_KEY: meili-master-key
+    JWT_SECRET: jwt-secret
+    ENCRYPTION_KEY: encryption-key
+    STORAGE_ENCRYPTION_KEY: storage-encryption-key
+    STORAGE_S3_ACCESS_KEY_ID: s3-access-key-id
+    STORAGE_S3_SECRET_ACCESS_KEY: s3-secret-access-key
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Prefer Pi5 nodes (8GB) for the app and Meilisearch (indexing-heavy).
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - pi5-01
+                - pi5-02
+
+# Dedicated PostgreSQL — app runs Drizzle migrations against its own DB.
+postgres:
+  image:
+    repository: postgres
+    tag: "17-alpine"
+    pullPolicy: IfNotPresent
+  auth:
+    database: open_archive
+    username: openarchiver
+  persistence:
+    storageClass: local-path
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+meilisearch:
+  image:
+    repository: getmeili/meilisearch
+    tag: "v1.38"
+    pullPolicy: IfNotPresent
+  persistence:
+    storageClass: local-path
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Infisical Secrets Operator — sole secret source for this chart (no
+# sealed-secrets). Folder /open-archiver in project homelab-nkcl, env prod.
+infisical:
+  enabled: true
+  # In-cluster Service URL — public hostname only resolves via pihole DNS,
+  # which CoreDNS can't reach. Keeps operator traffic in-cluster.
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
+  resyncInterval: 60s
+  instantUpdates: false
+  projectSlug: homelab-nkcl
+  envSlug: prod
+  secretsPath: /open-archiver
+  credentialsRef:
+    secretName: infisical-machine-identity
+    secretNamespace: infisical-secrets-operator
