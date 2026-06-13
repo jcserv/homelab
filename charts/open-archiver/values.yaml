@@ -36,6 +36,9 @@ env:
   # missing value is fatal (not defaulted), so it must be set explicitly.
   # Matches upstream .env.example.
   JWT_EXPIRES_IN: 7d
+  # Allow deleting archived emails + ingestion sources (instance-wide).
+  # Off by default upstream for compliance/immutability.
+  ENABLE_DELETION: "true"
   MEILI_HOST: http://open-archiver-meilisearch:7700
   # Shared cluster Valkey (charts/valkey) — unauthenticated, in-cluster only.
   REDIS_HOST: valkey.default.svc.cluster.local
