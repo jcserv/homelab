@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "open-archiver.fullname" . }}-meilisearch
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "open-archiver.labels" . | nindent 4 }}
+    component: meilisearch
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "open-archiver.selectorLabels" . | nindent 6 }}
+      component: meilisearch
+  template:
+    metadata:
+      labels:
+        {{- include "open-archiver.selectorLabels" . | nindent 8 }}
+        component: meilisearch
+    spec:
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: meilisearch
+          image: "{{ .Values.meilisearch.image.repository }}:{{ .Values.meilisearch.image.tag }}"
+          imagePullPolicy: {{ .Values.meilisearch.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 7700
+              protocol: TCP
+          env:
+            - name: MEILI_ENV
+              value: production
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret.name }}
+                  key: meili-master-key
+          volumeMounts:
+            - name: meilidata
+              mountPath: /meili_data
+          resources:
+            {{- toYaml .Values.meilisearch.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: meilidata
+          persistentVolumeClaim:
+            claimName: {{ include "open-archiver.fullname" . }}-meilidata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "open-archiver.fullname" . }}-meilisearch
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "open-archiver.labels" . | nindent 4 }}
+    component: meilisearch
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 7700
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "open-archiver.selectorLabels" . | nindent 4 }}
+    component: meilisearch

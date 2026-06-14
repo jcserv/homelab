@@ -69,6 +69,7 @@ All Helm charts live under `charts/`. Each chart follows: `Chart.yaml`, `values.
 - `pihole` — DNS + ad-blocking, 4 replicas spread across nodes
 - `authentik` — SSO/identity provider with PostgreSQL
 - `nas-services` — External service routing to UGREEN NAS
+- `open-archiver` — Email archiving (B2 S3 storage, shared valkey, dedicated PostgreSQL + Meilisearch)
 
 **Backups** (CronJobs):
 - `restic-backup` — Monthly NAS files/library to Backblaze B2
