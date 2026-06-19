@@ -3,7 +3,7 @@ apiVersion: v2
 name: open-archiver
 description: OpenArchiver email archiving (Gmail/M365/IMAP/PST ingestion, full-text search)
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "v0.5.0"
 maintainers:
   - name: homelab
