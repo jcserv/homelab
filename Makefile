@@ -59,7 +59,7 @@ setup-repos:
 	@echo "Adding Helm repositories..."
 	helm repo add metallb https://metallb.github.io/metallb
 	helm repo add jetstack https://charts.jetstack.io
-	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+	helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo add infisical-helm-charts https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
