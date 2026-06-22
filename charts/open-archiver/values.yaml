@@ -111,7 +111,7 @@ postgres:
 meilisearch:
   image:
     repository: getmeili/meilisearch
-    tag: "v1.47.0"
+    tag: "v1.48.0"
     pullPolicy: IfNotPresent
   persistence:
     storageClass: local-path
