@@ -79,7 +79,7 @@ librechat:
             baseURL: "https://openrouter.ai/api/v1"
             models:
               default: ["anthropic/claude-sonnet-4", "openai/gpt-4o-mini"]
-              fetch: true
+              fetch: false
             titleConvo: true
             titleModel: "openai/gpt-4o-mini"
             modelDisplayLabel: "OpenRouter"
