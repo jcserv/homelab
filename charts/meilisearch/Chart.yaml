@@ -1,0 +1,14 @@
+apiVersion: v2
+name: meilisearch
+description: Shared Meilisearch instance for cluster services (open-archiver, librechat)
+type: application
+version: 1.0.0
+appVersion: "1.38.2"
+keywords:
+  - meilisearch
+  - search
+home: https://www.meilisearch.com
+sources:
+  - https://github.com/meilisearch/meilisearch
+maintainers:
+  - name: homelab

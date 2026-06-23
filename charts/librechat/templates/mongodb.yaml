@@ -1,0 +1,98 @@
+{{- /*
+Bundled MongoDB for LibreChat — plain Deployment using the official (arm64)
+mongo image instead of the upstream chart's Bitnami subchart. Static resource
+names to avoid helper collisions with the librechat subchart.
+*/ -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: librechat-mongodb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: librechat-mongodb
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.mongo.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.mongo.persistence.size }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat-mongodb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: librechat-mongodb
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: librechat-mongodb
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: librechat-mongodb
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.mongo.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mongodb
+          image: "{{ .Values.mongo.image.repository }}:{{ .Values.mongo.image.tag }}"
+          imagePullPolicy: {{ .Values.mongo.image.pullPolicy }}
+          ports:
+            - name: mongodb
+              containerPort: 27017
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+          resources:
+            {{- toYaml .Values.mongo.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: mongodb
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: mongodb
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: librechat-mongodb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: librechat-mongodb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: librechat-mongodb
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 27017
+      targetPort: mongodb
+      protocol: TCP
+      name: mongodb
+  selector:
+    app.kubernetes.io/name: librechat-mongodb
+    app.kubernetes.io/instance: {{ .Release.Name }}
