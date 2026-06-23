@@ -1,0 +1,13 @@
+apiVersion: v2
+name: librechat
+description: LibreChat - self-hosted multi-model AI chat UI
+type: application
+version: 1.0.0
+appVersion: "v0.8.7-rc1"
+maintainers:
+  - name: homelab
+
+dependencies:
+  - name: librechat
+    version: "2.0.6"
+    repository: oci://ghcr.io/danny-avila/librechat-chart

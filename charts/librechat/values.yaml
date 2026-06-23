@@ -1,0 +1,136 @@
+namespace: default
+
+# --- Bundled MongoDB (official image, arm64-native) ---------------------------
+# LibreChat's upstream chart bundles a Bitnami MongoDB subchart, which is risky
+# on the arm64 Pi cluster. Mirror the repo convention (open-archiver bundles its
+# own Postgres) and run a plain Deployment with the official mongo image. Only
+# LibreChat uses it. In-cluster only, no auth (consistent with shared valkey).
+mongo:
+  image:
+    repository: mongo
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  persistence:
+    storageClass: local-path
+    size: 8Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  # Prefer Pi5 (8GB) — RAM headroom.
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - pi5-01
+
+# Infisical Secrets Operator — sole secret source. Folder /librechat in project
+# homelab-nkcl, env prod. Materializes the `librechat-credentials-env` Secret
+# the upstream chart loads via envFrom (it overrides configEnv defaults).
+infisical:
+  enabled: true
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
+  resyncInterval: 60s
+  instantUpdates: false
+  projectSlug: homelab-nkcl
+  envSlug: prod
+  secretsPath: /librechat
+  credentialsRef:
+    secretName: infisical-machine-identity
+    secretNamespace: infisical-secrets-operator
+
+# --- Upstream LibreChat chart (subchart name = librechat) ---------------------
+librechat:
+  global:
+    librechat:
+      existingSecretName: librechat-credentials-env
+
+  librechat:
+    existingSecretName: librechat-credentials-env
+    # Non-secret env. Secret keys (CREDS_KEY/CREDS_IV/JWT_SECRET/
+    # JWT_REFRESH_SECRET/MEILI_MASTER_KEY/OPENROUTER_KEY) come from the Secret,
+    # which overrides this configMap at runtime (envFrom order).
+    configEnv:
+      ALLOW_REGISTRATION: "true"
+      ALLOW_EMAIL_LOGIN: "true"
+      # Reuse bundled-but-disabled services with shared cluster datastores.
+      MONGO_URI: mongodb://librechat-mongodb.default.svc.cluster.local:27017/LibreChat
+      MEILI_HOST: http://meilisearch.default.svc.cluster.local:7700
+      SEARCH: "true"
+      USE_REDIS: "true"
+      REDIS_URI: redis://valkey.default.svc.cluster.local:6379/2
+    # librechat.yaml — defines the OpenRouter custom endpoint. Phase 2 (MCP
+    # server) adds an `mcpServers:` block here.
+    configYamlContent: |
+      version: 1.2.1
+      cache: true
+      endpoints:
+        custom:
+          - name: "OpenRouter"
+            apiKey: "${OPENROUTER_KEY}"
+            baseURL: "https://openrouter.ai/api/v1"
+            models:
+              default: ["anthropic/claude-sonnet-4", "openai/gpt-4o-mini"]
+              fetch: true
+            titleConvo: true
+            titleModel: "openai/gpt-4o-mini"
+            modelDisplayLabel: "OpenRouter"
+    imageVolume:
+      enabled: true
+      size: 10G
+      accessModes: ReadWriteOnce
+      storageClassName: local-path
+
+  # Disable bundled datastores — we use the bundled mongo Deployment above and
+  # the shared charts/meilisearch + charts/valkey services.
+  mongodb:
+    enabled: false
+  meilisearch:
+    enabled: false
+  redis:
+    enabled: false
+  librechat-rag-api:
+    enabled: false
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    hosts:
+      - host: chat.jarrodservilla.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: wildcard-jarrodservilla-tls
+        hosts:
+          - chat.jarrodservilla.com
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+
+  # Prefer Pi5 (8GB).
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - pi5-01

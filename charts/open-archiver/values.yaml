@@ -39,7 +39,8 @@ env:
   # Allow deleting archived emails + ingestion sources (instance-wide).
   # Off by default upstream for compliance/immutability.
   ENABLE_DELETION: "true"
-  MEILI_HOST: http://open-archiver-meilisearch:7700
+  # Shared cluster Meilisearch (charts/meilisearch).
+  MEILI_HOST: http://meilisearch.default.svc.cluster.local:7700
   # Shared cluster Valkey (charts/valkey) — unauthenticated, in-cluster only.
   REDIS_HOST: valkey.default.svc.cluster.local
   REDIS_PORT: "6379"
@@ -107,22 +108,6 @@ postgres:
     limits:
       cpu: 500m
       memory: 512Mi
-
-meilisearch:
-  image:
-    repository: getmeili/meilisearch
-    tag: "v1.48.0"
-    pullPolicy: IfNotPresent
-  persistence:
-    storageClass: local-path
-    size: 5Gi
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 1000m
-      memory: 1Gi
 
 # Infisical Secrets Operator — sole secret source for this chart (no
 # sealed-secrets). Folder /open-archiver in project homelab-nkcl, env prod.

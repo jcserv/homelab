@@ -1,0 +1,57 @@
+namespace: default
+
+# Pin exact tag — a rolling minor bump can push the engine past the on-disk DB
+# version and CrashLoop. See docs + meilisearch-version-pinning memory.
+image:
+  repository: getmeili/meilisearch
+  tag: "v1.38.2"
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+persistence:
+  enabled: true
+  storageClass: local-path
+  size: 8Gi
+
+# Prefer Pi5 (8GB) — indexing is memory-heavy.
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - pi5-01
+
+service:
+  type: ClusterIP
+  port: 7700
+
+# Master key sourced from the Infisical-managed Secret.
+existingSecret:
+  name: meilisearch-secrets
+  key: meili-master-key
+
+# Infisical Secrets Operator — sole secret source. Folder /meilisearch in
+# project homelab-nkcl, env prod. The master key is only an API gate (not tied
+# to stored data); every consumer keeps its own copy set to this same value.
+infisical:
+  enabled: true
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
+  resyncInterval: 60s
+  instantUpdates: false
+  projectSlug: homelab-nkcl
+  envSlug: prod
+  secretsPath: /meilisearch
+  credentialsRef:
+    secretName: infisical-machine-identity
+    secretNamespace: infisical-secrets-operator
