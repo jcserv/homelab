@@ -78,37 +78,41 @@ locally** while CI might — one human + one runner = no contention if you don't
 
 ## Phase 2: Tailscale
 
-Brings the tailnet under TF: **ACL-as-code**, **TF-managed device tags** on cluster
-nodes, and a **TF-managed tailnet auth key**. Module: `modules/tailscale/`.
+Brings the tailnet under TF: **ACL-as-code** and a **TF-managed tailnet auth key**.
+Module: `modules/tailscale/`.
 
-**Not fully plan-only.** The ACL and every `tailscale_device_tags` are
-import->no-op (mirror the B2 discipline). The **one apply** is
-`tailscale_tailnet_key.ci` — a key's `key` secret is never returned on import, so it
-is inherently a CREATE.
+**Not fully plan-only.** The ACL is import->no-op (mirror the B2 discipline). The
+**one apply** is `tailscale_tailnet_key.ci` — a key's `key` secret is never returned
+on import, so it is inherently a CREATE.
+
+**Device tags deferred.** The cluster nodes (`pi4-01/02`, `pi5-01/02`) are
+**user-owned (untagged) live**, so TF-managing their tags would be a real
+ownership-changing mutation, not an import-no-op — it would subject them to ACL tag
+rules and risk cluster connectivity. Tagging is left to a deliberate follow-up: add
+the node tag to `tagOwners` + the necessary `grants` in `acl.hujson`, then apply.
 
 ### New OAuth client + GH secrets (Tier-0-adjacent, hand-made)
 
 The Tailscale **provider** authenticates with a **new** OAuth client, distinct from
 the node-auth `TS_OAUTH_*` (which the `tailscale/github-action` uses to self-mint
-ephemeral node keys). Create it in the admin console with scopes:
+ephemeral node keys). Create it in the admin console with scopes (new UI names):
 
-- `acl` (write) — manage the policy file
-- `auth_keys` — create the tailnet key
-- `devices:core` (write) — set device tags
+- **General → Policy File** (read + write) — manage the ACL
+- **Keys → Auth Keys** (read + write) — create the tailnet key
+- **Devices → Core** (read + write) — reserved for the deferred device-tag follow-up
 
-It must **own every tag it manages** (`tag:github-actions` + the node tags). Seed its
-id/secret into GH Actions secrets `TS_TF_OAUTH_CLIENT_ID` / `TS_TF_OAUTH_CLIENT_SECRET`
-(+ password manager). The provider reads env `TAILSCALE_OAUTH_CLIENT_ID` /
-`TAILSCALE_OAUTH_CLIENT_SECRET`. It hits the public `api.tailscale.com` — **no cluster
-VPN**, so `terraform.yml`'s commented `Connect to Tailscale` step stays commented.
+It must **own every tag it manages** (currently `tag:github-actions`; add node tags
+when tagging lands). Seed its id/secret into GH Actions secrets
+`TS_TF_OAUTH_CLIENT_ID` / `TS_TF_OAUTH_CLIENT_SECRET` (+ password manager). The
+provider reads env `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET`. It
+hits the public `api.tailscale.com` — **no cluster VPN**, so `terraform.yml`'s
+commented `Connect to Tailscale` step stays commented.
 
 ### Required inputs before plan
 
 - `modules/tailscale/acl.hujson` — the live ACL, exported verbatim (HuJSON
   formatting/comments are the drift culprit). Must declare `tagOwners` for every tag
   used or the provider rejects it.
-- `var.managed_nodes` (in `modules/tailscale/variables.tf`) — node hostname + tag set.
-- Device-tag `import` blocks in `main.tf` — one per node, `id = "<nodeID>CNTRL"`.
 
 ### Running (adds to the env in "Running" above)
 
@@ -116,7 +120,7 @@ VPN**, so `terraform.yml`'s commented `Connect to Tailscale` step stays commente
 export TAILSCALE_OAUTH_CLIENT_ID=...      # new ACL-scoped OAuth client
 export TAILSCALE_OAUTH_CLIENT_SECRET=...
 tofu init
-tofu plan   # ACL + all device_tags = no-op; tailscale_tailnet_key.ci = the only create
+tofu plan   # ACL = no-op; tailscale_tailnet_key.ci = the only create
 ```
 
 After apply, read the key once: `tofu output -raw ci_auth_key` (Infisical storage

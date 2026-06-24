@@ -1,10 +1,14 @@
-# Tailscale tailnet — ACL-as-code + TF-managed device tags + a tailnet auth key.
+# Tailscale tailnet — ACL-as-code + a tailnet auth key.
 #
-# Import discipline (mirrors B2): the ACL and every device_tags are import->no-op.
-# Only tailscale_tailnet_key.ci is a CREATE (its `key` secret is never returned on
-# import). HARD STOP: if `tofu plan` shows destroy/replace on the ACL or any tags,
-# fix HCL/acl.hujson to match live before applying — a bad ACL push can lock the
-# tailnet.
+# Import discipline (mirrors B2): the ACL is import->no-op. Only
+# tailscale_tailnet_key.ci is a CREATE (its `key` secret is never returned on
+# import). HARD STOP: if `tofu plan` shows destroy/replace on the ACL, fix
+# acl.hujson to match live before applying — a bad ACL push can lock the tailnet.
+#
+# Device tags are intentionally NOT managed here: the cluster nodes are currently
+# user-owned (untagged) live, so tagging them would be a real ownership-changing
+# mutation, not an import-no-op. Deferred to a deliberate follow-up (add the node
+# tag to tagOwners + grants in acl.hujson, then apply).
 
 # ---------------------------------------------------------------------------
 # ACL-as-code. Kept in acl.hujson so it's diffable as policy, not buried in HCL.
@@ -13,22 +17,6 @@
 # ---------------------------------------------------------------------------
 resource "tailscale_acl" "this" {
   acl = file("${path.module}/acl.hujson")
-}
-
-# ---------------------------------------------------------------------------
-# TF-managed device tags on the managed cluster nodes (import -> no-op).
-# Looks each device up by hostname, then owns its tag set.
-# ---------------------------------------------------------------------------
-data "tailscale_device" "node" {
-  for_each = var.managed_nodes
-  hostname = each.value.hostname
-  wait_for = "30s"
-}
-
-resource "tailscale_device_tags" "node" {
-  for_each  = var.managed_nodes
-  device_id = data.tailscale_device.node[each.key].node_id
-  tags      = each.value.tags
 }
 
 # ---------------------------------------------------------------------------
@@ -43,5 +31,5 @@ resource "tailscale_tailnet_key" "ci" {
   preauthorized = true
   tags          = ["tag:github-actions"]
   expiry        = var.ci_key_expiry_seconds
-  description   = "TF-managed node-join key (manual/NAS/re-image); see terraform/modules/tailscale"
+  description   = "TF node-join key (manual/NAS/re-image)"
 }
