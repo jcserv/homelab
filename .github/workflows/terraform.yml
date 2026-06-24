@@ -1,0 +1,128 @@
+name: terraform
+
+# OpenTofu for the external/cloud gap (B2/DNS/Tailscale/Authentik/Infisical structure).
+# Fully separate from ci.yml (Helm). Only runs on terraform/** changes.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  pull_request:
+    paths:
+      - 'terraform/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TF_VAR_state_passphrase: ${{ secrets.TF_STATE_PASSPHRASE }}
+  # b2 provider creds (Tier-0 mgmt key).
+  B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
+  B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+  # s3 state backend creds: B2's S3 endpoint uses the AWS SDK, which reads the
+  # standard AWS env vars (NOT the B2_ ones). Same Tier-0 B2 mgmt key, AWS-named.
+  AWS_ACCESS_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+
+jobs:
+  plan:
+    name: tofu plan (PR)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v7.0.0
+
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+          sudo apt-get update && sudo apt-get install -y infisical
+
+      - name: Set up OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.8.0
+
+      # Tailscale not needed for the B2-only phase (B2 is reached over the public S3
+      # endpoint). Re-enable once cluster-touching modules (Infisical/node labels) land:
+      # - name: Connect to Tailscale
+      #   uses: tailscale/github-action@v4
+      #   with:
+      #     oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+      #     oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+      #     tags: tag:github-actions
+
+      - name: tofu init
+        run: tofu init -input=false
+
+      - name: tofu plan
+        id: plan
+        run: tofu plan -input=false -no-color -out=tfplan 2>&1 | tee plan.txt
+
+      - name: Post plan to PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            let plan = '';
+            try { plan = fs.readFileSync('terraform/plan.txt', 'utf8'); }
+            catch (e) { plan = 'No plan output.'; }
+            const max = 60000;
+            if (plan.length > max) plan = plan.slice(0, max) + '\n...(truncated)...';
+            const body = [
+              '### `tofu plan`',
+              '',
+              '```',
+              plan,
+              '```',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+  apply:
+    name: tofu apply (merge)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Required-reviewer gate (operator) lives on this GitHub Environment.
+    environment: terraform-prod
+    # Locking substitute (B2 has no DynamoDB-style lock) — serialize applies.
+    concurrency:
+      group: terraform
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v7.0.0
+
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+          sudo apt-get update && sudo apt-get install -y infisical
+
+      - name: Set up OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.8.0
+
+      # - name: Connect to Tailscale
+      #   uses: tailscale/github-action@v4
+      #   with:
+      #     oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+      #     oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+      #     tags: tag:github-actions
+
+      - name: tofu init
+        run: tofu init -input=false
+
+      - name: tofu apply
+        run: tofu apply -input=false -auto-approve
