@@ -1,14 +1,8 @@
-# Tailscale tailnet — ACL-as-code + a tailnet auth key.
+# Tailscale tailnet — ACL-as-code + a tailnet auth key + cluster node tags.
 #
-# Import discipline (mirrors B2): the ACL is import->no-op. Only
-# tailscale_tailnet_key.ci is a CREATE (its `key` secret is never returned on
-# import). HARD STOP: if `tofu plan` shows destroy/replace on the ACL, fix
-# acl.hujson to match live before applying — a bad ACL push can lock the tailnet.
-#
-# Device tags are intentionally NOT managed here: the cluster nodes are currently
-# user-owned (untagged) live, so tagging them would be a real ownership-changing
-# mutation, not an import-no-op. Deferred to a deliberate follow-up (add the node
-# tag to tagOwners + grants in acl.hujson, then apply).
+# The ACL is import->no-op. tailscale_tailnet_key.ci is a CREATE. HARD STOP: if
+# `tofu plan` shows destroy/replace on the ACL, fix acl.hujson to match live
+# before applying — a bad ACL push can lock the tailnet.
 
 # ---------------------------------------------------------------------------
 # ACL-as-code. Kept in acl.hujson so it's diffable as policy, not buried in HCL.
@@ -17,6 +11,25 @@
 # ---------------------------------------------------------------------------
 resource "tailscale_acl" "this" {
   acl = file("${path.module}/acl.hujson")
+}
+
+# ---------------------------------------------------------------------------
+# Cluster node tags. The nodes were user-owned (untagged); this is the deliberate
+# CREATE that moves them to tag-ownership (tag:k3s) so they no longer depend on a
+# personal account or key expiry. The required grants (autogroup:admin -> tag:k3s
+# and -> 10.2.1.0/24, plus SSH) landed in acl.hujson in the prior PR, so this flip
+# does not strand kubectl/SSH/LAN access. The TF OAuth client must own tag:k3s.
+# ---------------------------------------------------------------------------
+data "tailscale_device" "node" {
+  for_each = var.managed_nodes
+  hostname = each.value
+  wait_for = "30s"
+}
+
+resource "tailscale_device_tags" "node" {
+  for_each  = var.managed_nodes
+  device_id = data.tailscale_device.node[each.key].node_id
+  tags      = ["tag:k3s"]
 }
 
 # ---------------------------------------------------------------------------
