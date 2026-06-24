@@ -7,3 +7,9 @@ provider "b2" {}
 provider "tailscale" {
   tailnet = "-"
 }
+
+# Credentials from env: GITHUB_TOKEN (hand-made fine-grained PAT GH_TF_TOKEN, repo
+# Secrets RW + Metadata R). Never TF-managed (self-management = chicken-egg).
+provider "github" {
+  owner = var.github_owner
+}

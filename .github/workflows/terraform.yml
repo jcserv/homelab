@@ -30,6 +30,14 @@ env:
   # The provider hits public api.tailscale.com — no cluster VPN needed.
   TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TS_TF_OAUTH_CLIENT_ID }}
   TAILSCALE_OAUTH_CLIENT_SECRET: ${{ secrets.TS_TF_OAUTH_CLIENT_SECRET }}
+  # github provider (Phase 6) — fine-grained PAT, repo Secrets RW. Hand-made, never TF-managed.
+  GITHUB_TOKEN: ${{ secrets.GH_TF_TOKEN }}
+  GITHUB_OWNER: ${{ github.repository_owner }}
+  # Adopted non-Tier-0 secrets re-supplied as plaintext (lands in encrypted state).
+  TF_VAR_github_owner: ${{ github.repository_owner }}
+  TF_VAR_kube_config: ${{ secrets.KUBE_CONFIG }}
+  TF_VAR_ts_oauth_client_id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+  TF_VAR_ts_oauth_secret: ${{ secrets.TS_OAUTH_SECRET }}
 
 jobs:
   plan:

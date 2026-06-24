@@ -11,6 +11,19 @@ module "tailscale" {
 # Phase 3: module "infisical_platform" { source = "./modules/infisical-platform" }
 # Phase 4: module "authentik"        { source = "./modules/authentik" }
 # Phase 5: module "cluster_bootstrap" { source = "./modules/cluster-bootstrap" }
+
+# Phase 6 — TF-managed credentials pushed straight to GitHub Actions secrets,
+# closing the hand-paste loop. ci_auth_key consumed directly from the tailscale
+# module (no root output needed). Adopted secrets fed plaintext via TF_VAR_*.
+module "github" {
+  source      = "./modules/github"
+  ci_auth_key = module.tailscale.ci_auth_key
+  adopted_secrets = {
+    KUBE_CONFIG        = var.kube_config
+    TS_OAUTH_CLIENT_ID = var.ts_oauth_client_id
+    TS_OAUTH_SECRET    = var.ts_oauth_secret
+  }
+}
 # DNS:     module "dns"              { source = "./modules/dns" }
 
 # ---------------------------------------------------------------------------
