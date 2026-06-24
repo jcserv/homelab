@@ -2,7 +2,7 @@ apiVersion: v2
 name: librechat
 description: LibreChat - self-hosted multi-model AI chat UI
 type: application
-version: 1.0.1
+version: 1.0.2
 appVersion: "v0.8.7-rc1"
 maintainers:
   - name: homelab

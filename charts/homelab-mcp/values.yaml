@@ -1,0 +1,68 @@
+---
+namespace: default
+
+image:
+  repository: ghcr.io/jcserv/homelab-mcp
+  # sha-72e314e: multi-arch (amd64+arm64), fixes the Python 3.13/3.14
+  # builder-runtime mismatch that crashed earlier tags. Repo convention =
+  # pin a sha-<short> tag, never :latest.
+  tag: "sha-72e314e"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8000
+
+# MCP transport. Server speaks streamable-http on :8000 (/mcp bearer-gated,
+# /health + /metrics unauthenticated).
+app:
+  transport: streamable-http
+
+# Plain (non-secret) app environment. Secret-sourced env comes from
+# existingSecret.keys below.
+env:
+  # home-assistant runs host-network on pi4-02 but exposes a ClusterIP Service.
+  # Pods resolve cluster Service DNS, not *.jarrodservilla.com.
+  APP_HOME_ASSISTANT_BASE_URL: http://home-assistant.default.svc.cluster.local:8123
+  # Writes ON (confirmed). lock.unlock stays gated off.
+  APP_HA_ENABLE_WRITES: "true"
+  APP_HA_ENABLE_UNLOCK: "false"
+
+# Env vars sourced from the Infisical-managed Secret via secretKeyRef.
+existingSecret:
+  name: homelab-mcp-secrets
+  keys:
+    APP_AUTH_TOKEN: auth-token
+    APP_HOME_ASSISTANT_TOKEN: home-assistant-token
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Restrict ingress on :8000 to LibreChat pods (effective only under a
+# default-deny baseline / CNI that enforces NetworkPolicy). Egress left
+# permissive (HA is host-network → reached via node IP, not a pod selector).
+networkPolicy:
+  enabled: true
+
+# Infisical Secrets Operator — sole secret source for this chart (no
+# sealed-secrets). Folder /homelab-mcp in project homelab-nkcl, env prod.
+infisical:
+  enabled: true
+  # In-cluster Service URL — public hostname only resolves via pihole DNS,
+  # which CoreDNS can't reach. Keeps operator traffic in-cluster.
+  hostAPI: http://infisical-infisical-standalone-infisical.default.svc.cluster.local:8080/api
+  resyncInterval: 60s
+  instantUpdates: false
+  projectSlug: homelab-nkcl
+  envSlug: prod
+  secretsPath: /homelab-mcp
+  credentialsRef:
+    secretName: infisical-machine-identity
+    secretNamespace: infisical-secrets-operator

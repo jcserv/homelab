@@ -67,11 +67,35 @@ librechat:
       SEARCH: "true"
       USE_REDIS: "true"
       REDIS_URI: redis://valkey.default.svc.cluster.local:6379/2
-    # librechat.yaml — defines the OpenRouter custom endpoint. Phase 2 (MCP
-    # server) adds an `mcpServers:` block here.
+    # librechat.yaml — defines the OpenRouter custom endpoint + the homelab MCP
+    # server (Home Assistant tools, in-cluster via Service DNS). HOMELAB_MCP_TOKEN
+    # is injected via the librechat-credentials-env Secret (Infisical /librechat)
+    # and must match /homelab-mcp auth-token.
     configYamlContent: |
       version: 1.2.1
       cache: true
+      # The MCP server is reached over in-cluster Service DNS, which resolves to
+      # a private ClusterIP. LibreChat's SSRF guard blocks private targets unless
+      # the host is allowlisted here.
+      mcpSettings:
+        allowedDomains:
+          - homelab-mcp.default.svc.cluster.local
+      mcpServers:
+        homelab:
+          type: streamable-http
+          url: http://homelab-mcp.default.svc.cluster.local:8000/mcp
+          # Skip the app-level startup inspection: it sends header placeholders
+          # raw (no env substitution), so the server's 401 would mis-classify
+          # this as requiresOAuth. With startup:false the connection is made
+          # per-user, where processMCPEnv substitutes the header correctly.
+          startup: false
+          headers:
+            # LibreChat's extractEnvVariable only substitutes a whole-string
+            # ${VAR}, not inline after "Bearer ". So HOMELAB_MCP_AUTH_HEADER
+            # holds the full "Bearer <token>" string (composed in the
+            # InfisicalSecret template).
+            Authorization: "${HOMELAB_MCP_AUTH_HEADER}"
+          timeout: 60000
       endpoints:
         custom:
           - name: "OpenRouter"
