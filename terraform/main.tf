@@ -4,7 +4,10 @@ module "b2" {
   source = "./modules/b2"
 }
 
-# Phase 2: module "tailscale"        { source = "./modules/tailscale" }
+module "tailscale" {
+  source = "./modules/tailscale"
+}
+
 # Phase 3: module "infisical_platform" { source = "./modules/infisical-platform" }
 # Phase 4: module "authentik"        { source = "./modules/authentik" }
 # Phase 5: module "cluster_bootstrap" { source = "./modules/cluster-bootstrap" }
@@ -34,4 +37,22 @@ import {
 import {
   to = module.b2.b2_bucket.restic
   id = "5ad4be49abae28a291a2011d" # homelab-k3s-567f18
+}
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Tailscale. Import the live ACL into state WITHOUT mutating it.
+# tailscale_tailnet_key.ci is intentionally NOT imported — it's the lone CREATE
+# (its `key` secret is never returned on import).
+#
+# Device tags are NOT managed: cluster nodes are user-owned (untagged) live, so
+# tagging is a real mutation, not an import. Deferred to a follow-up.
+#
+# HARD STOP: if `tofu plan` shows ANY destroy/replace on the ACL, do not apply.
+# Reconcile acl.hujson to live first. A bad ACL push can lock the tailnet — treat
+# it like a backup bucket.
+# ---------------------------------------------------------------------------
+
+import {
+  to = module.tailscale.tailscale_acl.this
+  id = "acl"
 }

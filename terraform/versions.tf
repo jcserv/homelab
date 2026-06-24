@@ -1,5 +1,4 @@
 terraform {
-  # >= 1.7.0: native state encryption GA'd in 1.7; declarative `import` blocks 1.6+.
   required_version = ">= 1.7.0"
 
   required_providers {
@@ -7,6 +6,9 @@ terraform {
       source  = "Backblaze/b2"
       version = "~> 0.12"
     }
-    # Other providers (dns, tailscale, authentik, infisical, kubernetes) added in later phases.
+    tailscale = {
+      source  = "tailscale/tailscale"
+      version = "~> 0.29"
+    }
   }
 }
