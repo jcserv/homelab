@@ -33,16 +33,21 @@ resource "tailscale_device_tags" "node" {
 }
 
 # ---------------------------------------------------------------------------
-# Tailnet auth key for manual/other node joins (NAS, re-imaging a Pi). CI's
-# github-action self-mints from TS_OAUTH_* and does NOT consume this. The lone
-# CREATE in this phase; `key` is sensitive -> surfaced via output, never committed.
-# Infisical storage of the value deferred to Phase 3.
+# Tailnet auth key for manual/other node joins (re-imaging a Pi, etc.). CI's
+# github-action self-mints from TS_OAUTH_* and does NOT consume this. `key` is
+# sensitive -> surfaced via output, never committed. Infisical storage deferred
+# to Phase 3.
+#
+# Tagged tag:k3s (not tag:github-actions): a node joined with this key should come
+# up as a cluster node. This also keeps the TF OAuth client single-tag (tag:k3s) —
+# a multi-tag client can only assign its tags as the exact full set, never one
+# individually, so every tag op TF does must be [tag:k3s].
 # ---------------------------------------------------------------------------
 resource "tailscale_tailnet_key" "ci" {
   reusable      = true
   ephemeral     = true
   preauthorized = true
-  tags          = ["tag:github-actions"]
+  tags          = ["tag:k3s"]
   expiry        = var.ci_key_expiry_seconds
   # Tailscale rejects non-alphanumeric chars in key descriptions (no / ( ) -).
   description = "TF managed node join key"
