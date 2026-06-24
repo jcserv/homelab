@@ -31,5 +31,6 @@ resource "tailscale_tailnet_key" "ci" {
   preauthorized = true
   tags          = ["tag:github-actions"]
   expiry        = var.ci_key_expiry_seconds
-  description   = "TF node-join key (manual/NAS/re-image)"
+  # Tailscale rejects non-alphanumeric chars in key descriptions (no / ( ) -).
+  description = "TF managed node join key"
 }

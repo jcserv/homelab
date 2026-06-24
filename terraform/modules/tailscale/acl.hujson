@@ -25,9 +25,20 @@
 			"ip":  ["*"],
 		},
 
-		// Allow users in "group:example" to access "tag:example", but only from
-		// devices that are running macOS and have enabled Tailscale client auto-updating.
-		// {"src": ["group:example"], "dst": ["tag:example"], "ip": ["*"], "srcPosture":["posture:autoUpdateMac"]},
+		// Admins (cluster operators) reach the k3s nodes on all ports — kubectl
+		// (6443), SSH, etc. Replaces the implicit access tagged nodes lose when
+		// they leave autogroup:member.
+		{
+			"src": ["autogroup:admin"],
+			"dst": ["tag:k3s"],
+			"ip":  ["*"],
+		},
+		// Admins reach the home LAN via pi4-01's advertised subnet route.
+		{
+			"src": ["autogroup:admin"],
+			"dst": ["10.2.1.0/24"],
+			"ip":  ["*"],
+		},
 	],
 
 	// Define postures that will be applied to all rules without any specific
@@ -64,16 +75,28 @@
 			"dst":    ["autogroup:self"],
 			"users":  ["autogroup:nonroot", "root"],
 		},
+		// Admins can Tailscale-SSH into the tagged k3s nodes (autogroup:self no
+		// longer covers them once they are tag-owned, not user-owned).
+		{
+			"action": "check",
+			"src":    ["autogroup:admin"],
+			"dst":    ["tag:k3s"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
 	],
 
-	"tagOwners": {"tag:github-actions": ["autogroup:admin"]},
+	"tagOwners": {"tag:github-actions": ["autogroup:admin"], "tag:k3s": ["autogroup:admin"]},
 
-	// Test access rules every time they're saved.
-	// "tests": [
-	//   {
-	//       "src": "alice@example.com",
-	//       "accept": ["tag:example"],
-	//       "deny": ["100.101.102.103:443"],
-	//   },
-	// ],
+	// Test access rules every time they're saved. These assert the access the
+	// k3s nodes must keep AFTER they become tag-owned (tag:k3s).
+	"tests": [
+		{
+			"src":    "jarrod.servilla@gmail.com",
+			"accept": ["tag:k3s:6443", "tag:k3s:22", "10.2.1.200:443"],
+		},
+		{
+			"src":    "tag:github-actions",
+			"accept": ["tag:k3s:6443"],
+		},
+	],
 }
