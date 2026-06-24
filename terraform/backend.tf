@@ -9,8 +9,6 @@ terraform {
     endpoints = {
       s3 = "https://s3.ca-east-006.backblazeb2.com"
     }
-
-    # B2's S3 API is not AWS — skip AWS-specific validation/metadata calls.
     skip_credentials_validation = true
     skip_region_validation      = true
     skip_requesting_account_id  = true
@@ -18,8 +16,6 @@ terraform {
     use_path_style              = true
   }
 
-  # OpenTofu native state encryption (PBKDF2/AES-GCM). Passphrase is a Tier-0 root
-  # (TF_VAR_state_passphrase) — never in Infisical, since state holds Infisical creds.
   encryption {
     key_provider "pbkdf2" "k" {
       passphrase = var.state_passphrase

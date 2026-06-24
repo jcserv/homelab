@@ -7,15 +7,11 @@
 #   restic            ->  homelab-k3s-567f18        ca-east-006   restic-backup
 #
 # All bucket_type allPrivate. Imported via `import` blocks in ../../main.tf.
-# IMPORTANT: if `tofu plan` post-import shows destroy/replace, the culprit is
-# almost always lifecycle_rules / bucket_info differing from live — set them
-# here to match what `b2 get-bucket <name>` reports, then re-plan.
 
 resource "b2_bucket" "homelab_backups" {
   bucket_name = "homelab-backups-431118"
   bucket_type = "allPrivate"
 
-  # Live bucket has SSE-B2 enabled — declare it to match, else plan disables it.
   default_server_side_encryption {
     mode      = "SSE-B2"
     algorithm = "AES256"
@@ -25,15 +21,11 @@ resource "b2_bucket" "homelab_backups" {
 resource "b2_bucket" "open_archiver" {
   bucket_name = "open-archiver-homelab"
   bucket_type = "allPrivate"
-
-  # lifecycle_rules / bucket_info: add to match live if plan is not a clean no-op.
 }
 
 resource "b2_bucket" "restic" {
   bucket_name = "homelab-k3s-567f18"
   bucket_type = "allPrivate"
-
-  # lifecycle_rules / bucket_info: add to match live if plan is not a clean no-op.
 }
 
 # ---------------------------------------------------------------------------

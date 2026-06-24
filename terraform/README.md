@@ -76,6 +76,53 @@ B2's S3 API has no DynamoDB-style locking. **Mitigation: serialize applies throu
 (`concurrency: { group: terraform, cancel-in-progress: false }`). **Never run `tofu apply`
 locally** while CI might — one human + one runner = no contention if you don't race them.
 
+## Phase 2: Tailscale
+
+Brings the tailnet under TF: **ACL-as-code**, **TF-managed device tags** on cluster
+nodes, and a **TF-managed tailnet auth key**. Module: `modules/tailscale/`.
+
+**Not fully plan-only.** The ACL and every `tailscale_device_tags` are
+import->no-op (mirror the B2 discipline). The **one apply** is
+`tailscale_tailnet_key.ci` — a key's `key` secret is never returned on import, so it
+is inherently a CREATE.
+
+### New OAuth client + GH secrets (Tier-0-adjacent, hand-made)
+
+The Tailscale **provider** authenticates with a **new** OAuth client, distinct from
+the node-auth `TS_OAUTH_*` (which the `tailscale/github-action` uses to self-mint
+ephemeral node keys). Create it in the admin console with scopes:
+
+- `acl` (write) — manage the policy file
+- `auth_keys` — create the tailnet key
+- `devices:core` (write) — set device tags
+
+It must **own every tag it manages** (`tag:github-actions` + the node tags). Seed its
+id/secret into GH Actions secrets `TS_TF_OAUTH_CLIENT_ID` / `TS_TF_OAUTH_CLIENT_SECRET`
+(+ password manager). The provider reads env `TAILSCALE_OAUTH_CLIENT_ID` /
+`TAILSCALE_OAUTH_CLIENT_SECRET`. It hits the public `api.tailscale.com` — **no cluster
+VPN**, so `terraform.yml`'s commented `Connect to Tailscale` step stays commented.
+
+### Required inputs before plan
+
+- `modules/tailscale/acl.hujson` — the live ACL, exported verbatim (HuJSON
+  formatting/comments are the drift culprit). Must declare `tagOwners` for every tag
+  used or the provider rejects it.
+- `var.managed_nodes` (in `modules/tailscale/variables.tf`) — node hostname + tag set.
+- Device-tag `import` blocks in `main.tf` — one per node, `id = "<nodeID>CNTRL"`.
+
+### Running (adds to the env in "Running" above)
+
+```bash
+export TAILSCALE_OAUTH_CLIENT_ID=...      # new ACL-scoped OAuth client
+export TAILSCALE_OAUTH_CLIENT_SECRET=...
+tofu init
+tofu plan   # ACL + all device_tags = no-op; tailscale_tailnet_key.ci = the only create
+```
+
+After apply, read the key once: `tofu output -raw ci_auth_key` (Infisical storage
+deferred to Phase 3). The key is for manual/other node joins (NAS, re-imaging a Pi);
+CI does not consume it.
+
 ## HARD STOP rule (import safety)
 
 After import, if `tofu plan` shows ANY `destroy`/replace on a live bucket, **do not apply** —

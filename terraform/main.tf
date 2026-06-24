@@ -4,7 +4,10 @@ module "b2" {
   source = "./modules/b2"
 }
 
-# Phase 2: module "tailscale"        { source = "./modules/tailscale" }
+module "tailscale" {
+  source = "./modules/tailscale"
+}
+
 # Phase 3: module "infisical_platform" { source = "./modules/infisical-platform" }
 # Phase 4: module "authentik"        { source = "./modules/authentik" }
 # Phase 5: module "cluster_bootstrap" { source = "./modules/cluster-bootstrap" }
@@ -35,3 +38,27 @@ import {
   to = module.b2.b2_bucket.restic
   id = "5ad4be49abae28a291a2011d" # homelab-k3s-567f18
 }
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Tailscale. Import the live ACL + each managed node's device tags into
+# state WITHOUT mutating them. tailscale_tailnet_key.ci is intentionally NOT
+# imported — it's the lone CREATE (its `key` secret is never returned on import).
+#
+# HARD STOP: if `tofu plan` shows ANY destroy/replace on the ACL or a node's tags,
+# do not apply. Reconcile acl.hujson / managed_nodes to live first. A bad ACL push
+# can lock the tailnet — treat it like a backup bucket.
+# ---------------------------------------------------------------------------
+
+import {
+  to = module.tailscale.tailscale_acl.this
+  id = "acl"
+}
+
+# TODO(user data): one block per managed node. id = the node ID with the CNTRL
+# suffix (preferred), e.g. "nXXXXXXCNTRL", from `tailscale device list` / admin
+# console. The for_each key must match the managed_nodes map key in the module.
+#
+# import {
+#   to = module.tailscale.tailscale_device_tags.node["pi4_01"]
+#   id = "<nodeID>CNTRL"
+# }
