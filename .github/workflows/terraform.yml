@@ -18,9 +18,13 @@ permissions:
 
 env:
   TF_VAR_state_passphrase: ${{ secrets.TF_STATE_PASSPHRASE }}
-  # Used by both the s3 state backend and the b2 provider (reuse the Tier-0 mgmt key).
+  # b2 provider creds (Tier-0 mgmt key).
   B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
   B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+  # s3 state backend creds: B2's S3 endpoint uses the AWS SDK, which reads the
+  # standard AWS env vars (NOT the B2_ ones). Same Tier-0 B2 mgmt key, AWS-named.
+  AWS_ACCESS_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
 
 jobs:
   plan:

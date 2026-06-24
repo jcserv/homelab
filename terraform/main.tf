@@ -23,15 +23,15 @@ module "b2" {
 
 import {
   to = module.b2.b2_bucket.homelab_backups
-  id = "REPLACE_WITH_BUCKET_ID_homelab-backups-431118"
+  id = "0a041ee91bcea84291a2011d" # homelab-backups-431118
 }
 
 import {
   to = module.b2.b2_bucket.open_archiver
-  id = "REPLACE_WITH_BUCKET_ID_open-archiver-homelab"
+  id = "1ae40e29cbdec82291e2011d" # open-archiver-homelab
 }
 
 import {
   to = module.b2.b2_bucket.restic
-  id = "REPLACE_WITH_BUCKET_ID_homelab-k3s-567f18"
+  id = "5ad4be49abae28a291a2011d" # homelab-k3s-567f18
 }

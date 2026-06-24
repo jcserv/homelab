@@ -24,7 +24,9 @@ Because Infisical runs *in the cluster*, full DR cannot bootstrap from Infisical
 password manager is the true recovery root.**
 
 1. **B2 management app key** — account-wide create/list buckets+keys. GH secrets
-   `B2_APPLICATION_KEY_ID` / `B2_APPLICATION_KEY` (reused for both the s3 backend and the b2 provider).
+   `B2_APPLICATION_KEY_ID` / `B2_APPLICATION_KEY`. The **b2 provider** reads these directly.
+   The **s3 state backend** uses the AWS SDK and reads the standard `AWS_ACCESS_KEY_ID` /
+   `AWS_SECRET_ACCESS_KEY` env vars — set those to the *same* B2 keyID/appKey (AWS-named).
 2. **State bucket `homelab-tofu-state-dd43bf5b`** — made by hand (private, `ca-east-006`).
    Can't be TF-managed: it stores the state that would manage it.
 3. **`TF_STATE_PASSPHRASE`** — PBKDF2 passphrase for native state encryption. GH secret +
@@ -50,11 +52,14 @@ Already-existing GH secrets reused later: `KUBE_CONFIG`, `TS_OAUTH_CLIENT_ID`, `
 
 ```bash
 cd terraform
-export TF_VAR_state_passphrase=...     # = TF_STATE_PASSPHRASE
-export B2_APPLICATION_KEY_ID=...       # B2 mgmt key
-export B2_APPLICATION_KEY=...
+unset AWS_PROFILE                       # stop the AWS SDK using a shared-config profile
+export TF_VAR_state_passphrase=...      # = TF_STATE_PASSPHRASE
+export B2_APPLICATION_KEY_ID=...        # b2 provider: B2 mgmt key (keyID)
+export B2_APPLICATION_KEY=...           # b2 provider: B2 mgmt key (appKey)
+export AWS_ACCESS_KEY_ID=$B2_APPLICATION_KEY_ID      # s3 backend: same B2 keyID
+export AWS_SECRET_ACCESS_KEY=$B2_APPLICATION_KEY     # s3 backend: same B2 appKey
 tofu init
-tofu plan                              # must be a CLEAN no-op for B2 buckets
+tofu plan                               # must be a CLEAN no-op for B2 buckets
 ```
 
 Get the bucket IDs to fill `import` blocks:

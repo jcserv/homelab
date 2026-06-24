@@ -15,7 +15,11 @@ resource "b2_bucket" "homelab_backups" {
   bucket_name = "homelab-backups-431118"
   bucket_type = "allPrivate"
 
-  # lifecycle_rules / bucket_info: add to match live if plan is not a clean no-op.
+  # Live bucket has SSE-B2 enabled — declare it to match, else plan disables it.
+  default_server_side_encryption {
+    mode      = "SSE-B2"
+    algorithm = "AES256"
+  }
 }
 
 resource "b2_bucket" "open_archiver" {
