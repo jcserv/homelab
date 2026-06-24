@@ -5,3 +5,9 @@ output "ci_auth_key" {
   value       = tailscale_tailnet_key.ci.key
   sensitive   = true
 }
+
+# Non-secret: logical name -> Tailscale node_id for the tagged cluster nodes.
+output "tagged_device_ids" {
+  description = "Managed node logical name -> Tailscale node_id."
+  value       = { for k, d in data.tailscale_device.node : k => d.node_id }
+}
