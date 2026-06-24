@@ -127,6 +127,75 @@ After apply, read the key once: `tofu output -raw ci_auth_key` (Infisical storag
 deferred to Phase 3). The key is for manual/other node joins (NAS, re-imaging a Pi);
 CI does not consume it.
 
+## Phase 6: GitHub Actions secrets (implemented)
+
+Closes the loop on **TF-generated secrets** by writing them straight into GitHub Actions
+secrets, instead of a human running `tofu output -raw …` and pasting into the repo settings.
+Fits the boundary cleanly: GitHub config is **external gap**, not in-cluster — no `helm_release`,
+no `charts/**`. Module: `modules/github/`.
+
+**Final scope landed**: candidate 1 (`TS_TF_CI_AUTH_KEY`, fed from `module.tailscale.ci_auth_key`)
+**+** candidate 3 adoption of `KUBE_CONFIG` / `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_SECRET`. Adopted
+secrets use `value` (plaintext; provider encrypts — `plaintext_value` is deprecated in github
+provider v6) re-supplied via `TF_VAR_*` from the existing live GH secrets — value
+lands in (encrypted) state; accepted. Plan shows **4 creates, zero destroys/replaces**.
+
+### Scope boundary (read before adding any secret)
+
+- TF **owns**: repo Actions secrets whose *value originates in TF* (a TF resource generated it),
+  plus the *existence/metadata* of adopted non-Tier-0 secrets.
+- TF **never manages**: the **4 Tier-0 secrets** — `B2_APPLICATION_KEY_ID` / `B2_APPLICATION_KEY`,
+  `TF_STATE_PASSPHRASE`, and the Infisical bootstrap `INFISICAL_CLIENT_ID` /
+  `INFISICAL_CLIENT_SECRET`. **Chicken-egg:** TF reads state from B2 using exactly these creds, so
+  it cannot bootstrap its own access — they stay in the password manager + hand-set GH secrets
+  forever. Same DR-root logic as §"Tier-0 seeded roots": the password manager is the true root.
+
+### Provider auth (Tier-0-adjacent, hand-made)
+
+The `integrations/github` provider needs a token with `repo` + Actions-secrets write scope —
+a fine-grained PAT (Secrets: read/write on this repo) or a GitHub App installation token. Seed
+it into a GH secret `GH_TF_TOKEN` (+ password manager); the provider reads env `GITHUB_TOKEN`
+and `GITHUB_OWNER`. **Not** a Tier-0 root (TF doesn't need it to reach state), but hand-made and
+never TF-managed (it grants the write access TF uses — self-management is the same chicken-egg).
+
+### Candidate secrets
+
+1. **`TS_TF_CI_AUTH_KEY`** ← `module.tailscale.tailscale_tailnet_key.ci.key`. TF already
+   generates this; today it's surfaced via `tofu output -raw ci_auth_key` and copied by hand.
+   Wiring it to `github_actions_secret.plaintext_value` removes the manual step. Lowest risk,
+   clearest win — the first one to land.
+2. **Future TF-generated values** — reserve the pattern for per-service B2 app keys (Phase 1+),
+   Authentik tokens (Phase 4), and Infisical machine identities (Phase 3). As each TF resource
+   that mints a credential lands, pipe its output into a `github_actions_secret` in the same PR.
+3. **Adopted non-Tier-0 secrets** (`KUBE_CONFIG`, `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_SECRET`) —
+   bring existing manually-set secrets under TF for an inventory-in-code. Caveat: their values
+   do **not** originate in TF, so adoption means re-supplying the value through a `TF_VAR_*`
+   (it then lands in state) — accept the state exposure or skip. Lower priority than 1–2.
+
+### Import discipline does NOT apply
+
+Unlike B2 buckets and the Tailscale ACL, **`github_actions_secret` cannot be import->no-op**:
+the GitHub API never returns a secret's value, so every managed secret is an inherent CREATE
+(same shape as `tailscale_tailnet_key.ci`). Plan-only verification is therefore by *count of
+creates*, not a clean no-op. There's no destroy risk to a live backup here — deleting a managed
+secret only un-sets it in CI — but a wrong value silently breaks a workflow, so apply deliberately.
+
+### State exposure
+
+`plaintext_value` lands in TF state. State is the B2 bucket + native encryption, so it's
+encrypted at rest, but anyone with the state file **and** `TF_STATE_PASSPHRASE` can recover the
+value. For candidate 1 that's already true (the key lives in state via the tailscale module
+output regardless). For candidate 3, prefer `encrypted_value` (sealed client-side with the repo's
+public key via `github_actions_public_key`) if the value is sensitive and not already in state.
+
+### Bootstrap order delta
+
+```
+… (Phases 0–5 as above)
+6. (manual) Create GH_TF_TOKEN PAT/App token -> GH Actions secret + password manager.
+7. tofu apply modules/github   # creates TS_TF_CI_AUTH_KEY first; expand per candidate.
+```
+
 ## HARD STOP rule (import safety)
 
 After import, if `tofu plan` shows ANY `destroy`/replace on a live bucket, **do not apply** —
