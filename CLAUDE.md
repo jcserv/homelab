@@ -95,6 +95,21 @@ The `.env` file (not committed) holds raw credentials. Never commit unsealed sec
 
 Renovate auto-creates PRs for Helm chart and Docker image updates (config in `renovate.json`). PostgreSQL updates in `charts/authentik/values.yaml` are disabled (requires manual migration). Renovate auto-bumps chart versions in `Chart.yaml` on dependency changes.
 
+### OpenTofu (`terraform/`)
+
+`terraform/` uses **OpenTofu** (`tofu`, not Terraform) to manage only the external/cloud
+"gap": **B2 buckets/keys, DNS, Tailscale, Authentik, and Infisical structure**. The boundary
+is hard: **TF = external gap; Helm = all in-cluster workloads.** Never put `helm_release` or
+workload `kubernetes` resources under TF, and never touch `charts/**` from TF.
+
+State lives in the hand-made B2 bucket `homelab-tofu-state-dd43bf5b` (`ca-east-006`) with
+native state encryption. A separate workflow `.github/workflows/terraform.yml` (triggered only
+on `terraform/**`) runs plan-on-PR / apply-on-merge; `ci.yml` ignores `terraform/**`. Applies
+are serialized via a `terraform` concurrency group (B2 has no S3 locking) — never `tofu apply`
+locally. The 4 Tier-0 seeded roots (B2 mgmt key, state bucket, `TF_STATE_PASSPHRASE`, Infisical
+bootstrap identity) live in the password manager + GH secrets, never in Infisical or state.
+See `terraform/README.md`.
+
 ### Non-Kubernetes Components
 
 `docker/` contains Docker Compose configs running on the NAS (not part of the K8s cluster):

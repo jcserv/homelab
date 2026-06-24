@@ -37,11 +37,14 @@ kubeconfig
 
 scripts/.venv
 
-# Terraform (if used later)
+# Terraform / OpenTofu (terraform/)
 .terraform/
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+*.tfplan
+*.tfvars
+!*.tfvars.example
 
 # IDE
 .vscode/
