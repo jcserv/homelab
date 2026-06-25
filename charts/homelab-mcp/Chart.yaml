@@ -1,0 +1,12 @@
+---
+apiVersion: v2
+name: homelab-mcp
+description: Homelab MCP server (FastMCP, streamable-http) — Home Assistant tools for LibreChat
+type: application
+version: 0.1.0
+# appVersion tracks the pinned image tag (sha-<short>). sha-72e314e fixes the
+# image's builder/runtime Python mismatch (3.13 venv under a 3.14 runtime →
+# ModuleNotFoundError: app) by aligning the runtime base to python:3.13.
+appVersion: "sha-72e314e"
+maintainers:
+  - name: homelab

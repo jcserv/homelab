@@ -1,0 +1,45 @@
+{{- /*
+Internal-only isolation. Ingress on :8000 restricted to LibreChat pods (the
+sole consumer) plus the monitoring namespace for unauthenticated /metrics.
+Egress left permissive: home-assistant is host-network on pi4-02, reached via
+node IP rather than a pod selector, so a tight egress rule would break it.
+Only effective under a default-deny baseline / NetworkPolicy-enforcing CNI.
+*/ -}}
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "homelab-mcp.fullname" . }}-network-policy
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "homelab-mcp.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "homelab-mcp.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # MCP (:8000) — only LibreChat pods may reach the server.
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.service.port }}
+      from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: librechat
+        # Metrics scraping from the monitoring namespace (/metrics is open).
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+  egress:
+    # DNS resolution.
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Permissive egress (HA host-network reached via node IP).
+    - {}
+{{- end }}
