@@ -2,12 +2,12 @@ apiVersion: v2
 name: blackbox-exporter
 description: Blackbox exporter for synthetic monitoring of services in homelab
 type: application
-version: 1.0.15
+version: 1.0.16
 appVersion: "v0.27.0"
 maintainers:
   - name: homelab
 
 dependencies:
   - name: prometheus-blackbox-exporter
-    version: 11.13.0
+    version: 11.17.2
     repository: https://prometheus-community.github.io/helm-charts
