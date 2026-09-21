@@ -2,7 +2,7 @@ apiVersion: v2
 name: meilisearch
 description: Shared Meilisearch instance for cluster services (open-archiver, librechat)
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "1.38.2"
 keywords:
   - meilisearch
